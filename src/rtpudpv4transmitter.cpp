@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2005 Jori Liesenborgs
+  Copyright (c) 1999-2006 Jori Liesenborgs
 
   Contact: jori@lumumba.uhasselt.be
 
@@ -77,6 +77,8 @@
 
 #include "rtpdebug.h"
 
+#include <iostream>
+
 #ifndef _WIN32_WCE
 	#define RTPUDPV4TRANS_RTPRECEIVEBUFFER							32768
 	#define RTPUDPV4TRANS_RTCPRECEIVEBUFFER							32768
@@ -99,12 +101,12 @@
 										struct ip_mreq mreq;\
 										\
 										mreq.imr_multiaddr.s_addr = htonl(mcastip);\
-										mreq.imr_interface.s_addr = htonl(bindIP);\
+										mreq.imr_interface.s_addr = htonl(mcastifaceIP);\
 										status = setsockopt(socket,IPPROTO_IP,type,(const char *)&mreq,sizeof(struct ip_mreq));\
 									}
 #ifndef RTP_SUPPORT_INLINETEMPLATEPARAM
 	int RTPUDPv4Trans_GetHashIndex_IPv4Dest(const RTPIPv4Destination &d)				{ return d.GetIP_HBO()%RTPUDPV4TRANS_HASHSIZE; }
-	int RTPUDPv4Trans_GetHashIndex_u_int32_t(const u_int32_t &k)					{ return k%RTPUDPV4TRANS_HASHSIZE; }
+	int RTPUDPv4Trans_GetHashIndex_uint32_t(const uint32_t &k)					{ return k%RTPUDPV4TRANS_HASHSIZE; }
 #endif // !RTP_SUPPORT_INLINETEMPLATEPARAM
 	
 #ifdef RTP_SUPPORT_THREAD
@@ -253,6 +255,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	// bind sockets
 
 	bindIP = params->GetBindIP();
+	mcastifaceIP = params->GetMulticastInterfaceIP();
 	
 	memset(&addr,0,sizeof(struct sockaddr_in));
 	addr.sin_family = AF_INET;
@@ -294,7 +297,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 #ifdef RTPDEBUG
 		std::cout << "Found these local IP addresses:" << std::endl;
 		
-		std::list<u_int32_t>::const_iterator it;
+		std::list<uint32_t>::const_iterator it;
 
 		for (it = localIPs.begin() ; it != localIPs.end() ; it++)
 		{
@@ -403,7 +406,7 @@ RTPTransmissionInfo *RTPUDPv4Transmitter::GetTransmissionInfo()
 	return tinf;
 }
 
-int RTPUDPv4Transmitter::GetLocalHostName(u_int8_t *buffer,size_t *bufferlength)
+int RTPUDPv4Transmitter::GetLocalHostName(uint8_t *buffer,size_t *bufferlength)
 {
 	if (!init)
 		return ERR_RTP_UDPV4TRANS_NOTINIT;
@@ -423,24 +426,55 @@ int RTPUDPv4Transmitter::GetLocalHostName(u_int8_t *buffer,size_t *bufferlength)
 			return ERR_RTP_UDPV4TRANS_NOLOCALIPS;
 		}
 		
-		std::list<u_int32_t>::const_iterator it;
+		std::list<uint32_t>::const_iterator it;
 		std::list<std::string> hostnames;
 	
 		for (it = localIPs.begin() ; it != localIPs.end() ; it++)
 		{
-			struct hostent *he;
-			u_int8_t addr[4];
-			u_int32_t ip = (*it);
-	
-			addr[0] = (u_int8_t)((ip>>24)&0xFF);
-			addr[1] = (u_int8_t)((ip>>16)&0xFF);
-			addr[2] = (u_int8_t)((ip>>8)&0xFF);
-			addr[3] = (u_int8_t)(ip&0xFF);
-			he = gethostbyaddr((char *)addr,4,AF_INET);
-			if (he != 0)
+			bool founddouble = false;
+			bool foundentry = true;
+
+			while (!founddouble && foundentry)
 			{
-				std::string hname = std::string(he->h_name);
-				hostnames.push_back(hname);
+				struct hostent *he;
+				uint8_t addr[4];
+				uint32_t ip = (*it);
+		
+				addr[0] = (uint8_t)((ip>>24)&0xFF);
+				addr[1] = (uint8_t)((ip>>16)&0xFF);
+				addr[2] = (uint8_t)((ip>>8)&0xFF);
+				addr[3] = (uint8_t)(ip&0xFF);
+				he = gethostbyaddr((char *)addr,4,AF_INET);
+				if (he != 0)
+				{
+					std::string hname = std::string(he->h_name);
+					std::list<std::string>::const_iterator it;
+
+					for (it = hostnames.begin() ; !founddouble && it != hostnames.end() ; it++)
+						if ((*it) == hname)
+							founddouble = true;
+
+					if (!founddouble)
+						hostnames.push_back(hname);
+					
+					int i = 0;
+					while (!founddouble && he->h_aliases[i] != 0)
+					{
+						std::string hname = std::string(he->h_aliases[i]);
+					
+						for (it = hostnames.begin() ; !founddouble && it != hostnames.end() ; it++)
+							if ((*it) == hname)
+								founddouble = true;
+
+						if (!founddouble)
+						{
+							hostnames.push_back(hname);
+							i++;
+						}
+					}
+				}
+				else
+					foundentry = false;
 			}
 		}
 	
@@ -449,14 +483,15 @@ int RTPUDPv4Transmitter::GetLocalHostName(u_int8_t *buffer,size_t *bufferlength)
 		if (!hostnames.empty())	// try to select the most appropriate hostname
 		{
 			std::list<std::string>::const_iterator it;
-			
+		
+			hostnames.sort();
 			for (it = hostnames.begin() ; !found && it != hostnames.end() ; it++)
 			{
 				if ((*it).find('.') != std::string::npos)
 				{
 					found = true;
 					localhostnamelength = (*it).length();
-					localhostname = new u_int8_t [localhostnamelength+1];
+					localhostname = new uint8_t [localhostnamelength+1];
 					if (localhostname == 0)
 					{
 						MAINMUTEX_UNLOCK
@@ -470,18 +505,22 @@ int RTPUDPv4Transmitter::GetLocalHostName(u_int8_t *buffer,size_t *bufferlength)
 	
 		if (!found) // use an IP address
 		{
-			u_int32_t ip;
+			uint32_t ip;
 			int len;
-			char str[256];
+			char str[16];
 			
 			it = localIPs.begin();
 			ip = (*it);
 			
-			sprintf(str,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
+#if (defined(WIN32) || defined(_WIN32_WCE))
+			_snprintf(str,16,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
+#else
+			snprintf(str,16,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
+#endif // WIN32 || _WIN32_WCE
 			len = strlen(str);
 	
 			localhostnamelength = len;
-			localhostname = new u_int8_t [localhostnamelength + 1];
+			localhostname = new uint8_t [localhostnamelength + 1];
 			if (localhostname == 0)
 			{
 				MAINMUTEX_UNLOCK
@@ -522,7 +561,7 @@ bool RTPUDPv4Transmitter::ComesFromThisTransmitter(const RTPAddress *addr)
 	{	
 		const RTPIPv4Address *addr2 = (const RTPIPv4Address *)addr;
 		bool found = false;
-		std::list<u_int32_t>::const_iterator it;
+		std::list<uint32_t>::const_iterator it;
 	
 		it = localIPs.begin();
 		while (!found && it != localIPs.end())
@@ -759,14 +798,14 @@ void RTPUDPv4Transmitter::ResetPacketCount()
 	MAINMUTEX_UNLOCK	
 }
 
-u_int32_t RTPUDPv4Transmitter::GetNumRTPPacketsSent()
+uint32_t RTPUDPv4Transmitter::GetNumRTPPacketsSent()
 {
 	if (!init)
 		return 0;
 
 	MAINMUTEX_LOCK
 	
-	u_int32_t num;
+	uint32_t num;
 
 	if (!created)
 		num = 0;
@@ -778,14 +817,14 @@ u_int32_t RTPUDPv4Transmitter::GetNumRTPPacketsSent()
 	return num;
 }
 
-u_int32_t RTPUDPv4Transmitter::GetNumRTCPPacketsSent()
+uint32_t RTPUDPv4Transmitter::GetNumRTCPPacketsSent()
 {
 	if (!init)
 		return 0;
 	
 	MAINMUTEX_LOCK
 	
-	u_int32_t num;
+	uint32_t num;
 
 	if (!created)
 		num = 0;
@@ -901,7 +940,7 @@ int RTPUDPv4Transmitter::JoinMulticastGroup(const RTPAddress &addr)
 	}
 	
 	const RTPIPv4Address &address = (const RTPIPv4Address &)addr;
-	u_int32_t mcastIP = address.GetIP();
+	uint32_t mcastIP = address.GetIP();
 	
 	if (!RTPUDPV4TRANS_IS_MCASTADDR(mcastIP))
 	{
@@ -953,7 +992,7 @@ int RTPUDPv4Transmitter::LeaveMulticastGroup(const RTPAddress &addr)
 	}
 	
 	const RTPIPv4Address &address = (const RTPIPv4Address &)addr;
-	u_int32_t mcastIP = address.GetIP();
+	uint32_t mcastIP = address.GetIP();
 	
 	if (!RTPUDPV4TRANS_IS_MCASTADDR(mcastIP))
 	{
@@ -984,7 +1023,7 @@ void RTPUDPv4Transmitter::LeaveAllMulticastGroups()
 		multicastgroups.GotoFirstElement();
 		while (multicastgroups.HasCurrentElement())
 		{
-			u_int32_t mcastIP;
+			uint32_t mcastIP;
 			int status = 0;
 
 			mcastIP = multicastgroups.GetCurrentElement();
@@ -1259,7 +1298,7 @@ RTPRawPacket *RTPUDPv4Transmitter::GetNextPacket()
 // Here the private functions start...
 
 #ifdef RTP_SUPPORT_IPV4MULTICAST
-bool RTPUDPv4Transmitter::SetMulticastTTL(u_int8_t ttl)
+bool RTPUDPv4Transmitter::SetMulticastTTL(uint8_t ttl)
 {
 	int ttl2,status;
 
@@ -1326,12 +1365,12 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 			{
 				RTPRawPacket *pack;
 				RTPIPv4Address *addr;
-				u_int8_t *datacopy;
+				uint8_t *datacopy;
 
 				addr = new RTPIPv4Address(ntohl(srcaddr.sin_addr.s_addr),ntohs(srcaddr.sin_port));
 				if (addr == 0)
 					return ERR_RTP_OUTOFMEM;
-				datacopy = new u_int8_t[recvlen];
+				datacopy = new uint8_t[recvlen];
 				if (datacopy == 0)
 				{
 					delete addr;
@@ -1355,7 +1394,7 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 	return 0;
 }
 
-int RTPUDPv4Transmitter::ProcessAddAcceptIgnoreEntry(u_int32_t ip,u_int16_t port)
+int RTPUDPv4Transmitter::ProcessAddAcceptIgnoreEntry(uint32_t ip,uint16_t port)
 {
 	acceptignoreinfo.GotoElement(ip);
 	if (acceptignoreinfo.HasCurrentElement()) // An entry for this IP address already exists
@@ -1369,7 +1408,7 @@ int RTPUDPv4Transmitter::ProcessAddAcceptIgnoreEntry(u_int32_t ip,u_int16_t port
 		}
 		else if (!portinf->all)
 		{
-			std::list<u_int16_t>::const_iterator it,begin,end;
+			std::list<uint16_t>::const_iterator it,begin,end;
 
 			begin = portinf->portlist.begin();
 			end = portinf->portlist.end();
@@ -1417,7 +1456,7 @@ void RTPUDPv4Transmitter::ClearAcceptIgnoreInfo()
 	acceptignoreinfo.Clear();
 }
 	
-int RTPUDPv4Transmitter::ProcessDeleteAcceptIgnoreEntry(u_int32_t ip,u_int16_t port)
+int RTPUDPv4Transmitter::ProcessDeleteAcceptIgnoreEntry(uint32_t ip,uint16_t port)
 {
 	acceptignoreinfo.GotoElement(ip);
 	if (!acceptignoreinfo.HasCurrentElement())
@@ -1436,7 +1475,7 @@ int RTPUDPv4Transmitter::ProcessDeleteAcceptIgnoreEntry(u_int32_t ip,u_int16_t p
 		if (inf->all) // currently, all ports are selected. Add the one to remove to the list
 		{
 			// we have to check if the list doesn't contain the port already
-			std::list<u_int16_t>::const_iterator it,begin,end;
+			std::list<uint16_t>::const_iterator it,begin,end;
 
 			begin = inf->portlist.begin();
 			end = inf->portlist.end();
@@ -1449,7 +1488,7 @@ int RTPUDPv4Transmitter::ProcessDeleteAcceptIgnoreEntry(u_int32_t ip,u_int16_t p
 		}
 		else // check if we can find the port in the list
 		{
-			std::list<u_int16_t>::iterator it,begin,end;
+			std::list<uint16_t>::iterator it,begin,end;
 			
 			begin = inf->portlist.begin();
 			end = inf->portlist.end();
@@ -1468,7 +1507,7 @@ int RTPUDPv4Transmitter::ProcessDeleteAcceptIgnoreEntry(u_int32_t ip,u_int16_t p
 	return 0;
 }
 
-bool RTPUDPv4Transmitter::ShouldAcceptData(u_int32_t srcip,u_int16_t srcport)
+bool RTPUDPv4Transmitter::ShouldAcceptData(uint32_t srcip,uint16_t srcport)
 {
 	if (receivemode == RTPTransmitter::AcceptSome)
 	{
@@ -1481,7 +1520,7 @@ bool RTPUDPv4Transmitter::ShouldAcceptData(u_int32_t srcip,u_int16_t srcport)
 		inf = acceptignoreinfo.GetCurrentElement();
 		if (!inf->all) // only accept the ones in the list
 		{
-			std::list<u_int16_t>::const_iterator it,begin,end;
+			std::list<uint16_t>::const_iterator it,begin,end;
 
 			begin = inf->portlist.begin();
 			end = inf->portlist.end();
@@ -1494,7 +1533,7 @@ bool RTPUDPv4Transmitter::ShouldAcceptData(u_int32_t srcip,u_int16_t srcport)
 		}
 		else // accept all, except the ones in the list
 		{
-			std::list<u_int16_t>::const_iterator it,begin,end;
+			std::list<uint16_t>::const_iterator it,begin,end;
 
 			begin = inf->portlist.begin();
 			end = inf->portlist.end();
@@ -1517,7 +1556,7 @@ bool RTPUDPv4Transmitter::ShouldAcceptData(u_int32_t srcip,u_int16_t srcport)
 		inf = acceptignoreinfo.GetCurrentElement();
 		if (!inf->all) // ignore the ports in the list
 		{
-			std::list<u_int16_t>::const_iterator it,begin,end;
+			std::list<uint16_t>::const_iterator it,begin,end;
 
 			begin = inf->portlist.begin();
 			end = inf->portlist.end();
@@ -1530,7 +1569,7 @@ bool RTPUDPv4Transmitter::ShouldAcceptData(u_int32_t srcip,u_int16_t srcport)
 		}
 		else // ignore all, except the ones in the list
 		{
-			std::list<u_int16_t>::const_iterator it,begin,end;
+			std::list<uint16_t>::const_iterator it,begin,end;
 
 			begin = inf->portlist.begin();
 			end = inf->portlist.end();
@@ -1706,7 +1745,7 @@ bool RTPUDPv4Transmitter::GetLocalIPList_Interfaces()
 	
 	while (tmp != 0)
 	{
-		if (tmp->ifa_addr->sa_family == AF_INET)
+		if (tmp->ifa_addr != 0 && tmp->ifa_addr->sa_family == AF_INET)
 		{
 			struct sockaddr_in *inaddr = (struct sockaddr_in *)tmp->ifa_addr;
 			localIPs.push_back(ntohl(inaddr->sin_addr.s_addr));
@@ -1751,7 +1790,7 @@ bool RTPUDPv4Transmitter::GetLocalIPList_Interfaces()
 		{
 			if (sa->sa_len == sizeof(struct sockaddr_in) && sa->sa_family == PF_INET)
 			{
-				u_int32_t ip;
+				uint32_t ip;
 				struct sockaddr_in *addr = (struct sockaddr_in *)sa;
 				
 				ip = ntohl(addr->sin_addr.s_addr);
@@ -1770,7 +1809,7 @@ bool RTPUDPv4Transmitter::GetLocalIPList_Interfaces()
 #else // don't have sa_len in struct sockaddr
 		if (sa->sa_family == PF_INET)
 		{
-			u_int32_t ip;
+			uint32_t ip;
 			struct sockaddr_in *addr = (struct sockaddr_in *)sa;
 		
 			ip = ntohl(addr->sin_addr.s_addr);
@@ -1795,7 +1834,7 @@ void RTPUDPv4Transmitter::GetLocalIPList_DNS()
 {
 	struct hostent *he;
 	char name[1024];
-	u_int32_t ip;
+	uint32_t ip;
 	bool done;
 	int i,j;
 
@@ -1816,7 +1855,7 @@ void RTPUDPv4Transmitter::GetLocalIPList_DNS()
 		{
 			ip = 0;
 			for (j = 0 ; j < 4 ; j++)
-				ip |= ((u_int32_t)((unsigned char)he->h_addr_list[i][j])<<((3-j)*8));
+				ip |= ((uint32_t)((unsigned char)he->h_addr_list[i][j])<<((3-j)*8));
 			localIPs.push_back(ip);
 			i++;
 		}
@@ -1834,8 +1873,8 @@ void RTPUDPv4Transmitter::AbortWaitInternal()
 
 void RTPUDPv4Transmitter::AddLoopbackAddress()
 {
-	u_int32_t loopbackaddr = (((u_int32_t)127)<<24)|((u_int32_t)1);
-	std::list<u_int32_t>::const_iterator it;
+	uint32_t loopbackaddr = (((uint32_t)127)<<24)|((uint32_t)1);
+	std::list<uint32_t>::const_iterator it;
 	bool found = false;
 	
 	for (it = localIPs.begin() ; !found && it != localIPs.end() ; it++)
@@ -1861,21 +1900,24 @@ void RTPUDPv4Transmitter::Dump()
 			std::cout << "Not created" << std::endl;
 		else
 		{
-			char str[1024];
-			u_int32_t ip;
-			std::list<u_int32_t>::const_iterator it;
+			char str[16];
+			uint32_t ip;
+			std::list<uint32_t>::const_iterator it;
 			
 			std::cout << "Portbase:                       " << portbase << std::endl;
 			std::cout << "RTP socket descriptor:          " << rtpsock << std::endl;
 			std::cout << "RTCP socket descriptor:         " << rtcpsock << std::endl;
 			ip = bindIP;
-			sprintf(str,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
+			snprintf(str,16,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
 			std::cout << "Bind IP address:                " << str << std::endl;
+			ip = mcastifaceIP;
+			snprintf(str,16,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
+			std::cout << "Multicast interface IP address: " << str << std::endl;
 			std::cout << "Local IP addresses:" << std::endl;
 			for (it = localIPs.begin() ; it != localIPs.end() ; it++)
 			{
 				ip = (*it);
-				sprintf(str,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
+				snprintf(str,16,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
 				std::cout << "    " << str << std::endl;
 			}
 			std::cout << "Multicast TTL:                  " << (int)multicastTTL << std::endl;
@@ -1898,7 +1940,7 @@ void RTPUDPv4Transmitter::Dump()
 				while(acceptignoreinfo.HasCurrentElement())
 				{
 					ip = acceptignoreinfo.GetCurrentKey();
-					sprintf(str,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
+					snprintf(str,16,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
 					PortInfo *pinfo = acceptignoreinfo.GetCurrentElement();
 					std::cout << "    " << str << ": ";
 					if (pinfo->all)
@@ -1908,7 +1950,7 @@ void RTPUDPv4Transmitter::Dump()
 							std::cout << ", except ";
 					}
 					
-					std::list<u_int16_t>::const_iterator it;
+					std::list<uint16_t>::const_iterator it;
 					
 					for (it = pinfo->portlist.begin() ; it != pinfo->portlist.end() ; )
 					{
@@ -1952,7 +1994,7 @@ void RTPUDPv4Transmitter::Dump()
 				do
 				{
 					ip = multicastgroups.GetCurrentElement();
-					sprintf(str,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
+					snprintf(str,16,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
 					std::cout << "    " << str << std::endl;
 					multicastgroups.GotoNextElement();
 				} while (multicastgroups.HasCurrentElement());
