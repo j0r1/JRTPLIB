@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -52,11 +52,16 @@
 #define RTPUDPV4TRANS_HASHSIZE									8317
 #define RTPUDPV4TRANS_DEFAULTPORTBASE								5000
 
+#define RTPUDPV4TRANS_RTPRECEIVEBUFFER							32768
+#define RTPUDPV4TRANS_RTCPRECEIVEBUFFER							32768
+#define RTPUDPV4TRANS_RTPTRANSMITBUFFER							32768
+#define RTPUDPV4TRANS_RTCPTRANSMITBUFFER						32768
+
 /** Parameters for the UDP over IPv4 transmitter. */
 class RTPUDPv4TransmissionParams : public RTPTransmissionParams
 {
 public:
-	RTPUDPv4TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	{ portbase = RTPUDPV4TRANS_DEFAULTPORTBASE; bindIP = 0; multicastTTL = 1; mcastifaceIP = 0; }
+	RTPUDPv4TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	{ portbase = RTPUDPV4TRANS_DEFAULTPORTBASE; bindIP = 0; multicastTTL = 1; mcastifaceIP = 0; rtpsendbuf = RTPUDPV4TRANS_RTPTRANSMITBUFFER; rtprecvbuf= RTPUDPV4TRANS_RTPRECEIVEBUFFER; rtcpsendbuf = RTPUDPV4TRANS_RTCPTRANSMITBUFFER; rtcprecvbuf = RTPUDPV4TRANS_RTCPRECEIVEBUFFER; }
 
 	/** Sets the IP address which is used to bind the sockets to \c ip. */
 	void SetBindIP(uint32_t ip)									{ bindIP = ip; }
@@ -93,11 +98,37 @@ public:
 
 	/** Returns the list of local IP addresses. */
 	const std::list<uint32_t> &GetLocalIPList() const			{ return localIPs; }
+
+	/** Sets the RTP socket's send buffer size. */
+	void SetRTPSendBuffer(int s)								{ rtpsendbuf = s; }
+
+	/** Sets the RTP socket's receive buffer size. */
+	void SetRTPReceiveBuffer(int s)								{ rtprecvbuf = s; }
+
+	/** Sets the RTCP socket's send buffer size. */
+	void SetRTCPSendBuffer(int s)								{ rtcpsendbuf = s; }
+
+	/** Sets the RTCP socket's receive buffer size. */
+	void SetRTCPReceiveBuffer(int s)							{ rtcprecvbuf = s; }
+
+	/** Returns the RTP socket's send buffer size. */
+	int GetRTPSendBuffer() const								{ return rtpsendbuf; }
+
+	/** Returns the RTP socket's receive buffer size. */
+	int GetRTPReceiveBuffer() const								{ return rtprecvbuf; }
+
+	/** Returns the RTCP socket's send buffer size. */
+	int GetRTCPSendBuffer() const								{ return rtcpsendbuf; }
+
+	/** Returns the RTCP socket's receive buffer size. */
+	int GetRTCPReceiveBuffer() const							{ return rtcprecvbuf; }
 private:
 	uint16_t portbase;
 	uint32_t bindIP, mcastifaceIP;
 	std::list<uint32_t> localIPs;
 	uint8_t multicastTTL;
+	int rtpsendbuf, rtprecvbuf;
+	int rtcpsendbuf, rtcprecvbuf;
 };
 
 /** Additional information about the UDP over IPv4 transmitter. */

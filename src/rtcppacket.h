@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 

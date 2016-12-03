@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -42,7 +42,7 @@
 
 #include "rtpdebug.h"
 
-RTPPacketBuilder::RTPPacketBuilder(RTPMemoryManager *mgr) : lastwallclocktime(0,0),RTPMemoryObject(mgr)
+RTPPacketBuilder::RTPPacketBuilder(RTPMemoryManager *mgr) : RTPMemoryObject(mgr),lastwallclocktime(0,0)
 {
 	init = false;
 #if (defined(WIN32) || defined(_WIN32_WCE))

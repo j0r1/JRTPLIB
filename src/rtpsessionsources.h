@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -46,7 +46,7 @@ class RTPSession;
 class RTPSessionSources : public RTPSources
 {
 public:
-	RTPSessionSources(RTPSession &sess,RTPMemoryManager *mgr) : rtpsession(sess),RTPSources(RTPSources::ProbationStore,mgr)	
+	RTPSessionSources(RTPSession &sess,RTPMemoryManager *mgr) : RTPSources(RTPSources::ProbationStore,mgr),rtpsession(sess)
 													{ owncollision = false; }
 	~RTPSessionSources()										{ }
 	void ClearOwnCollisionFlag()									{ owncollision = false; }

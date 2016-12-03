@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -89,7 +89,7 @@ private:
 	bool isrtp;
 };
 
-inline RTPRawPacket::RTPRawPacket(uint8_t *data,size_t datalen,RTPAddress *address,RTPTime &recvtime,bool rtp,RTPMemoryManager *mgr):receivetime(recvtime),RTPMemoryObject(mgr)
+inline RTPRawPacket::RTPRawPacket(uint8_t *data,size_t datalen,RTPAddress *address,RTPTime &recvtime,bool rtp,RTPMemoryManager *mgr):RTPMemoryObject(mgr),receivetime(recvtime)
 {
 	packetdata = data;
 	packetdatalength = datalen;

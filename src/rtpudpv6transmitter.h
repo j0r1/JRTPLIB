@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -59,11 +59,16 @@
 #define RTPUDPV6TRANS_HASHSIZE										8317
 #define RTPUDPV6TRANS_DEFAULTPORTBASE								5000
 
+#define RTPUDPV6TRANS_RTPRECEIVEBUFFER							32768
+#define RTPUDPV6TRANS_RTCPRECEIVEBUFFER							32768
+#define RTPUDPV6TRANS_RTPTRANSMITBUFFER							32768
+#define RTPUDPV6TRANS_RTCPTRANSMITBUFFER						32768
+
 /** Parameters for the UDP over IPv6 transmitter. */
 class RTPUDPv6TransmissionParams : public RTPTransmissionParams
 {
 public:
-	RTPUDPv6TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv6UDPProto)	{ portbase = RTPUDPV6TRANS_DEFAULTPORTBASE; for (int i = 0 ; i < 16 ; i++) bindIP.s6_addr[i] = 0; multicastTTL = 1; mcastifidx = 0; }
+	RTPUDPv6TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv6UDPProto)	{ portbase = RTPUDPV6TRANS_DEFAULTPORTBASE; for (int i = 0 ; i < 16 ; i++) bindIP.s6_addr[i] = 0; multicastTTL = 1; mcastifidx = 0; rtpsendbuf = RTPUDPV6TRANS_RTPTRANSMITBUFFER; rtprecvbuf= RTPUDPV6TRANS_RTPRECEIVEBUFFER; rtcpsendbuf = RTPUDPV6TRANS_RTCPTRANSMITBUFFER; rtcprecvbuf = RTPUDPV6TRANS_RTCPRECEIVEBUFFER; }
 
 	/** Sets the IP address which is used to bind the sockets to \c ip. */
 	void SetBindIP(in6_addr ip)											{ bindIP = ip; }
@@ -100,12 +105,38 @@ public:
 
 	/** Returns the list of local IP addresses. */
 	const std::list<in6_addr> &GetLocalIPList() const					{ return localIPs; }
+
+	/** Sets the RTP socket's send buffer size. */
+	void SetRTPSendBuffer(int s)								{ rtpsendbuf = s; }
+
+	/** Sets the RTP socket's receive buffer size. */
+	void SetRTPReceiveBuffer(int s)								{ rtprecvbuf = s; }
+
+	/** Sets the RTCP socket's send buffer size. */
+	void SetRTCPSendBuffer(int s)								{ rtcpsendbuf = s; }
+
+	/** Sets the RTCP socket's receive buffer size. */
+	void SetRTCPReceiveBuffer(int s)							{ rtcprecvbuf = s; }
+
+	/** Returns the RTP socket's send buffer size. */
+	int GetRTPSendBuffer() const								{ return rtpsendbuf; }
+
+	/** Returns the RTP socket's receive buffer size. */
+	int GetRTPReceiveBuffer() const								{ return rtprecvbuf; }
+
+	/** Returns the RTCP socket's send buffer size. */
+	int GetRTCPSendBuffer() const								{ return rtcpsendbuf; }
+
+	/** Returns the RTCP socket's receive buffer size. */
+	int GetRTCPReceiveBuffer() const							{ return rtcprecvbuf; }
 private:
 	uint16_t portbase;
 	in6_addr bindIP;
 	unsigned int mcastifidx;
 	std::list<in6_addr> localIPs;
 	uint8_t multicastTTL;
+	int rtpsendbuf, rtprecvbuf;
+	int rtcpsendbuf, rtcprecvbuf;
 };
 
 /** Additional information about the UDP over IPv6 transmitter. */

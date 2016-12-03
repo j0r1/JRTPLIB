@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -207,7 +207,7 @@ void RTPSourceStats::ProcessPacket(RTPPacket *pack,const RTPTime &receivetime,do
 	}
 }
 
-RTPSourceData::RTPSourceData(uint32_t s, RTPMemoryManager *mgr) : byetime(0,0),RTPMemoryObject(mgr),SDESinf(mgr)
+RTPSourceData::RTPSourceData(uint32_t s, RTPMemoryManager *mgr) : RTPMemoryObject(mgr),SDESinf(mgr),byetime(0,0)
 {
 	ssrc = s;
 	issender = false;

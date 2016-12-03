@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -79,21 +79,8 @@
 
 #include "rtpdebug.h"
 
-#ifndef _WIN32_WCE
-	#define RTPUDPV6TRANS_RTPRECEIVEBUFFER							32768
-	#define RTPUDPV6TRANS_RTCPRECEIVEBUFFER							32768
-	#define RTPUDPV6TRANS_RTPTRANSMITBUFFER							32768
-	#define RTPUDPV6TRANS_RTCPTRANSMITBUFFER						32768
-	#define RTPUDPV6TRANS_MAXPACKSIZE							65535
-	#define RTPUDPV6TRANS_IFREQBUFSIZE							8192
-#else
-	#define RTPUDPV6TRANS_RTPRECEIVEBUFFER							2048
-	#define RTPUDPV6TRANS_RTCPRECEIVEBUFFER							2048
-	#define RTPUDPV6TRANS_RTPTRANSMITBUFFER							2048
-	#define RTPUDPV6TRANS_RTCPTRANSMITBUFFER						2048
-	#define RTPUDPV6TRANS_MAXPACKSIZE							2048
-	#define RTPUDPV6TRANS_IFREQBUFSIZE							2048
-#endif // _WIN32_WCE
+#define RTPUDPV6TRANS_MAXPACKSIZE							65535
+#define RTPUDPV6TRANS_IFREQBUFSIZE							8192
 
 #define RTPUDPV6TRANS_IS_MCASTADDR(x)							(x.s6_addr[0] == 0xFF)
 
@@ -123,8 +110,9 @@ inline bool operator==(const in6_addr &ip1,const in6_addr &ip2)
 	return false;
 }
 
-RTPUDPv6Transmitter::RTPUDPv6Transmitter(RTPMemoryManager *mgr) : RTPTransmitter(mgr),multicastgroups(GetMemoryManager(),RTPMEM_TYPE_CLASS_MULTICASTHASHELEMENT),
+RTPUDPv6Transmitter::RTPUDPv6Transmitter(RTPMemoryManager *mgr) : RTPTransmitter(mgr),
 								  destinations(GetMemoryManager(),RTPMEM_TYPE_CLASS_DESTINATIONLISTHASHELEMENT),
+								  multicastgroups(GetMemoryManager(),RTPMEM_TYPE_CLASS_MULTICASTHASHELEMENT),
 								  acceptignoreinfo(GetMemoryManager(),RTPMEM_TYPE_CLASS_ACCEPTIGNOREHASHELEMENT)
 {
 	created = false;
@@ -223,7 +211,7 @@ int RTPUDPv6Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	
 	// set socket buffer sizes
 	
-	size = RTPUDPV6TRANS_RTPRECEIVEBUFFER;
+	size = params->GetRTPReceiveBuffer();
 	if (setsockopt(rtpsock,SOL_SOCKET,SO_RCVBUF,(const char *)&size,sizeof(int)) != 0)
 	{
 		RTPCLOSE(rtpsock);
@@ -231,7 +219,7 @@ int RTPUDPv6Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV6TRANS_CANTSETRTPRECEIVEBUF;
 	}
-	size = RTPUDPV6TRANS_RTPTRANSMITBUFFER;
+	size = params->GetRTPSendBuffer();
 	if (setsockopt(rtpsock,SOL_SOCKET,SO_SNDBUF,(const char *)&size,sizeof(int)) != 0)
 	{
 		RTPCLOSE(rtpsock);
@@ -239,7 +227,7 @@ int RTPUDPv6Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV6TRANS_CANTSETRTPTRANSMITBUF;
 	}
-	size = RTPUDPV6TRANS_RTCPRECEIVEBUFFER;
+	size = params->GetRTCPReceiveBuffer();
 	if (setsockopt(rtcpsock,SOL_SOCKET,SO_RCVBUF,(const char *)&size,sizeof(int)) != 0)
 	{
 		RTPCLOSE(rtpsock);
@@ -247,7 +235,7 @@ int RTPUDPv6Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV6TRANS_CANTSETRTCPRECEIVEBUF;
 	}
-	size = RTPUDPV6TRANS_RTCPTRANSMITBUFFER;
+	size = params->GetRTCPSendBuffer();
 	if (setsockopt(rtcpsock,SOL_SOCKET,SO_SNDBUF,(const char *)&size,sizeof(int)) != 0)
 	{
 		RTPCLOSE(rtpsock);
@@ -1298,7 +1286,7 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 			if (receivemode == RTPTransmitter::AcceptAll)
 				acceptdata = true;
 			else
-				acceptdata = ShouldAcceptData(srcaddr.sin6_addr,htons(srcaddr.sin6_port));
+				acceptdata = ShouldAcceptData(srcaddr.sin6_addr,ntohs(srcaddr.sin6_port));
 			
 			if (acceptdata)
 			{

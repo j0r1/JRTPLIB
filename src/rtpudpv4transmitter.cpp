@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -80,21 +80,8 @@
 
 #include <iostream>
 
-#ifndef _WIN32_WCE
-	#define RTPUDPV4TRANS_RTPRECEIVEBUFFER							32768
-	#define RTPUDPV4TRANS_RTCPRECEIVEBUFFER							32768
-	#define RTPUDPV4TRANS_RTPTRANSMITBUFFER							32768
-	#define RTPUDPV4TRANS_RTCPTRANSMITBUFFER						32768
-	#define RTPUDPV4TRANS_MAXPACKSIZE							65535
-	#define RTPUDPV4TRANS_IFREQBUFSIZE							8192
-#else
-	#define RTPUDPV4TRANS_RTPRECEIVEBUFFER							2048
-	#define RTPUDPV4TRANS_RTCPRECEIVEBUFFER							2048
-	#define RTPUDPV4TRANS_RTPTRANSMITBUFFER							2048
-	#define RTPUDPV4TRANS_RTCPTRANSMITBUFFER						2048
-	#define RTPUDPV4TRANS_MAXPACKSIZE							2048
-	#define RTPUDPV4TRANS_IFREQBUFSIZE							2048
-#endif // _WIN32_WCE
+#define RTPUDPV4TRANS_MAXPACKSIZE							65535
+#define RTPUDPV4TRANS_IFREQBUFSIZE							8192
 
 #define RTPUDPV4TRANS_IS_MCASTADDR(x)							(((x)&0xF0000000) == 0xE0000000)
 
@@ -216,7 +203,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 
 	// set socket buffer sizes
 	
-	size = RTPUDPV4TRANS_RTPRECEIVEBUFFER;
+	size = params->GetRTPReceiveBuffer();
 	if (setsockopt(rtpsock,SOL_SOCKET,SO_RCVBUF,(const char *)&size,sizeof(int)) != 0)
 	{
 		RTPCLOSE(rtpsock);
@@ -224,7 +211,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_CANTSETRTPRECEIVEBUF;
 	}
-	size = RTPUDPV4TRANS_RTPTRANSMITBUFFER;
+	size = params->GetRTPSendBuffer();
 	if (setsockopt(rtpsock,SOL_SOCKET,SO_SNDBUF,(const char *)&size,sizeof(int)) != 0)
 	{
 		RTPCLOSE(rtpsock);
@@ -232,7 +219,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_CANTSETRTPTRANSMITBUF;
 	}
-	size = RTPUDPV4TRANS_RTCPRECEIVEBUFFER;
+	size = params->GetRTCPReceiveBuffer();
 	if (setsockopt(rtcpsock,SOL_SOCKET,SO_RCVBUF,(const char *)&size,sizeof(int)) != 0)
 	{
 		RTPCLOSE(rtpsock);
@@ -240,7 +227,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_CANTSETRTCPRECEIVEBUF;
 	}
-	size = RTPUDPV4TRANS_RTCPTRANSMITBUFFER;
+	size = params->GetRTCPSendBuffer();
 	if (setsockopt(rtcpsock,SOL_SOCKET,SO_SNDBUF,(const char *)&size,sizeof(int)) != 0)
 	{
 		RTPCLOSE(rtpsock);
@@ -1283,7 +1270,7 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 			if (receivemode == RTPTransmitter::AcceptAll)
 				acceptdata = true;
 			else
-				acceptdata = ShouldAcceptData(ntohl(srcaddr.sin_addr.s_addr),htons(srcaddr.sin_port));
+				acceptdata = ShouldAcceptData(ntohl(srcaddr.sin_addr.s_addr),ntohs(srcaddr.sin_port));
 			
 			if (acceptdata)
 			{

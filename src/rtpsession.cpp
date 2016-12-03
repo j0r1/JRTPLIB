@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -78,8 +78,8 @@
 #endif // RTP_SUPPORT_THREAD
 
 RTPSession::RTPSession(RTPMemoryManager *mgr) 
-	: sources(*this,mgr),rtcpsched(sources),rtcpbuilder(sources,packetbuilder,mgr),RTPMemoryObject(mgr),
-	  packetbuilder(mgr),collisionlist(mgr)
+	: RTPMemoryObject(mgr),sources(*this,mgr),packetbuilder(mgr),rtcpsched(sources),rtcpbuilder(sources,packetbuilder,mgr),
+	  collisionlist(mgr)
 {
 	created = false;
 #if (defined(WIN32) || defined(_WIN32_WCE))

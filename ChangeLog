@@ -1,9 +1,19 @@
-							        June 20, 2006
+							     January 31, 2007
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.7.0 (January 2007)
+ 	* Send and receive socket buffer sizes can now be set in the
+	  transmission parameters. Thanks to Dmitry Shandyba
+	  (Dmitry.Shandyba@materialise.kiev.ua) for suggesting this.
+	* Changed a 'htons' call to a 'ntohs' call in ShouldAcceptData
+	  in both the IPv4 and IPv6 transmitters.
+	* Fixed bug in RTPIPv6Destination. Thanks to Yi-Huan Chan
+	  (yhchan@csie.nctu.edu.tw) and Franco Sinhori 
+	  (francosinhori@gmail.com) for bringing this to my attention.
 
  3.6.0 (June 2006)
 	* Added a constructor to the RTCPCompoundPacket class to be able

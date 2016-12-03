@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -65,7 +65,7 @@ void RTPPacket::Clear()
 	externalbuffer = false;
 }
 
-RTPPacket::RTPPacket(RTPRawPacket &rawpack,RTPMemoryManager *mgr) : receivetime(rawpack.GetReceiveTime()),RTPMemoryObject(mgr)
+RTPPacket::RTPPacket(RTPRawPacket &rawpack,RTPMemoryManager *mgr) : RTPMemoryObject(mgr),receivetime(rawpack.GetReceiveTime())
 {
 	Clear();
 	error = ParseRawPacket(rawpack);
@@ -74,7 +74,7 @@ RTPPacket::RTPPacket(RTPRawPacket &rawpack,RTPMemoryManager *mgr) : receivetime(
 RTPPacket::RTPPacket(uint8_t payloadtype,const void *payloaddata,size_t payloadlen,uint16_t seqnr,
 		  uint32_t timestamp,uint32_t ssrc,bool gotmarker,uint8_t numcsrcs,const uint32_t *csrcs,
 		  bool gotextension,uint16_t extensionid,uint16_t extensionlen_numwords,const void *extensiondata,
-		  size_t maxpacksize, RTPMemoryManager *mgr) : receivetime(0,0),RTPMemoryObject(mgr)
+		  size_t maxpacksize, RTPMemoryManager *mgr) : RTPMemoryObject(mgr),receivetime(0,0)
 {
 	Clear();
 	error = BuildPacket(payloadtype,payloaddata,payloadlen,seqnr,timestamp,ssrc,gotmarker,numcsrcs,
@@ -84,7 +84,7 @@ RTPPacket::RTPPacket(uint8_t payloadtype,const void *payloaddata,size_t payloadl
 RTPPacket::RTPPacket(uint8_t payloadtype,const void *payloaddata,size_t payloadlen,uint16_t seqnr,
 		  uint32_t timestamp,uint32_t ssrc,bool gotmarker,uint8_t numcsrcs,const uint32_t *csrcs,
 		  bool gotextension,uint16_t extensionid,uint16_t extensionlen_numwords,const void *extensiondata,
-		  void *buffer,size_t buffersize, RTPMemoryManager *mgr) : receivetime(0,0),RTPMemoryObject(mgr)
+		  void *buffer,size_t buffersize, RTPMemoryManager *mgr) : RTPMemoryObject(mgr),receivetime(0,0)
 {
 	Clear();
 	if (buffer == 0)

@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2006 Jori Liesenborgs
+  Copyright (c) 1999-2007 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -65,9 +65,9 @@ public:
 		rtpaddr.sin6_family = AF_INET6;
 		rtpaddr.sin6_port = htons(portbase);
 		rtpaddr.sin6_addr = ip;
-		rtpaddr.sin6_family = AF_INET6;
-		rtpaddr.sin6_port = htons(portbase+1);
-		rtpaddr.sin6_addr = ip;
+		rtcpaddr.sin6_family = AF_INET6;
+		rtcpaddr.sin6_port = htons(portbase+1);
+		rtcpaddr.sin6_addr = ip;
 	}
 	in6_addr GetIP() const								{ return rtpaddr.sin6_addr; }
 	bool operator==(const RTPIPv6Destination &src) const				

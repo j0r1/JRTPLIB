@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------------
-                                                                 June 20, 2006
+                                                              January 31, 2007
 
 
-                                   JRTPLIB (v3.6.0)
+                                   JRTPLIB (v3.7.0)
 
 
                       Developed at the The Expertise Centre for 
