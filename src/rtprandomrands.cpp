@@ -45,10 +45,6 @@
 	// Windows Server 2003, and later, so we'll do a run-time check to see if we can
 	// use it (it won't work on Windows 2000 SP4 for example).
 	#define RTP_SUPPORT_RANDS
-	#define QUOTEPROCNAME(x) #x
-	#ifndef RtlGenRandom
-		#define RtlGenRandom    SystemFunction036
-	#endif
 #endif
 
 #include "rtpdebug.h"
@@ -108,7 +104,7 @@ int RTPRandomRandS::Init()
 	HMODULE hAdvApi32 = LoadLibrary("ADVAPI32.DLL");
 	if(hAdvApi32 != NULL)
 	{
-		if(NULL != GetProcAddress( hAdvApi32, QUOTEPROCNAME( RtlGenRandom ) ))
+		if(NULL != GetProcAddress( hAdvApi32, "SystemFunction036" )) // RtlGenRandom
 		{
 			initialized = true;
 		}

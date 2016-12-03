@@ -1,9 +1,14 @@
-							   September 30, 2010
+							      October 8, 2010
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.8.1 (October 2010)
+ 	* Initialization of the RTPRandomRandS class didn't work as
+	  intended, causing the fall-back class RTPRandomRand48 always
+	  being used on the Win32 platform.
 
  3.8.0 (September 2010)
  	* Fixed bug in RTPSources implementation. An incorrect 

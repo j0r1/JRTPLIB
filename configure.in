@@ -1,5 +1,5 @@
 AC_INIT(configure.in)
-AM_INIT_AUTOMAKE(jrtplib,3.8.0)
+AM_INIT_AUTOMAKE(jrtplib,3.8.1)
 
 RTP_FILIO="// Don't have <sys/filio.h>"
 RTP_SOCKIO="// Don't have <sys/sockio.h>"

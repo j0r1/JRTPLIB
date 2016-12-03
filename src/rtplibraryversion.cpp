@@ -36,7 +36,7 @@
 
 RTPLibraryVersion RTPLibraryVersion::GetVersion()
 {
-	return RTPLibraryVersion(3,8,0);
+	return RTPLibraryVersion(3,8,1);
 }
 
 std::string RTPLibraryVersion::GetVersionString() const
