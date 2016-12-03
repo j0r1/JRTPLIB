@@ -65,15 +65,16 @@ int main(void)
 		{
 			do
 			{
-				RTPPacket *packet = session.GetNextPacket();
-				if (packet)
+				RTPPacket *packet;
+
+				while ((packet = session.GetNextPacket()) != 0)
 				{
 					std::cout << "Got packet with " 
 					          << "extended sequence number " 
 					          << packet->GetExtendedSequenceNumber() 
 					          << " from SSRC " << packet->GetSSRC() 
 					          << std::endl;
-					delete packet;
+					session.DeletePacket(packet);
 				}
 			} while (session.GotoNextSource());
 		}

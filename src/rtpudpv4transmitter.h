@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtpudpv4transmitter.h
+ */
+
 #ifndef RTPUDPV4TRANSMITTER_H
 
 #define RTPUDPV4TRANSMITTER_H
@@ -48,21 +52,47 @@
 #define RTPUDPV4TRANS_HASHSIZE									8317
 #define RTPUDPV4TRANS_DEFAULTPORTBASE								5000
 
+/** Parameters for the UDP over IPv4 transmitter. */
 class RTPUDPv4TransmissionParams : public RTPTransmissionParams
 {
 public:
 	RTPUDPv4TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	{ portbase = RTPUDPV4TRANS_DEFAULTPORTBASE; bindIP = 0; multicastTTL = 1; mcastifaceIP = 0; }
-	void SetBindIP(uint32_t ip)								{ bindIP = ip; }
-	void SetMulticastInterfaceIP(uint32_t ip)						{ mcastifaceIP = ip; }
+
+	/** Sets the IP address which is used to bind the sockets to \c ip. */
+	void SetBindIP(uint32_t ip)									{ bindIP = ip; }
+
+	/** Sets the multicast interface IP address. */
+	void SetMulticastInterfaceIP(uint32_t ip)					{ mcastifaceIP = ip; }
+
+	/** Sets the RTP portbase to \c pbase. This has to be an even number. */
 	void SetPortbase(uint16_t pbase)							{ portbase = pbase; }
-	void SetMulticastTTL(uint8_t mcastTTL)							{ multicastTTL = mcastTTL; }
-	void SetLocalIPList(std::list<uint32_t> &iplist)					{ localIPs = iplist; } 
-	void ClearLocalIPList()									{ localIPs.clear(); }
-	uint32_t GetBindIP() const								{ return bindIP; }
-	uint32_t GetMulticastInterfaceIP() const						{ return mcastifaceIP; }
+
+	/** Sets the multicast TTL to be used to \c mcastTTL. */
+	void SetMulticastTTL(uint8_t mcastTTL)						{ multicastTTL = mcastTTL; }
+
+	/** Passes a list of IP addresses which will be used as the local IP addresses. */
+	void SetLocalIPList(std::list<uint32_t> &iplist)			{ localIPs = iplist; } 
+
+	/** Clears the list of local IP addresses. 
+	 *  Clears the list of local IP addresses. An empty list will make the transmission 
+	 *  component itself determine the local IP addresses.
+	 */
+	void ClearLocalIPList()										{ localIPs.clear(); }
+
+	/** Returns the IP address which will be used to bind the sockets. */
+	uint32_t GetBindIP() const									{ return bindIP; }
+
+	/** Returns the multicast interface IP address. */
+	uint32_t GetMulticastInterfaceIP() const					{ return mcastifaceIP; }
+
+	/** Returns the RTP portbase which will be used (default is 5000). */
 	uint16_t GetPortbase() const								{ return portbase; }
-	uint8_t GetMulticastTTL() const							{ return multicastTTL; }
-	const std::list<uint32_t> &GetLocalIPList() const					{ return localIPs; }
+
+	/** Returns the multicast TTL which will be used (default is 1). */
+	uint8_t GetMulticastTTL() const								{ return multicastTTL; }
+
+	/** Returns the list of local IP addresses. */
+	const std::list<uint32_t> &GetLocalIPList() const			{ return localIPs; }
 private:
 	uint16_t portbase;
 	uint32_t bindIP, mcastifaceIP;
@@ -70,6 +100,7 @@ private:
 	uint8_t multicastTTL;
 };
 
+/** Additional information about the UDP over IPv4 transmitter. */
 class RTPUDPv4TransmissionInfo : public RTPTransmissionInfo
 {
 public:
@@ -78,16 +109,21 @@ public:
 #else
 	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
 #endif  // WIN32
-												{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
+															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
 
 	~RTPUDPv4TransmissionInfo()								{ }
-	std::list<uint32_t> GetLocalIPList() const						{ return localIPlist; }
+	
+	/** Returns the list of IPv4 addresses the transmitter considers to be the local IP addresses. */
+	std::list<uint32_t> GetLocalIPList() const				{ return localIPlist; }
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
+	/** Returns the socket descriptor used for receiving and transmitting RTP packets. */
 	int GetRTPSocket() const								{ return rtpsocket; }
+
+	/** Returns the socket descriptor used for receiving and transmitting RTCP packets. */
 	int GetRTCPSocket() const								{ return rtcpsocket; }
 #else
 	SOCKET GetRTPSocket() const								{ return rtpsocket; }
-	SOCKET GetRTCPSocket() const								{ return rtcpsocket; }
+	SOCKET GetRTCPSocket() const							{ return rtcpsocket; }
 #endif // WIN32
 private:
 	std::list<uint32_t> localIPlist;
@@ -101,7 +137,7 @@ private:
 class RTPUDPv4Trans_GetHashIndex_IPv4Dest
 {
 public:
-	static int GetIndex(const RTPIPv4Destination &d)							{ return d.GetIP_HBO()%RTPUDPV4TRANS_HASHSIZE; }
+	static int GetIndex(const RTPIPv4Destination &d)							{ return d.GetIP()%RTPUDPV4TRANS_HASHSIZE; }
 };
 
 class RTPUDPv4Trans_GetHashIndex_uint32_t
@@ -112,10 +148,17 @@ public:
 
 #define RTPUDPV4TRANS_HEADERSIZE						(20+8)
 	
+/** An UDP over IPv4 transmission component.
+ *  This class inherits the RTPTransmitter interface and implements a transmission component 
+ *  which uses UDP over IPv4 to send and receive RTP and RTCP data. The component's parameters 
+ *  are described by the class RTPUDPv4TransmissionParams. The functions which have an RTPAddress 
+ *  argument require an argument of RTPIPv4Address. The GetTransmissionInfo member function
+ *  returns an instance of type RTPUDPv4TransmissionInfo.
+ */
 class RTPUDPv4Transmitter : public RTPTransmitter
 {
 public:
-	RTPUDPv4Transmitter();
+	RTPUDPv4Transmitter(RTPMemoryManager *mgr);
 	~RTPUDPv4Transmitter();
 
 	int Init(bool treadsafe);
@@ -134,10 +177,6 @@ public:
 	int SendRTPData(const void *data,size_t len);	
 	int SendRTCPData(const void *data,size_t len);
 
-	void ResetPacketCount();
-	uint32_t GetNumRTPPacketsSent();
-	uint32_t GetNumRTCPPacketsSent();
-				
 	int AddDestination(const RTPAddress &addr);
 	int DeleteDestination(const RTPAddress &addr);
 	void ClearDestinations();
@@ -226,8 +265,6 @@ private:
 	JMutex mainmutex,waitmutex;
 	int threadsafe;
 #endif // RTP_SUPPORT_THREAD
-
-	uint32_t rtppackcount,rtcppackcount;
 };
 
 #endif // RTPUDPV4TRANSMITTER_H

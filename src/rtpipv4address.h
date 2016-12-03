@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtpipv4address.h
+ */
+
 #ifndef RTPIPV4ADDRESS_H
 
 #define RTPIPV4ADDRESS_H
@@ -38,18 +42,40 @@
 #include "rtpaddress.h"
 #include "rtptypes.h"
 
+class RTPMemoryManager;
+
+/** Represents an IPv4 IP address and port.
+ *  This class is used by the UDP over IPv4 transmission component.
+ *  When an RTPIPv4Address is used in one of the multicast functions of the transmitter, the port 
+ *  number is ignored. When an instance is used in one of the accept or ignore functions of the 
+ *  transmitter, a zero port number represents all ports for the specified IP address.
+ */
 class RTPIPv4Address : public RTPAddress
 {
 public:
-	RTPIPv4Address(uint32_t ip = 0, uint16_t port = 0):RTPAddress(IPv4Address) 		{ RTPIPv4Address::ip = ip; RTPIPv4Address::port = port; }
-	RTPIPv4Address(const uint8_t ip[4],uint16_t port = 0):RTPAddress(IPv4Address)		{ RTPIPv4Address::ip = (uint32_t)ip[3]; RTPIPv4Address::ip |= (((uint32_t)ip[2])<<8); RTPIPv4Address::ip |= (((uint32_t)ip[1])<<16); RTPIPv4Address::ip |= (((uint32_t)ip[0])<<24); RTPIPv4Address::port = port; }
-	~RTPIPv4Address()									{ }
-	void SetIP(uint32_t ip)								{ RTPIPv4Address::ip = ip; }
-	void SetIP(const uint8_t ip[4])							{ RTPIPv4Address::ip = (uint32_t)ip[3]; RTPIPv4Address::ip |= (((uint32_t)ip[2])<<8); RTPIPv4Address::ip |= (((uint32_t)ip[1])<<16); RTPIPv4Address::ip |= (((uint32_t)ip[0])<<24); }
-	void SetPort(uint16_t port)								{ RTPIPv4Address::port = port; }
-	uint32_t GetIP() const									{ return ip; }
-	uint16_t GetPort() const								{ return port; }
-	RTPAddress *CreateCopy() const;
+	/** Creates an instance with IP address \c ip and port number \c port (both are interpreted in host byte order). */
+	RTPIPv4Address(uint32_t ip = 0, uint16_t port = 0):RTPAddress(IPv4Address)						{ RTPIPv4Address::ip = ip; RTPIPv4Address::port = port; }
+	
+	/** Creates an instance with IP address \c ip and port number \c port (\c port is interpreted in host byte order). */
+	RTPIPv4Address(const uint8_t ip[4],uint16_t port = 0):RTPAddress(IPv4Address)					{ RTPIPv4Address::ip = (uint32_t)ip[3]; RTPIPv4Address::ip |= (((uint32_t)ip[2])<<8); RTPIPv4Address::ip |= (((uint32_t)ip[1])<<16); RTPIPv4Address::ip |= (((uint32_t)ip[0])<<24); RTPIPv4Address::port = port; }
+	~RTPIPv4Address()																				{ }
+
+	/** Sets the IP address for this instance to \c ip which is assumed to be in host byte order. */
+	void SetIP(uint32_t ip)																			{ RTPIPv4Address::ip = ip; }
+
+	/** Sets the IP address of this instance to \c ip. */
+	void SetIP(const uint8_t ip[4])																	{ RTPIPv4Address::ip = (uint32_t)ip[3]; RTPIPv4Address::ip |= (((uint32_t)ip[2])<<8); RTPIPv4Address::ip |= (((uint32_t)ip[1])<<16); RTPIPv4Address::ip |= (((uint32_t)ip[0])<<24); }
+
+	/** Sets the port number for this instance to \c port which is interpreted in host byte order. */
+	void SetPort(uint16_t port)																		{ RTPIPv4Address::port = port; }
+
+	/** Returns the IP address contained in this instance in host byte order. */
+	uint32_t GetIP() const																			{ return ip; }
+
+	/** Returns the port number of this instance in host byte order. */
+	uint16_t GetPort() const																		{ return port; }
+
+	RTPAddress *CreateCopy(RTPMemoryManager *mgr) const;
 	bool IsSameAddress(const RTPAddress *addr) const;
 	bool IsFromSameHost(const RTPAddress *addr) const;
 #ifdef RTPDEBUG

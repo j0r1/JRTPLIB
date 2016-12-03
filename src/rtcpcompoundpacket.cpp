@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -47,7 +47,7 @@
 
 #include "rtpdebug.h"
 
-RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack)
+RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack, RTPMemoryManager *mgr) : RTPMemoryObject(mgr)
 {
 	compoundpacket = 0;
 	compoundpacketlength = 0;
@@ -61,13 +61,50 @@ RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack)
 
 	uint8_t *data = rawpack.GetData();
 	size_t datalen = rawpack.GetDataLength();
+
+	error = ParseData(data,datalen);
+	if (error < 0)
+		return;
+	
+	compoundpacket = rawpack.GetData();
+	compoundpacketlength = rawpack.GetDataLength();
+	deletepacket = true;
+
+	rawpack.ZeroData();
+	
+	rtcppackit = rtcppacklist.begin();
+}
+
+RTCPCompoundPacket::RTCPCompoundPacket(uint8_t *packet, size_t packetlen, bool deletedata, RTPMemoryManager *mgr) : RTPMemoryObject(mgr)
+{
+	compoundpacket = 0;
+	compoundpacketlength = 0;
+	
+	error = ParseData(packet,packetlen);
+	if (error < 0)
+		return;
+	
+	compoundpacket = packet;
+	compoundpacketlength = packetlen;
+	deletepacket = deletedata;
+
+	rtcppackit = rtcppacklist.begin();
+}
+
+RTCPCompoundPacket::RTCPCompoundPacket(RTPMemoryManager *mgr) : RTPMemoryObject(mgr)
+{
+	compoundpacket = 0;
+	compoundpacketlength = 0;
+	error = 0;
+	deletepacket = true;
+}
+
+int RTCPCompoundPacket::ParseData(uint8_t *data, size_t datalen)
+{
 	bool first;
 	
 	if (datalen < sizeof(RTCPCommonHeader))
-	{
-		error = ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
-		return;
-	}
+		return ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
 
 	first = true;
 	
@@ -80,8 +117,7 @@ RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack)
 		if (rtcphdr->version != RTP_VERSION) // check version
 		{
 			ClearPacketList();
-			error = ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
-			return;
+			return ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
 		}
 		if (first)
 		{
@@ -91,8 +127,7 @@ RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack)
 			if ( ! (rtcphdr->packettype == RTP_RTCPTYPE_SR || rtcphdr->packettype == RTP_RTCPTYPE_RR))
 			{
 				ClearPacketList();
-				error = ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
-				return;
+				return ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
 			}
 		}
 		
@@ -103,8 +138,7 @@ RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack)
 		if (length > datalen) // invalid length field
 		{
 			ClearPacketList();
-			error = ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
-			return;
+			return ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
 		}
 		
 		if (rtcphdr->padding)
@@ -113,8 +147,7 @@ RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack)
 			if (length != datalen)
 			{
 				ClearPacketList();
-				error = ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
-				return; // not last packet
+				return ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
 			}
 		}
 
@@ -123,29 +156,28 @@ RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack)
 		switch (rtcphdr->packettype)
 		{
 		case RTP_RTCPTYPE_SR:
-			p = new RTCPSRPacket(data,length);
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPSRPACKET) RTCPSRPacket(data,length);
 			break;
 		case RTP_RTCPTYPE_RR:
-			p = new RTCPRRPacket(data,length);
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPRRPACKET) RTCPRRPacket(data,length);
 			break;
 		case RTP_RTCPTYPE_SDES:
-			p = new RTCPSDESPacket(data,length);
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPSDESPACKET) RTCPSDESPacket(data,length);
 			break;
 		case RTP_RTCPTYPE_BYE:
-			p = new RTCPBYEPacket(data,length);
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPBYEPACKET) RTCPBYEPacket(data,length);
 			break;
 		case RTP_RTCPTYPE_APP:
-			p = new RTCPAPPPacket(data,length);
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPAPPPACKET) RTCPAPPPacket(data,length);
 			break;
 		default:
-			p = new RTCPUnknownPacket(data,length);
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPUNKNOWNPACKET) RTCPUnknownPacket(data,length);
 		}
 
 		if (p == 0)
 		{
 			ClearPacketList();
-			error = ERR_RTP_OUTOFMEM;
-			return;
+			return ERR_RTP_OUTOFMEM;
 		}
 
 		rtcppacklist.push_back(p);
@@ -157,30 +189,16 @@ RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack)
 	if (datalen != 0) // some remaining bytes
 	{
 		ClearPacketList();
-		error = ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
-		return;
+		return ERR_RTP_RTCPCOMPOUND_INVALIDPACKET;
 	}
-
-	compoundpacket = rawpack.GetData();
-	compoundpacketlength = rawpack.GetDataLength();
-
-	rawpack.ZeroData();
-	
-	rtcppackit = rtcppacklist.begin();
-}
-
-RTCPCompoundPacket::RTCPCompoundPacket()
-{
-	compoundpacket = 0;
-	compoundpacketlength = 0;
-	error = 0;
+	return 0;
 }
 
 RTCPCompoundPacket::~RTCPCompoundPacket()
 {
 	ClearPacketList();
-	if (compoundpacket)
-		delete [] compoundpacket;
+	if (compoundpacket && deletepacket)
+		RTPDeleteByteArray(compoundpacket,GetMemoryManager());
 }
 
 void RTCPCompoundPacket::ClearPacketList()
@@ -188,8 +206,7 @@ void RTCPCompoundPacket::ClearPacketList()
 	std::list<RTCPPacket *>::const_iterator it;
 
 	for (it = rtcppacklist.begin() ; it != rtcppacklist.end() ; it++)
-		delete *it;
-
+		RTPDelete(*it,GetMemoryManager());
 	rtcppacklist.clear();
 	rtcppackit = rtcppacklist.begin();
 }

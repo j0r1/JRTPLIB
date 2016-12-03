@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtcpsdespacket.h
+ */
+
 #ifndef RTCPSDESPACKET_H
 
 #define RTCPSDESPACKET_H
@@ -44,31 +48,94 @@
 
 class RTCPCompoundPacket;
 
+/** Describes an RTCP source description packet. */
 class RTCPSDESPacket : public RTCPPacket
 {
 public:
-	enum ItemType { None,CNAME,NAME,EMAIL,PHONE,LOC,TOOL,NOTE,PRIV,Unknown };
+	/** Identifies the type of an SDES item. */
+	enum ItemType 
+	{ 
+		None,	/**< Used when the iteration over the items has finished. */
+		CNAME,	/**< Used for a CNAME (canonical name) item. */
+		NAME,	/**< Used for a NAME item. */
+		EMAIL,	/**< Used for an EMAIL item. */
+		PHONE,	/**< Used for a PHONE item. */
+		LOC,	/**< Used for a LOC (location) item. */
+		TOOL,	/**< Used for a TOOL item. */
+		NOTE,	/**< Used for a NOTE item. */
+		PRIV,	/**< Used for a PRIV item. */
+		Unknown /**< Used when there is an item present, but the type is not recognized. */
+	};
 	
+	/** Creates an instance based on the data in \c data with length \c datalen.
+	 *  Creates an instance based on the data in \c data with length \c datalen. Since the \c data pointer
+	 *  is referenced inside the class (no copy of the data is made) one must make sure that the memory it 
+	 *  points to is valid as long as the class instance exists.
+	 */
 	RTCPSDESPacket(uint8_t *data,size_t datalen);
 	~RTCPSDESPacket()							{ }
 
+	/** Returns the number of SDES chunks in the SDES packet.
+	 *  Returns the number of SDES chunks in the SDES packet. Each chunk has its own SSRC identifier. 
+	 */
 	int GetChunkCount() const;
 	
+	/** Starts the iteration over the chunks.
+	 *  Starts the iteration. If no SDES chunks are present, the function returns \c false. Otherwise,
+	 *  it returns \c true and sets the current chunk to be the first chunk.
+	 */
 	bool GotoFirstChunk();
+
+	/** Sets the current chunk to the next available chunk.
+	 *  Sets the current chunk to the next available chunk. If no next chunk is present, this function returns
+	 *  \c false, otherwise it returns \c true.
+	 */
 	bool GotoNextChunk();
 
+	/** Returns the SSRC identifier of the current chunk. */
 	uint32_t GetChunkSSRC() const;
+
+	/** Starts the iteration over the SDES items in the current chunk.
+	 *  Starts the iteration over the SDES items in the current chunk. If no SDES items are 
+	 *  present, the function returns \c false. Otherwise, the function sets the current item
+	 *  to be the first one and returns \c true.
+	 */
 	bool GotoFirstItem();
+
+	/** Advances the iteration to the next item in the current chunk. 
+	 *  If there's another item in the chunk, the current item is set to be the next one and the function
+	 *  returns \c true. Otherwise, the function returns \c false.
+	 */
 	bool GotoNextItem();
 
+	/** Returns the SDES item type of the current item in the current chunk. */
 	ItemType GetItemType() const;
+
+	/** Returns the item length of the current item in the current chunk. */
 	size_t GetItemLength() const;
+
+	/** Returns the item data of the current item in the current chunk. */
 	uint8_t *GetItemData();
 
 #ifdef RTP_SUPPORT_SDESPRIV
+	/** If the current item is an SDES PRIV item, this function returns the length of the 
+	 *  prefix string of the private item. 
+	 */
 	size_t GetPRIVPrefixLength() const;
+
+	/** If the current item is an SDES PRIV item, this function returns actual data of the
+	 *  prefix string.
+	 */
 	uint8_t *GetPRIVPrefixData();
+
+	/** If the current item is an SDES PRIV item, this function returns the length of the
+	 *  value string of the private item.
+	 */
 	size_t GetPRIVValueLength() const;
+
+	/** If the current item is an SDES PRIV item, this function returns actual value data of the
+	 *  private item.
+	 */
 	uint8_t *GetPRIVValueData();
 #endif // RTP_SUPPORT_SDESPRIV
 

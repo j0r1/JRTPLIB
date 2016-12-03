@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtpcollisionlist.h
+ */
+
 #ifndef RTPCOLLISIONLIST_H
 
 #define RTPCOLLISIONLIST_H
@@ -37,18 +41,34 @@
 #include "rtpconfig.h"
 #include "rtpaddress.h"
 #include "rtptimeutilities.h"
+#include "rtpmemoryobject.h"
 #include <list>
 
 class RTPAddress;
 
-class RTPCollisionList
+/** This class represents a list of addresses from which SSRC collisions were detected. */
+class RTPCollisionList : public RTPMemoryObject
 {
 public:
-	RTPCollisionList();
+	/** Constructs an instance, optionally installing a memory manager. */
+	RTPCollisionList(RTPMemoryManager *mgr = 0);
 	~RTPCollisionList()								{ Clear(); }
+	
+	/** Clears the list of addresses. */
 	void Clear();
+
+	/** Updates the entry for address \c addr to indicate that a collision was detected at time \c receivetime.
+	 *  Updates the entry for address \c addr to indicate that a collision was detected at time \c receivetime. 
+	 *  If the entry did not exist yet, the flag \c created is set to \c true, otherwise it is set to \c false.
+	 */
 	int UpdateAddress(const RTPAddress *addr,const RTPTime &receivetime,bool *created);
+
+	/** Returns \c true} if the address \c addr appears in the list. */
 	bool HasAddress(const RTPAddress *addr) const;
+
+	/** Assuming that the current time is given by \c currenttime, this function times out entries which 
+	 *  haven't been updated in the previous time interval specified by \c timeoutdelay.
+	 */
 	void Timeout(const RTPTime &currenttime,const RTPTime &timeoutdelay);
 #ifdef RTPDEBUG
 	void Dump();

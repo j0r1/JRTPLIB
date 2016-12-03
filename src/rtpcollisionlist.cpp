@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -32,13 +32,14 @@
 
 #include "rtpcollisionlist.h"
 #include "rtperrors.h"
+#include "rtpmemorymanager.h"
 #ifdef RTPDEBUG
 	#include <iostream>
 #endif // RTPDEBUG
 
 #include "rtpdebug.h"
 
-RTPCollisionList::RTPCollisionList()
+RTPCollisionList::RTPCollisionList(RTPMemoryManager *mgr) : RTPMemoryObject(mgr)
 {
 #if (defined(WIN32) || defined(_WIN32_WCE))
 	timeinit.Dummy();
@@ -50,7 +51,7 @@ void RTPCollisionList::Clear()
 	std::list<AddressAndTime>::iterator it;
 	
 	for (it = addresslist.begin() ; it != addresslist.end() ; it++)
-		delete (*it).addr;
+		RTPDelete((*it).addr,GetMemoryManager());
 	addresslist.clear();
 }
 
@@ -71,7 +72,7 @@ int RTPCollisionList::UpdateAddress(const RTPAddress *addr,const RTPTime &receiv
 		}
 	}
 
-	RTPAddress *newaddr = addr->CreateCopy();
+	RTPAddress *newaddr = addr->CreateCopy(GetMemoryManager());
 	if (newaddr == 0)
 		return ERR_RTP_OUTOFMEM;
 	
@@ -104,7 +105,7 @@ void RTPCollisionList::Timeout(const RTPTime &currenttime,const RTPTime &timeout
 	{
 		if ((*it).recvtime < checktime) // timeout
 		{
-			delete (*it).addr;
+			RTPDelete((*it).addr,GetMemoryManager());
 			it = addresslist.erase(it);	
 		}
 		else

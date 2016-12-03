@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -31,6 +31,7 @@
 */
 
 #include "rtpipv4address.h"
+#include "rtpmemorymanager.h"
 #ifdef RTPDEBUG
 	#include "rtpdefines.h" 
 	#include <stdio.h>
@@ -64,9 +65,9 @@ bool RTPIPv4Address::IsFromSameHost(const RTPAddress *addr) const
 	return false;
 }
 
-RTPAddress *RTPIPv4Address::CreateCopy() const
+RTPAddress *RTPIPv4Address::CreateCopy(RTPMemoryManager *mgr) const
 {
-	RTPIPv4Address *a = new RTPIPv4Address(ip,port);
+	RTPIPv4Address *a = RTPNew(mgr,RTPMEM_TYPE_CLASS_RTPADDRESS) RTPIPv4Address(ip,port);
 	return a;
 }
 

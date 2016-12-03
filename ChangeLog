@@ -1,9 +1,29 @@
-							       March 26, 2006
+							        June 20, 2006
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.6.0 (June 2006)
+	* Added a constructor to the RTCPCompoundPacket class to be able
+	  to parse a compound packet out of a byte array (and not only
+	  out of an RTPRawPacket instance).
+	* Added a method to RTPSession to send RTCP APP packets. Thanks
+	  to Herman Bastiaens (herman.bastiaens@student.uhasselt.be)
+	  for supplying the patch.
+	* Fixed Win32 rand_s bug. Thanks to Jeremy Noring
+	  (jnoring@wilife.com) for supplying the patch.
+	* Removed the GetNumRTPPacketsSent and GetNumRTCPPacketsSent
+	  functions in the transmitter. The counts were only used to
+	  check if packets had been sent. Now, a flag in RTPSession is
+	  used for this purpose.
+	* Added memory management support.
+	* Added a member function to RTPSession which allows passing an
+	  RTPTransmitter instance. 
+	* The instances in the destination lists now store struct
+	  sockaddr variables. This makes sending data to each destination
+	  more efficient.
 
  3.5.2 (March 2006)
  	* Fixed bug in the random number functions which are used with

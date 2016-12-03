@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -42,7 +42,7 @@
 
 #include "rtpdebug.h"
 
-RTCPCompoundPacketBuilder::RTCPCompoundPacketBuilder()
+RTCPCompoundPacketBuilder::RTCPCompoundPacketBuilder(RTPMemoryManager *mgr) : RTCPCompoundPacket(mgr), report(mgr), sdes(mgr)
 {
 	byesize = 0;
 	appsize = 0;
@@ -66,12 +66,15 @@ void RTCPCompoundPacketBuilder::ClearBuildBuffers()
 
 	std::list<Buffer>::const_iterator it;
 	for (it = byepackets.begin() ; it != byepackets.end() ; it++)
+	{
 		if ((*it).packetdata)
-			delete [] (*it).packetdata;
-	
+			RTPDeleteByteArray((*it).packetdata,GetMemoryManager());
+	}
 	for (it = apppackets.begin() ; it != apppackets.end() ; it++)
+	{
 		if ((*it).packetdata)
-			delete [] (*it).packetdata;
+			RTPDeleteByteArray((*it).packetdata,GetMemoryManager());
+	}
 
 	byepackets.clear();
 	apppackets.clear();
@@ -192,7 +195,7 @@ int RTCPCompoundPacketBuilder::AddReportBlock(uint32_t ssrc,uint8_t fractionlost
 	if ((totalothersize+reportsizewithextrablock) > maximumpacketsize)
 		return ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT;
 
-	uint8_t *buf = new uint8_t[sizeof(RTCPReceiverReport)];
+	uint8_t *buf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPRECEIVERREPORT) uint8_t[sizeof(RTCPReceiverReport)];
 	if (buf == 0)
 		return ERR_RTP_OUTOFMEM;
 	
@@ -277,7 +280,7 @@ int RTCPCompoundPacketBuilder::AddSDESNormalItem(RTCPSDESPacket::ItemType t,cons
 	uint8_t *buf;
 	size_t len;
 
-	buf = new uint8_t[sizeof(RTCPSDESHeader)+(size_t)itemlength];
+	buf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_BUFFER_RTCPSDESBLOCK) uint8_t[sizeof(RTCPSDESHeader)+(size_t)itemlength];
 	if (buf == 0)
 		return ERR_RTP_OUTOFMEM;
 	len = sizeof(RTCPSDESHeader)+(size_t)itemlength;
@@ -315,7 +318,7 @@ int RTCPCompoundPacketBuilder::AddSDESPrivateItem(const void *prefixdata,uint8_t
 	uint8_t *buf;
 	size_t len;
 
-	buf = new uint8_t[sizeof(RTCPSDESHeader)+itemlength];
+	buf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_BUFFER_RTCPSDESBLOCK) uint8_t[sizeof(RTCPSDESHeader)+itemlength];
 	if (buf == 0)
 		return ERR_RTP_OUTOFMEM;
 	len = sizeof(RTCPSDESHeader)+(size_t)itemlength;
@@ -368,7 +371,7 @@ int RTCPCompoundPacketBuilder::AddBYEPacket(uint32_t *ssrcs,uint8_t numssrcs,con
 	uint8_t *buf;
 	size_t numwords;
 	
-	buf = new uint8_t[packsize];
+	buf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_BUFFER_RTCPBYEPACKET) uint8_t[packsize];
 	if (buf == 0)
 		return ERR_RTP_OUTOFMEM;
 
@@ -426,7 +429,7 @@ int RTCPCompoundPacketBuilder::AddAPPPacket(uint8_t subtype,uint32_t ssrc,const 
 
 	uint8_t *buf;
 	
-	buf = new uint8_t[packsize];
+	buf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_BUFFER_RTCPAPPPACKET) uint8_t[packsize];
 	if (buf == 0)
 		return ERR_RTP_OUTOFMEM;
 
@@ -470,7 +473,7 @@ int RTCPCompoundPacketBuilder::EndBuild()
 	
 	if (!external)
 	{
-		buf = new uint8_t[len];
+		buf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_BUFFER_RTCPCOMPOUNDPACKET) uint8_t[len];
 		if (buf == 0)
 			return ERR_RTP_OUTOFMEM;
 	}
@@ -525,13 +528,13 @@ int RTCPCompoundPacketBuilder::EndBuild()
 
 			// add entry in parent's list
 			if (hdr->packettype == RTP_RTCPTYPE_SR)
-				p = new RTCPSRPacket(curbuf,offset);
+				p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPSRPACKET) RTCPSRPacket(curbuf,offset);
 			else
-				p = new RTCPRRPacket(curbuf,offset);
+				p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPRRPACKET) RTCPRRPacket(curbuf,offset);
 			if (p == 0)
 			{
 				if (!external)
-					delete [] buf;
+					RTPDeleteByteArray(buf,GetMemoryManager());
 				ClearPacketList();
 				return ERR_RTP_OUTOFMEM;
 			}
@@ -601,11 +604,11 @@ int RTCPCompoundPacketBuilder::EndBuild()
 			hdr->count = sourcecount;
 			hdr->length = htons((uint16_t)(numwords-1));
 
-			p = new RTCPSDESPacket(curbuf,offset);
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPSDESPACKET) RTCPSDESPacket(curbuf,offset);
 			if (p == 0)
 			{
 				if (!external)
-					delete [] buf;
+					RTPDeleteByteArray(buf,GetMemoryManager());
 				ClearPacketList();
 				return ERR_RTP_OUTOFMEM;
 			}
@@ -626,11 +629,11 @@ int RTCPCompoundPacketBuilder::EndBuild()
 		{
 			memcpy(curbuf,(*it).packetdata,(*it).packetlength);
 			
-			p = new RTCPAPPPacket(curbuf,(*it).packetlength);
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPAPPPACKET) RTCPAPPPacket(curbuf,(*it).packetlength);
 			if (p == 0)
 			{
 				if (!external)
-					delete [] buf;
+					RTPDeleteByteArray(buf,GetMemoryManager());
 				ClearPacketList();
 				return ERR_RTP_OUTOFMEM;
 			}
@@ -649,11 +652,11 @@ int RTCPCompoundPacketBuilder::EndBuild()
 		{
 			memcpy(curbuf,(*it).packetdata,(*it).packetlength);
 			
-			p = new RTCPBYEPacket(curbuf,(*it).packetlength);
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPBYEPACKET) RTCPBYEPacket(curbuf,(*it).packetlength);
 			if (p == 0)
 			{
 				if (!external)
-					delete [] buf;
+					RTPDeleteByteArray(buf,GetMemoryManager());
 				ClearPacketList();
 				return ERR_RTP_OUTOFMEM;
 			}

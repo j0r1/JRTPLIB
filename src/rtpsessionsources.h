@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtpsessionsources.h
+ */
+
 #ifndef RTPSESSIONSOURCES_H
 
 #define RTPSESSIONSOURCES_H
@@ -42,10 +46,11 @@ class RTPSession;
 class RTPSessionSources : public RTPSources
 {
 public:
-	RTPSessionSources(RTPSession &sess) : rtpsession(sess) 					{ owncollision = false; }
-	~RTPSessionSources()									{ }
-	void ClearOwnCollisionFlag()								{ owncollision = false; }
-	bool DetectedOwnCollision() const							{ return owncollision; }
+	RTPSessionSources(RTPSession &sess,RTPMemoryManager *mgr) : rtpsession(sess),RTPSources(RTPSources::ProbationStore,mgr)	
+													{ owncollision = false; }
+	~RTPSessionSources()										{ }
+	void ClearOwnCollisionFlag()									{ owncollision = false; }
+	bool DetectedOwnCollision() const								{ return owncollision; }
 private:
 	void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime,
 	                 const RTPAddress *senderaddress);

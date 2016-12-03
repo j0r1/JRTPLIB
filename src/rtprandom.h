@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtprandom.h
+ */
+
 #ifndef RTPRANDOM_H
 
 #define RTPRANDOM_H
@@ -38,15 +42,24 @@
 #include "rtptypes.h"
 #include <stdlib.h>
 
+/** The RTPRandom class can be used to generate random numbers. */
 class RTPRandom
 {
 public:
 	RTPRandom();
 	~RTPRandom();
+
+	/** Returns a random eight bit value. */
 	uint8_t GetRandom8();
+
+	/** Returns a random sixteen bit value. */
 	uint16_t GetRandom16();
+
+	/** Returns a random thirty-two bit value. */
 	uint32_t GetRandom32();
-	double GetRandomDouble(); // returns random value between 0.0 and 1.0
+
+	/** Returns a random number between $0.0$ and $1.0$. */
+	double GetRandomDouble();
 private:
 #if defined(RTP_SUPPORT_GNUDRAND)
 	struct drand48_data drandbuffer;

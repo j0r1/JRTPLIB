@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtcppacket.h
+ */
+
 #ifndef RTCPPACKET_H
 
 #define RTCPPACKET_H
@@ -39,20 +43,36 @@
 
 class RTCPCompoundPacket;
 
+/** Base class for specific types of RTCP packets. */
 class RTCPPacket 
 {
 public:
-	enum PacketType { SR,RR,SDES,BYE,APP,Unknown };
+	/** Identifies the specific kind of RTCP packet. */
+	enum PacketType 
+	{ 
+			SR,		/**< An RTCP sender report. */
+			RR,		/**< An RTCP receiver report. */
+			SDES,	/**< An RTCP source description packet. */
+			BYE,	/**< An RTCP bye packet. */
+			APP,	/**< An RTCP packet containing application specific data. */
+			Unknown	/**< The type of RTCP packet was not recognized. */
+	};
 protected:
 	RTCPPacket(PacketType t,uint8_t *d,size_t dlen) : data(d),datalen(dlen),packettype(t) { knownformat = false; }
 public:
 	virtual ~RTCPPacket()								{ }	
 
+	/** Returns \c true if the subclass was able to interpret the data and \c false otherwise. */
 	bool IsKnownFormat() const							{ return knownformat; }
 	
-	PacketType GetPacketType() const						{ return packettype; }
+	/** Returns the actual packet type which the subclass implements. */
+	PacketType GetPacketType() const					{ return packettype; }
+
+	/** Returns a pointer to the data of this RTCP packet. */
 	uint8_t *GetPacketData()							{ return data; }
-	size_t GetPacketLength() const							{ return datalen; }
+
+	/** Returns the length of this RTCP packet. */
+	size_t GetPacketLength() const						{ return datalen; }
 
 #ifdef RTPDEBUG
 	virtual void Dump();

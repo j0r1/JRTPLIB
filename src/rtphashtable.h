@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -34,7 +34,12 @@
 
 #define RTPHASHTABLE_H
 
+/**
+ * \file rtphashtable.h
+ */
+
 #include "rtperrors.h"
+#include "rtpmemoryobject.h"
 
 #ifdef RTPDEBUG
 #include <iostream>
@@ -42,10 +47,10 @@
 
 //template<class Element,int GetIndex(const Element &k),int hashsize>
 template<class Element,class GetIndex,int hashsize>
-class RTPHashTable
+class RTPHashTable : public RTPMemoryObject
 {
 public:
-	RTPHashTable();
+	RTPHashTable(RTPMemoryManager *mgr = 0, int memtype = RTPMEM_TYPE_OTHER);
 	~RTPHashTable()						{ Clear(); }
 
 	void GotoFirstElement()					{ curhashelem = firsthashelem; }
@@ -86,15 +91,21 @@ private:
 	HashElement *table[hashsize];
 	HashElement *firsthashelem,*lasthashelem;
 	HashElement *curhashelem;
+#ifdef RTP_SUPPORT_MEMORYMANAGEMENT
+	int memorytype;
+#endif // RTP_SUPPORT_MEMORYMANAGEMENT
 };
 
 template<class Element,class GetIndex,int hashsize>
-inline RTPHashTable<Element,GetIndex,hashsize>::RTPHashTable()
+inline RTPHashTable<Element,GetIndex,hashsize>::RTPHashTable(RTPMemoryManager *mgr,int memtype) : RTPMemoryObject(mgr)
 {
 	for (int i = 0 ; i < hashsize ; i++)
 		table[i] = 0;
 	firsthashelem = 0;
 	lasthashelem = 0;
+#ifdef RTP_SUPPORT_MEMORYMANAGEMENT
+	memorytype = memtype;
+#endif // RTP_SUPPORT_MEMORYMANAGEMENT
 }
 
 template<class Element,class GetIndex,int hashsize>
@@ -145,7 +156,7 @@ inline int RTPHashTable<Element,GetIndex,hashsize>::DeleteCurrentElement()
 		}
 		
 		// finally, with everything being relinked, we can delete curhashelem
-		delete curhashelem;
+		RTPDelete(curhashelem,GetMemoryManager());
 		curhashelem = tmp2; // Set to next element in the list
 	}
 	else
@@ -226,7 +237,7 @@ inline void RTPHashTable<Element,GetIndex,hashsize>::Clear()
 	while (tmp1 != 0)
 	{
 		tmp2 = tmp1->listnext;
-		delete tmp1;
+		RTPDelete(tmp1,GetMemoryManager());
 		tmp1 = tmp2;
 	}
 	firsthashelem = 0;
@@ -258,7 +269,7 @@ inline int RTPHashTable<Element,GetIndex,hashsize>::AddElement(const Element &el
 	
 	// Okay, the key doesn't exist, so we can add the new element in the hash table
 	
-	newelem = new HashElement(elem,index);
+	newelem = RTPNew(GetMemoryManager(),memorytype) HashElement(elem,index);
 	if (newelem == 0)
 		return ERR_RTP_OUTOFMEM;
 

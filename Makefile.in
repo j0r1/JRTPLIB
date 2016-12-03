@@ -133,9 +133,11 @@ RTP_SUPPORT_INLINETEMPLATEPARAM = @RTP_SUPPORT_INLINETEMPLATEPARAM@
 RTP_SUPPORT_IPV4MULTICAST = @RTP_SUPPORT_IPV4MULTICAST@
 RTP_SUPPORT_IPV6 = @RTP_SUPPORT_IPV6@
 RTP_SUPPORT_IPV6MULTICAST = @RTP_SUPPORT_IPV6MULTICAST@
+RTP_SUPPORT_MEMORYMANAGEMENT = @RTP_SUPPORT_MEMORYMANAGEMENT@
 RTP_SUPPORT_PROBATION = @RTP_SUPPORT_PROBATION@
 RTP_SUPPORT_RANDR = @RTP_SUPPORT_RANDR@
 RTP_SUPPORT_SDESPRIV = @RTP_SUPPORT_SDESPRIV@
+RTP_SUPPORT_SENDAPP = @RTP_SUPPORT_SENDAPP@
 RTP_SUPPORT_THREAD = @RTP_SUPPORT_THREAD@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -186,7 +188,8 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = src tools doc examples pkgconfig
 EXTRA_DIST = LICENSE.MIT ChangeLog README.TXT jrtplib.dsw jrtplib.dsp jrtplib.vcproj \
-	     jrtplib.sln jrtplib_wce.vcproj jrtplib_wce.sln
+	     jrtplib.sln jrtplib_wce.vcproj jrtplib_wce.sln jrtplib_wce5.sln \
+	     jrtplib_wce5.vcproj Doxyfile
 
 all: all-recursive
 
@@ -622,6 +625,8 @@ dist-hook: distclean
 	chmod a-x $(distdir)/jrtplib.sln
 	chmod a-x $(distdir)/jrtplib_wce.vcproj
 	chmod a-x $(distdir)/jrtplib_wce.sln
+	chmod a-x $(distdir)/jrtplib_wce5.vcproj
+	chmod a-x $(distdir)/jrtplib_wce5.sln
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -15,7 +15,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2004 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
@@ -125,7 +125,7 @@ private:
 class RTPFakeTrans_GetHashIndex_IPv4Dest
 {
 public:
-	static int GetIndex(const RTPIPv4Destination &d)					{ return d.GetIP_HBO()%RTPFAKETRANS_HASHSIZE; }
+	static int GetIndex(const RTPIPv4Destination &d)					{ return d.GetIP()%RTPFAKETRANS_HASHSIZE; }
 };
 
 class RTPFakeTrans_GetHashIndex_uint32_t
@@ -139,7 +139,7 @@ public:
 class RTPFakeTransmitter : public RTPTransmitter
 {
 public:
-	RTPFakeTransmitter();
+	RTPFakeTransmitter(RTPMemoryManager *mgr);
 	~RTPFakeTransmitter();
 
 	int Init(bool treadsafe);
@@ -158,10 +158,6 @@ public:
 	int SendRTPData(const void *data,size_t len);	
 	int SendRTCPData(const void *data,size_t len);
 
-	void ResetPacketCount();
-	uint32_t GetNumRTPPacketsSent();
-	uint32_t GetNumRTCPPacketsSent();
-				
 	int AddDestination(const RTPAddress &addr);
 	int DeleteDestination(const RTPAddress &addr);
 	void ClearDestinations();
@@ -239,8 +235,6 @@ private:
 	JMutex mainmutex,waitmutex;
 	int threadsafe;
 #endif // RTP_SUPPORT_THREAD
-
-	uint32_t rtppackcount,rtcppackcount;
 };
 
 #endif // RTPFakeTRANSMITTER_H

@@ -150,8 +150,7 @@ int main(void)
 #endif // WIN32
 	
 	MyRTPSession sess;
-	uint16_t portbase,destport;
-	uint32_t destip;
+	uint16_t portbase;
 	std::string ipstr;
 	int status,i,num;
 
@@ -199,7 +198,7 @@ int main(void)
 					
 					// we don't longer need the packet, so
 					// we'll delete it
-					delete pack;
+					sess.DeletePacket(pack);
 				}
 			} while (sess.GotoNextSourceWithData());
 		}

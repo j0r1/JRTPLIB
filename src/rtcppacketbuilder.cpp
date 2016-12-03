@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -36,11 +36,12 @@
 #include "rtcpscheduler.h"
 #include "rtpsourcedata.h"
 #include "rtcpcompoundpacketbuilder.h"
+#include "rtpmemorymanager.h"
 
 #include "rtpdebug.h"
 
-RTCPPacketBuilder::RTCPPacketBuilder(RTPSources &s,RTPPacketBuilder &pb)
-	: sources(s),rtppacketbuilder(pb),prevbuildtime(0,0),transmissiondelay(0,0)
+RTCPPacketBuilder::RTCPPacketBuilder(RTPSources &s,RTPPacketBuilder &pb,RTPMemoryManager *mgr)
+	: RTPMemoryObject(mgr),sources(s),rtppacketbuilder(pb),prevbuildtime(0,0),transmissiondelay(0,0),ownsdesinfo(mgr)
 {
 	init = false;
 #if (defined(WIN32) || defined(_WIN32_WCE))
@@ -111,13 +112,13 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 	
 	*pack = 0;
 	
-	rtcpcomppack = new RTCPCompoundPacketBuilder();
+	rtcpcomppack = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPCOMPOUNDPACKETBUILDER) RTCPCompoundPacketBuilder(GetMemoryManager());
 	if (rtcpcomppack == 0)
 		return ERR_RTP_OUTOFMEM;
 	
 	if ((status = rtcpcomppack->InitBuild(maxpacketsize)) < 0)
 	{
-		delete rtcpcomppack;
+		RTPDelete(rtcpcomppack,GetMemoryManager());
 		return status;
 	}
 	
@@ -146,7 +147,7 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 
 		if ((status = rtcpcomppack->StartSenderReport(ssrc,ntptimestamp,rtptimestamp,packcount,octetcount)) < 0)
 		{
-			delete rtcpcomppack;
+			RTPDelete(rtcpcomppack,GetMemoryManager());
 			if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
 				return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 			return status;
@@ -156,7 +157,7 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 	{
 		if ((status = rtcpcomppack->StartReceiverReport(ssrc)) < 0)
 		{
-			delete rtcpcomppack;
+			RTPDelete(rtcpcomppack,GetMemoryManager());
 			if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
 				return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 			return status;
@@ -170,14 +171,14 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 
 	if ((status = rtcpcomppack->AddSDESSource(ssrc)) < 0)
 	{
-		delete rtcpcomppack;
+		RTPDelete(rtcpcomppack,GetMemoryManager());
 		if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
 			return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 		return status;
 	}
 	if ((status = rtcpcomppack->AddSDESNormalItem(RTCPSDESPacket::CNAME,owncname,owncnamelen)) < 0)
 	{
-		delete rtcpcomppack;
+		RTPDelete(rtcpcomppack,GetMemoryManager());
 		if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
 			return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 		return status;
@@ -190,13 +191,13 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 
 		if ((status = FillInReportBlocks(rtcpcomppack,curtime,sources.GetTotalCount(),&full,&added,&skipped,&atendoflist)) < 0)
 		{
-			delete rtcpcomppack;
+			RTPDelete(rtcpcomppack,GetMemoryManager());
 			return status;
 		}
 		
 		if (full && added == 0)
 		{
-			delete rtcpcomppack;
+			RTPDelete(rtcpcomppack,GetMemoryManager());
 			return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 		}
 	
@@ -225,7 +226,7 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 			
 			if ((status = FillInSDES(rtcpcomppack,&full,&processedall,&itemcount)) < 0)
 			{
-				delete rtcpcomppack;
+				RTPDelete(rtcpcomppack,GetMemoryManager());
 				return status;
 			}
 
@@ -243,7 +244,7 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 					 
 					if ((status = FillInReportBlocks(rtcpcomppack,curtime,skipped,&full,&added,&skipped,&atendoflist)) < 0)
 					{
-						delete rtcpcomppack;
+						RTPDelete(rtcpcomppack,GetMemoryManager());
 						return status;
 					}
 				}
@@ -258,13 +259,13 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 			
 		if ((status = FillInSDES(rtcpcomppack,&full,&processedall,&itemcount)) < 0)
 		{
-			delete rtcpcomppack;
+			RTPDelete(rtcpcomppack,GetMemoryManager());
 			return status;
 		}
 
 		if (itemcount == 0) // Big problem: packet size is too small to let any progress happen
 		{
-			delete rtcpcomppack;
+			RTPDelete(rtcpcomppack,GetMemoryManager());
 			return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 		}
 
@@ -282,7 +283,7 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 
 				if ((status = FillInReportBlocks(rtcpcomppack,curtime,sources.GetTotalCount(),&full,&added,&skipped,&atendoflist)) < 0)
 				{
-					delete rtcpcomppack;
+					RTPDelete(rtcpcomppack,GetMemoryManager());
 					return status;
 				}
 				if (atendoflist) // filled in all possible sources
@@ -293,7 +294,7 @@ int RTCPPacketBuilder::BuildNextPacket(RTCPCompoundPacket **pack)
 		
 	if ((status = rtcpcomppack->EndBuild()) < 0)
 	{
-		delete rtcpcomppack;
+		RTPDelete(rtcpcomppack,GetMemoryManager());
 		return status;
 	}
 
@@ -634,13 +635,13 @@ int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reas
 	
 	*pack = 0;
 	
-	rtcpcomppack = new RTCPCompoundPacketBuilder();
+	rtcpcomppack = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPCOMPOUNDPACKETBUILDER) RTCPCompoundPacketBuilder(GetMemoryManager());
 	if (rtcpcomppack == 0)
 		return ERR_RTP_OUTOFMEM;
 	
 	if ((status = rtcpcomppack->InitBuild(maxpacketsize)) < 0)
 	{
-		delete rtcpcomppack;
+		RTPDelete(rtcpcomppack,GetMemoryManager());
 		return status;
 	}
 	
@@ -674,7 +675,7 @@ int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reas
 
 		if ((status = rtcpcomppack->StartSenderReport(ssrc,ntptimestamp,rtptimestamp,packcount,octetcount)) < 0)
 		{
-			delete rtcpcomppack;
+			RTPDelete(rtcpcomppack,GetMemoryManager());
 			if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
 				return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 			return status;
@@ -684,7 +685,7 @@ int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reas
 	{
 		if ((status = rtcpcomppack->StartReceiverReport(ssrc)) < 0)
 		{
-			delete rtcpcomppack;
+			RTPDelete(rtcpcomppack,GetMemoryManager());
 			if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
 				return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 			return status;
@@ -698,14 +699,14 @@ int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reas
 
 	if ((status = rtcpcomppack->AddSDESSource(ssrc)) < 0)
 	{
-		delete rtcpcomppack;
+		RTPDelete(rtcpcomppack,GetMemoryManager());
 		if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
 			return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 		return status;
 	}
 	if ((status = rtcpcomppack->AddSDESNormalItem(RTCPSDESPacket::CNAME,owncname,owncnamelen)) < 0)
 	{
-		delete rtcpcomppack;
+		RTPDelete(rtcpcomppack,GetMemoryManager());
 		if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
 			return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 		return status;
@@ -717,7 +718,7 @@ int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reas
 	
 	if ((status = rtcpcomppack->AddBYEPacket(ssrcs,1,(const uint8_t *)reason,reasonlength)) < 0)
 	{
-		delete rtcpcomppack;
+		RTPDelete(rtcpcomppack,GetMemoryManager());
 		if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
 			return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
 		return status;
@@ -725,7 +726,7 @@ int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reas
 	
 	if ((status = rtcpcomppack->EndBuild()) < 0)
 	{
-		delete rtcpcomppack;
+		RTPDelete(rtcpcomppack,GetMemoryManager());
 		return status;
 	}
 

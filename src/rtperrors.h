@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,12 +30,17 @@
 
 */
 
+/**
+ * \file rtperrors.h
+ */
+
 #ifndef RTPERRORS_H
 
 #define RTPERRORS_H
 
 #include <string>
 
+/** Returns a string describing the error code \c errcode. */
 std::string RTPGetErrorString(int errcode);
 
 #define ERR_RTP_OUTOFMEM					-1

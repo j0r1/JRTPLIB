@@ -15,7 +15,7 @@ libjrtp_la_SOURCES = rtpdebug.cpp rtpsession.cpp rtpconfig_win.h \
 		     rtpcollisionlist.cpp rtpipv6address.cpp \
 		     rtpudpv6transmitter.cpp rtptimeutilities.cpp \
 		     extratransmitters/rtpfaketransmitter.cpp
-libjrtp_la_LDFLAGS = -release 3.5.2 @RTP_LINKLIBS@
+libjrtp_la_LDFLAGS = -release 3.6.0 @RTP_LINKLIBS@
 libjrtpinclude_HEADERS = rtcpapppacket.h rtcpbyepacket.h rtcpcompoundpacket.h \
 			 rtcpcompoundpacketbuilder.h rtcppacket.h rtcppacketbuilder.h \
 			 rtcprrpacket.h rtcpscheduler.h rtcpsdesinfo.h rtcpsdespacket.h \
@@ -29,6 +29,7 @@ libjrtpinclude_HEADERS = rtcpapppacket.h rtcpbyepacket.h rtcpcompoundpacket.h \
 			 rtptypes_win.h rtpudpv4transmitter.h rtpsessionsources.h \
 			 rtpcollisionlist.h rtpipv6address.h rtpipv6destination.h \
 			 rtpudpv6transmitter.h rtptypes.h rtptypes_unix.h \
+			 rtpmemorymanager.h rtpmemoryobject.h \
 			 extratransmitters/rtpfaketransmitter.h
 EXTRA_DIST = rtpconfig_unix.h.in
 libjrtpincludedir = ${includedir}/jrtplib3

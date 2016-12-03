@@ -1,6 +1,6 @@
 /*
-   Here's a small IPv4 example: it asks for a portbase and a destination and 
-   starts sending packets to that destination.
+   This is a modified version of example1.cpp to illustrate the use of a memory
+   manager.
 */
 
 #include "rtpsession.h"
@@ -9,6 +9,7 @@
 #include "rtpipv4address.h"
 #include "rtpsessionparams.h"
 #include "rtperrors.h"
+#include "rtpmemorymanager.h"
 #ifndef WIN32
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
@@ -38,6 +39,78 @@ void checkerror(int rtperr)
 // The main routine
 //
 
+#ifdef RTP_SUPPORT_THREAD
+
+class MyMemoryManager : public RTPMemoryManager
+{
+public:
+	MyMemoryManager() 
+	{ 
+		mutex.Init();
+		alloccount = 0; 
+		freecount = 0; 
+	}
+	~MyMemoryManager() 
+	{ 
+		std::cout << "alloc: " << alloccount << " free: " << freecount << std::endl; 
+	}
+	void *AllocateBuffer(size_t numbytes, int memtype)
+	{
+		mutex.Lock();
+		void *buf = malloc(numbytes);
+		std::cout << "Allocated " << numbytes << " bytes at location " << buf << " (memtype = " << memtype << ")" << std::endl;
+		alloccount++;
+		mutex.Unlock();
+		return buf;
+	}
+
+	void FreeBuffer(void *p)
+	{
+		mutex.Lock();
+		std::cout << "Freeing block " << p << std::endl;
+		freecount++;
+		free(p);
+		mutex.Unlock();
+	}
+private:
+	int alloccount,freecount;
+	JMutex mutex;
+};
+
+#else
+
+class MyMemoryManager : public RTPMemoryManager
+{
+public:
+	MyMemoryManager() 
+	{ 
+		alloccount = 0; 
+		freecount = 0; 
+	}
+	~MyMemoryManager() 
+	{ 
+		std::cout << "alloc: " << alloccount << " free: " << freecount << std::endl; 
+	}
+	void *AllocateBuffer(size_t numbytes, int memtype)
+	{
+		void *buf = malloc(numbytes);
+		std::cout << "Allocated " << numbytes << " bytes at location " << buf << " (memtype = " << memtype << ")" << std::endl;
+		alloccount++;
+		return buf;
+	}
+
+	void FreeBuffer(void *p)
+	{
+		std::cout << "Freeing block " << p << std::endl;
+		freecount++;
+		free(p);
+	}
+private:
+	int alloccount,freecount;
+};
+
+#endif // RTP_SUPPORT_THREAD
+
 int main(void)
 {
 #ifdef WIN32
@@ -45,7 +118,8 @@ int main(void)
 	WSAStartup(MAKEWORD(2,2),&dat);
 #endif // WIN32
 	
-	RTPSession sess;
+	MyMemoryManager mgr;
+	RTPSession sess(&mgr);
 	uint16_t portbase,destport;
 	uint32_t destip;
 	std::string ipstr;

@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\jthread-1.2.0\src"
+				AdditionalIncludeDirectories="..\jthread-1.2.1\src"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -116,7 +116,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\jthread-1.2.0\src"
+				AdditionalIncludeDirectories="..\jthread-1.2.1\src"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -1103,6 +1103,14 @@
 			</File>
 			<File
 				RelativePath="src\rtpudpv6transmitter.h"
+				>
+			</File>
+			<File
+				RelativePath="src\rtpmemorymanager.h"
+				>
+			</File>
+			<File
+				RelativePath="src\rtpmemoryobject.h"
 				>
 			</File>
 		</Filter>

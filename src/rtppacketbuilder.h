@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtppacketbuilder.h
+ */
+
 #ifndef RTPPACKETBUILDER_H
 
 #define RTPPACKETBUILDER_H
@@ -40,49 +44,141 @@
 #include "rtprandom.h"
 #include "rtptimeutilities.h"
 #include "rtptypes.h"
+#include "rtpmemoryobject.h"
 
 class RTPSources;
 
-class RTPPacketBuilder
+/** This class can be used to build RTP packets and is a bit more high-level than the RTPPacket 
+ *  class: it generates an SSRC identifier, keeps track of timestamp and sequence number etc.
+ */
+class RTPPacketBuilder : public RTPMemoryObject
 {
 public:
-	RTPPacketBuilder();
+	/** Constructs an instance, optionally installing a memory manager. */
+	RTPPacketBuilder(RTPMemoryManager *mgr = 0);
 	~RTPPacketBuilder();
+
+	/** Initializes the builder to only allow packets with a size below \c maxpacksize. */
 	int Init(size_t maxpacksize);
+
+	/** Cleans up the builder. */
 	void Destroy();
+
+	/** Returns the number of packets which have been created with the current SSRC identifier. */
 	uint32_t GetPacketCount()					{ if (!init) return 0; return numpackets; }
+
+	/** Returns the number of payload octets which have been generated with this SSRC identifier. */
 	uint32_t GetPayloadOctetCount()				{ if (!init) return 0; return numpayloadbytes; }
+
+	/** Sets the maximum allowed packet size to \c maxpacksize. */
 	int SetMaximumPacketSize(size_t maxpacksize);
 
+	/** Adds a CSRC to the CSRC list which will be stored in the RTP packets. */
 	int AddCSRC(uint32_t csrc);
+
+	/** Deletes a CSRC from the list which will be stored in the RTP packets. */
 	int DeleteCSRC(uint32_t csrc);
+
+	/** Clears the CSRC list. */
 	void ClearCSRCList();	
 	
+	/** Builds a packet with payload \c data and payload length \c len.
+	 *  Builds a packet with payload \c data and payload length \c len. The payload type, marker 
+	 *  and timestamp increment used will be those that have been set using the \c SetDefault 
+	 *  functions below.
+	 */
 	int BuildPacket(const void *data,size_t len);
+
+	/** Builds a packet with payload \c data and payload length \c len.
+	 *  Builds a packet with payload \c data and payload length \c len. The payload type will be 
+	 *  set to \c pt, the marker bit to \c mark and after building this packet, the timestamp will
+	 *  be incremented with \c timestamp.
+	 */
 	int BuildPacket(const void *data,size_t len,
 	                uint8_t pt,bool mark,uint32_t timestampinc);
+
+	/** Builds a packet with payload \c data and payload length \c len.
+	 *  Builds a packet with payload \c data and payload length \c len. The payload type, marker 
+	 *  and timestamp increment used will be those that have been set using the \c SetDefault 
+	 *  functions below. This packet will also contain an RTP header extension with identifier 
+	 *  \c hdrextID and data \c hdrextdata. The length of the header extension data is given by 
+	 *  \c numhdrextwords which expresses the length in a number of 32-bit words.
+	 */
 	int BuildPacketEx(const void *data,size_t len,
 	                  uint16_t hdrextID,const void *hdrextdata,size_t numhdrextwords);
+
+	/** Builds a packet with payload \c data and payload length \c len. 
+	 *  Builds a packet with payload \c data and payload length \c len. The payload type will be set 
+	 *  to \c pt, the marker bit to \c mark and after building this packet, the timestamp will 
+	 *  be incremented with \c timestamp. This packet will also contain an RTP header extension 
+	 *  with identifier \c hdrextID and data \c hdrextdata. The length of the header extension 
+	 *  data is given by \c numhdrextwords which expresses the length in a number of 32-bit words.
+	 */
 	int BuildPacketEx(const void *data,size_t len,
 	                  uint8_t pt,bool mark,uint32_t timestampinc,
 	                  uint16_t hdrextID,const void *hdrextdata,size_t numhdrextwords);
+
+	/** Returns a pointer to the last built RTP packet data. */
 	uint8_t *GetPacket()						{ if (!init) return 0; return buffer; }
+
+	/** Returns the size of the last built RTP packet. */
 	size_t GetPacketLength()					{ if (!init) return 0; return packetlength; }
 	
+	/** Sets the default payload type to \c pt. */
 	int SetDefaultPayloadType(uint8_t pt);
+
+	/** Sets the default marker bit to \c m. */
 	int SetDefaultMark(bool m);
+
+	/** Sets the default timestamp increment to \c timestampinc. */
 	int SetDefaultTimestampIncrement(uint32_t timestampinc);
+
+	/** This function increments the timestamp with the amount given by \c inc.
+	 *  This function increments the timestamp with the amount given by \c inc. This can be useful 
+	 *  if, for example, a packet was not sent because it contained only silence. Then, this function 
+	 *  should be called to increment the timestamp with the appropriate amount so that the next packets 
+	 *  will still be played at the correct time at other hosts.
+	 */
 	int IncrementTimestamp(uint32_t inc);
+
+	/** This function increments the timestamp with the amount given set by the SetDefaultTimestampIncrement
+	 *  member function. 
+	 *  This function increments the timestamp with the amount given set by the SetDefaultTimestampIncrement
+	 *  member function. This can be useful if, for example, a packet was not sent because it contained only silence.
+	 *  Then, this function should be called to increment the timestamp with the appropriate amount so that the next
+	 *  packets will still be played at the correct time at other hosts.	
+	 */
 	int IncrementTimestampDefault();
 	
+	/** Creates a new SSRC to be used in generated packets. 
+	 *  Creates a new SSRC to be used in generated packets. This will also generate new timestamp and 
+	 *  sequence number offsets.
+	 */
 	uint32_t CreateNewSSRC();
+
+	/** Creates a new SSRC to be used in generated packets. 
+	 *  Creates a new SSRC to be used in generated packets. This will also generate new timestamp and 
+	 *  sequence number offsets. The source table \c sources is used to make sure that the chosen SSRC 
+	 *  isn't used by another participant yet.
+	 */
 	uint32_t CreateNewSSRC(RTPSources &sources);
+
+	/** Returns the current SSRC identifier. */
 	uint32_t GetSSRC() const					{ if (!init) return 0; return ssrc; }
+
+	/** Returns the current RTP timestamp. */
 	uint32_t GetTimestamp() const					{ if (!init) return 0; return timestamp; }
+
+	/** Returns the current sequence number. */
 	uint16_t GetSequenceNumber() const				{ if (!init) return 0; return seqnr; }
 
-	// note: these are not necessarily from the last packet!
+	/** Returns the time at which a packet was generated.
+	 *  Returns the time at which a packet was generated. This is not necessarily the time at which 
+	 *  the last RTP packet was generated: if the timestamp increment was zero, the time is not updated.
+	 */
 	RTPTime GetPacketTime() const					{ if (!init) return RTPTime(0,0); return lastwallclocktime; }
+
+	/** Returns the RTP timestamp which corresponds to the time returned by the previous function. */
 	uint32_t GetPacketTimestamp() const				{ if (!init) return 0; return lastrtptimestamp; }
 private:
 	int PrivateBuildPacket(const void *data,size_t len,

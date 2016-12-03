@@ -17,7 +17,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2004 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
@@ -51,6 +51,7 @@
 #include "rtptimeutilities.h"
 #include <stdio.h>
 
+#include <sys/socket.h>
 #include <net/if.h>
 #include <string.h>
 #include <netdb.h>
@@ -92,7 +93,7 @@
 	#define WAITMUTEX_UNLOCK
 #endif // RTP_SUPPORT_THREAD
 
-RTPFakeTransmitter::RTPFakeTransmitter()
+RTPFakeTransmitter::RTPFakeTransmitter(RTPMemoryManager *mgr ) : RTPTransmitter(mgr), destinations(mgr,RTPMEM_TYPE_CLASS_DESTINATIONLISTHASHELEMENT),acceptignoreinfo(mgr,RTPMEM_TYPE_CLASS_ACCEPTIGNOREHASHELEMENT)
 {
 	created = false;
 	init = false;
@@ -136,8 +137,8 @@ int RTPFakeTransmitter::Init(bool tsafe)
 
 int RTPFakeTransmitter::Create(size_t maximumpacketsize,const RTPTransmissionParams *transparams)
 {
-	struct sockaddr_in addr;
-	int status;
+//	struct sockaddr_in addr;
+//	int status;
 
 	if (!init)
 		return ERR_RTP_FAKETRANS_NOTINIT;
@@ -153,7 +154,7 @@ int RTPFakeTransmitter::Create(size_t maximumpacketsize,const RTPTransmissionPar
 	// Obtain transmission parameters
 	
 	if (transparams == 0)
-		params = new RTPFakeTransmissionParams;
+		params = RTPNew(GetMemoryManager(),RTPMEM_TYPE_OTHER) RTPFakeTransmissionParams;
 	else
 	{
 		if (transparams->GetTransmissionProtocol() != RTPTransmitter::UserDefinedProto)
@@ -217,9 +218,6 @@ int RTPFakeTransmitter::Create(size_t maximumpacketsize,const RTPTransmissionPar
 	localhostname = 0;
 	localhostnamelength = 0;
 
-	rtppackcount = 0;
-	rtcppackcount = 0;
-	
 	waitingfordata = false;
 	created = true;
 
@@ -241,7 +239,7 @@ void RTPFakeTransmitter::Destroy()
 
 	if (localhostname)
 	{
-		delete [] localhostname;
+		RTPDeleteByteArray(localhostname,GetMemoryManager());
 		localhostname = 0;
 		localhostnamelength = 0;
 	}
@@ -254,7 +252,7 @@ void RTPFakeTransmitter::Destroy()
 	ClearAcceptIgnoreInfo();
 	localIPs.clear();
 	created = false;
-    delete params;
+    	RTPDelete(params,GetMemoryManager());
 	
 	MAINMUTEX_UNLOCK
 }
@@ -265,8 +263,7 @@ RTPTransmissionInfo *RTPFakeTransmitter::GetTransmissionInfo()
 		return 0;
 
 	MAINMUTEX_LOCK
-	RTPTransmissionInfo *tinf = new RTPFakeTransmissionInfo(localIPs, 
-            params);
+	RTPTransmissionInfo *tinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMISSIONINFO) RTPFakeTransmissionInfo(localIPs, params);
 	MAINMUTEX_UNLOCK
 	return tinf;
 }
@@ -324,7 +321,7 @@ int RTPFakeTransmitter::GetLocalHostName(uint8_t *buffer,size_t *bufferlength)
 				{
 					found = true;
 					localhostnamelength = (*it).length();
-					localhostname = new uint8_t [localhostnamelength+1];
+					localhostname = RTPNew(GetMemoryManager(),RTPMEM_TYPE_OTHER) uint8_t [localhostnamelength+1];
 					if (localhostname == 0)
 					{
 						MAINMUTEX_UNLOCK
@@ -349,7 +346,7 @@ int RTPFakeTransmitter::GetLocalHostName(uint8_t *buffer,size_t *bufferlength)
 			len = strlen(str);
 	
 			localhostnamelength = len;
-			localhostname = new uint8_t [localhostnamelength + 1];
+			localhostname = RTPNew(GetMemoryManager(),RTPMEM_TYPE_OTHER) uint8_t [localhostnamelength + 1];
 			if (localhostname == 0)
 			{
 				MAINMUTEX_UNLOCK
@@ -564,7 +561,6 @@ int RTPFakeTransmitter::SendRTPData(const void *data,size_t len)
 		destinations.GotoNextElement();
 	}
 	
-	rtppackcount++;
 	MAINMUTEX_UNLOCK
 	return 0;
 }
@@ -598,63 +594,10 @@ int RTPFakeTransmitter::SendRTCPData(const void *data,size_t len)
 		destinations.GotoNextElement();
 	}
 	
-	rtcppackcount++;
 	MAINMUTEX_UNLOCK
 	return 0;
 }
 
-void RTPFakeTransmitter::ResetPacketCount()
-{
-	if (!init)
-		return;
-
-	MAINMUTEX_LOCK
-	if (created)
-	{
-		rtppackcount = 0;
-		rtcppackcount = 0;	
-	}
-	MAINMUTEX_UNLOCK	
-}
-
-uint32_t RTPFakeTransmitter::GetNumRTPPacketsSent()
-{
-	if (!init)
-		return 0;
-
-	MAINMUTEX_LOCK
-	
-	uint32_t num;
-
-	if (!created)
-		num = 0;
-	else
-		num = rtppackcount;
-
-	MAINMUTEX_UNLOCK
-
-	return num;
-}
-
-uint32_t RTPFakeTransmitter::GetNumRTCPPacketsSent()
-{
-	if (!init)
-		return 0;
-	
-	MAINMUTEX_LOCK
-	
-	uint32_t num;
-
-	if (!created)
-		num = 0;
-	else
-		num = rtcppackcount;
-
-	MAINMUTEX_UNLOCK
-
-	return num;
-}
-	
 int RTPFakeTransmitter::AddDestination(const RTPAddress &addr)
 {
 	if (!init)
@@ -1134,6 +1077,7 @@ bool RTPFakeTransmitter::SetMulticastTTL(uint8_t ttl)
 	if (status != 0)
 		return false;
 	return true;*/
+	return true;
 }
 #endif // RTP_SUPPORT_IPV4MULTICAST
 
@@ -1142,7 +1086,7 @@ void RTPFakeTransmitter::FlushPackets()
 	std::list<RTPRawPacket*>::const_iterator it;
 
 	for (it = rawpacketlist.begin() ; it != rawpacketlist.end() ; ++it)
-		delete (*it);
+		RTPDelete(*it,GetMemoryManager());
 	rawpacketlist.clear();
 }
 
@@ -1169,7 +1113,7 @@ int RTPFakeTransmitter::FakePoll()
     }
 
     // let's make a RTPIPv4Address
-    RTPIPv4Address *addr = new RTPIPv4Address(sourceaddr, sourceport);
+    RTPIPv4Address *addr = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPADDRESS) RTPIPv4Address(sourceaddr, sourceport);
     if (addr == 0)
     {
         return ERR_RTP_OUTOFMEM;
@@ -1177,10 +1121,10 @@ int RTPFakeTransmitter::FakePoll()
 
     // ok we got the src addr, now this should be the actual packet
     uint8_t *datacopy;
-    datacopy = new uint8_t[data_len];
+    datacopy = RTPNew(GetMemoryManager(),(rtp)?RTPMEM_TYPE_BUFFER_RECEIVEDRTPPACKET:RTPMEM_TYPE_BUFFER_RECEIVEDRTCPPACKET) uint8_t[data_len];
     if (datacopy == 0)
     {
-        delete addr;
+        RTPDelete(addr,GetMemoryManager());
         return ERR_RTP_OUTOFMEM;
     }
     memcpy(datacopy, data, data_len);
@@ -1196,11 +1140,11 @@ int RTPFakeTransmitter::FakePoll()
         // adding packet to queue
         RTPRawPacket *pack;
 
-        pack = new RTPRawPacket(datacopy,data_len,addr,curtime,rtp);
+        pack = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPRAWPACKET) RTPRawPacket(datacopy,data_len,addr,curtime,rtp,GetMemoryManager());
 
         if (pack == 0)
         {
-            delete addr;
+            RTPDelete(addr,GetMemoryManager());
             return ERR_RTP_OUTOFMEM;
         }
         rawpacketlist.push_back(pack);	
@@ -1239,7 +1183,7 @@ int RTPFakeTransmitter::ProcessAddAcceptIgnoreEntry(uint32_t ip,uint16_t port)
 		PortInfo *portinf;
 		int status;
 		
-		portinf = new PortInfo();
+		portinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_ACCEPTIGNOREPORTINFO) PortInfo();
 		if (port == 0) // select all ports
 			portinf->all = true;
 		else
@@ -1248,7 +1192,7 @@ int RTPFakeTransmitter::ProcessAddAcceptIgnoreEntry(uint32_t ip,uint16_t port)
 		status = acceptignoreinfo.AddElement(ip,portinf);
 		if (status < 0)
 		{
-			delete portinf;
+			RTPDelete(portinf,GetMemoryManager());
 			return status;
 		}
 	}
@@ -1264,7 +1208,7 @@ void RTPFakeTransmitter::ClearAcceptIgnoreInfo()
 		PortInfo *inf;
 
 		inf = acceptignoreinfo.GetCurrentElement();
-		delete inf;
+		RTPDelete(inf,GetMemoryManager());
 		acceptignoreinfo.GotoNextElement();
 	}
 	acceptignoreinfo.Clear();
@@ -1494,6 +1438,7 @@ int RTPFakeTransmitter::CreateAbortDescriptors()
 //	if (pipe(abortdesc) < 0)
 //		return ERR_RTP_FAKETRANS_CANTCREATEPIPE;
 //	return 0;
+	return 0;
 }
 
 void RTPFakeTransmitter::DestroyAbortDescriptors()
@@ -1760,8 +1705,6 @@ void RTPFakeTransmitter::Dump()
 			
 			std::cout << "Number of raw packets in queue: " << rawpacketlist.size() << std::endl;
 			std::cout << "Maximum allowed packet size:    " << maxpacksize << std::endl;
-			std::cout << "RTP packet count:               " << rtppackcount << std::endl;
-			std::cout << "RTCP packet count:              " << rtcppackcount << std::endl;
 		}
 		
 		MAINMUTEX_UNLOCK

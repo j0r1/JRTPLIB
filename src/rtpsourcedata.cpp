@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -33,6 +33,7 @@
 #include "rtpsourcedata.h"
 #include "rtpdefines.h"
 #include "rtpaddress.h"
+#include "rtpmemorymanager.h"
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
 	#include <netinet/in.h>
 #endif // WIN32
@@ -206,7 +207,7 @@ void RTPSourceStats::ProcessPacket(RTPPacket *pack,const RTPTime &receivetime,do
 	}
 }
 
-RTPSourceData::RTPSourceData(uint32_t s) : byetime(0,0)
+RTPSourceData::RTPSourceData(uint32_t s, RTPMemoryManager *mgr) : byetime(0,0),RTPMemoryObject(mgr),SDESinf(mgr)
 {
 	ssrc = s;
 	issender = false;
@@ -228,11 +229,11 @@ RTPSourceData::~RTPSourceData()
 {
 	FlushPackets();
 	if (byereason)
-		delete [] byereason;
+		RTPDeleteByteArray(byereason,GetMemoryManager());
 	if (rtpaddr)
-		delete rtpaddr;
+		RTPDelete(rtpaddr,GetMemoryManager());
 	if (rtcpaddr)
-		delete rtcpaddr;
+		RTPDelete(rtcpaddr,GetMemoryManager());
 }
 
 double RTPSourceData::INF_GetEstimatedTimestampUnit() const

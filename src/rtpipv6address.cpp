@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -31,6 +31,7 @@
 */
 
 #include "rtpipv6address.h"
+#include "rtpmemorymanager.h"
 
 #ifdef RTP_SUPPORT_IPV6
 
@@ -41,9 +42,9 @@
 
 #include "rtpdebug.h"
 
-RTPAddress *RTPIPv6Address::CreateCopy() const
+RTPAddress *RTPIPv6Address::CreateCopy(RTPMemoryManager *mgr) const
 {
-	RTPIPv6Address *newaddr = new RTPIPv6Address(ip,port);
+	RTPIPv6Address *newaddr = RTPNew(mgr,RTPMEM_TYPE_CLASS_RTPADDRESS) RTPIPv6Address(ip,port);
 	return newaddr;
 }
 

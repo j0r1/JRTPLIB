@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -123,7 +123,9 @@ inline bool operator==(const in6_addr &ip1,const in6_addr &ip2)
 	return false;
 }
 
-RTPUDPv6Transmitter::RTPUDPv6Transmitter()
+RTPUDPv6Transmitter::RTPUDPv6Transmitter(RTPMemoryManager *mgr) : RTPTransmitter(mgr),multicastgroups(GetMemoryManager(),RTPMEM_TYPE_CLASS_MULTICASTHASHELEMENT),
+								  destinations(GetMemoryManager(),RTPMEM_TYPE_CLASS_DESTINATIONLISTHASHELEMENT),
+								  acceptignoreinfo(GetMemoryManager(),RTPMEM_TYPE_CLASS_ACCEPTIGNOREHASHELEMENT)
 {
 	created = false;
 	init = false;
@@ -345,9 +347,6 @@ int RTPUDPv6Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	localhostname = 0;
 	localhostnamelength = 0;
 
-	rtppackcount = 0;
-	rtcppackcount = 0;
-	
 	waitingfordata = false;
 	created = true;
 	MAINMUTEX_UNLOCK
@@ -368,7 +367,7 @@ void RTPUDPv6Transmitter::Destroy()
 
 	if (localhostname)
 	{
-		delete [] localhostname;
+		RTPDeleteByteArray(localhostname,GetMemoryManager());
 		localhostname = 0;
 		localhostnamelength = 0;
 	}
@@ -404,7 +403,7 @@ RTPTransmissionInfo *RTPUDPv6Transmitter::GetTransmissionInfo()
 		return 0;
 
 	MAINMUTEX_LOCK
-	RTPTransmissionInfo *tinf = new RTPUDPv6TransmissionInfo(localIPs,rtpsock,rtcpsock);
+	RTPTransmissionInfo *tinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMISSIONINFO) RTPUDPv6TransmissionInfo(localIPs,rtpsock,rtcpsock);
 	MAINMUTEX_UNLOCK
 	return tinf;
 }
@@ -489,7 +488,7 @@ int RTPUDPv6Transmitter::GetLocalHostName(uint8_t *buffer,size_t *bufferlength)
 				{
 					found = true;
 					localhostnamelength = (*it).length();
-					localhostname = new uint8_t [localhostnamelength+1];
+					localhostname = RTPNew(GetMemoryManager(),RTPMEM_TYPE_OTHER) uint8_t [localhostnamelength+1];
 					if (localhostname == 0)
 					{
 						MAINMUTEX_UNLOCK
@@ -522,7 +521,7 @@ int RTPUDPv6Transmitter::GetLocalHostName(uint8_t *buffer,size_t *bufferlength)
 			len = strlen(str);
 	
 			localhostnamelength = len;
-			localhostname = new uint8_t [localhostnamelength+1];
+			localhostname = RTPNew(GetMemoryManager(),RTPMEM_TYPE_OTHER) uint8_t [localhostnamelength+1];
 			if (localhostname == 0)
 			{
 				MAINMUTEX_UNLOCK
@@ -723,8 +722,6 @@ int RTPUDPv6Transmitter::SendRTPData(const void *data,size_t len)
 
 	MAINMUTEX_LOCK
 	
-	struct sockaddr_in6 saddr;
-	
 	if (!created)
 	{
 		MAINMUTEX_UNLOCK
@@ -736,18 +733,13 @@ int RTPUDPv6Transmitter::SendRTPData(const void *data,size_t len)
 		return ERR_RTP_UDPV6TRANS_SPECIFIEDSIZETOOBIG;
 	}
 	
-	memset(&saddr,0,sizeof(struct sockaddr_in6));
-	saddr.sin6_family = AF_INET6;
 	destinations.GotoFirstElement();
 	while (destinations.HasCurrentElement())
 	{
-		saddr.sin6_port = destinations.GetCurrentElement().GetRTPPort_NBO();
-		saddr.sin6_addr = destinations.GetCurrentElement().GetIP();
-		sendto(rtpsock,(const char *)data,len,0,(struct sockaddr *)&saddr,sizeof(struct sockaddr_in6));
+		sendto(rtpsock,(const char *)data,len,0,(const struct sockaddr *)destinations.GetCurrentElement().GetRTPSockAddr(),sizeof(struct sockaddr_in6));
 		destinations.GotoNextElement();
 	}
 	
-	rtppackcount++;
 	MAINMUTEX_UNLOCK
 	return 0;
 }
@@ -759,8 +751,6 @@ int RTPUDPv6Transmitter::SendRTCPData(const void *data,size_t len)
 
 	MAINMUTEX_LOCK
 	
-	struct sockaddr_in6 saddr;
-	
 	if (!created)
 	{
 		MAINMUTEX_UNLOCK
@@ -772,72 +762,15 @@ int RTPUDPv6Transmitter::SendRTCPData(const void *data,size_t len)
 		return ERR_RTP_UDPV6TRANS_SPECIFIEDSIZETOOBIG;
 	}
 	
-	memset(&saddr,0,sizeof(struct sockaddr_in6));
-	saddr.sin6_family = AF_INET6;
 	destinations.GotoFirstElement();
 	while (destinations.HasCurrentElement())
 	{
-		saddr.sin6_port = destinations.GetCurrentElement().GetRTCPPort_NBO();
-		saddr.sin6_addr = destinations.GetCurrentElement().GetIP();
-		sendto(rtcpsock,(const char *)data,len,0,(struct sockaddr *)&saddr,sizeof(struct sockaddr_in6));
+		sendto(rtcpsock,(const char *)data,len,0,(const struct sockaddr *)destinations.GetCurrentElement().GetRTCPSockAddr(),sizeof(struct sockaddr_in6));
 		destinations.GotoNextElement();
 	}
 	
-	rtcppackcount++;
 	MAINMUTEX_UNLOCK
 	return 0;
-}
-
-void RTPUDPv6Transmitter::ResetPacketCount()
-{
-	if (!init)
-		return;
-
-	MAINMUTEX_LOCK
-	if (created)
-	{
-		rtppackcount = 0;
-		rtcppackcount = 0;	
-	}
-	MAINMUTEX_UNLOCK	
-}
-
-uint32_t RTPUDPv6Transmitter::GetNumRTPPacketsSent()
-{
-	if (!init)
-		return 0;
-
-	MAINMUTEX_LOCK
-	
-	uint32_t num;
-
-	if (!created)
-		num = 0;
-	else
-		num = rtppackcount;
-
-	MAINMUTEX_UNLOCK
-
-	return num;
-}
-
-uint32_t RTPUDPv6Transmitter::GetNumRTCPPacketsSent()
-{
-	if (!init)
-		return 0;
-	
-	MAINMUTEX_LOCK
-	
-	uint32_t num;
-
-	if (!created)
-		num = 0;
-	else
-		num = rtcppackcount;
-
-	MAINMUTEX_UNLOCK
-
-	return num;
 }
 
 int RTPUDPv6Transmitter::AddDestination(const RTPAddress &addr)
@@ -1324,7 +1257,7 @@ void RTPUDPv6Transmitter::FlushPackets()
 	std::list<RTPRawPacket*>::const_iterator it;
 
 	for (it = rawpacketlist.begin() ; it != rawpacketlist.end() ; ++it)
-		delete (*it);
+		RTPDelete(*it,GetMemoryManager());
 	rawpacketlist.clear();
 }
 
@@ -1373,21 +1306,22 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 				RTPIPv6Address *addr;
 				uint8_t *datacopy;
 
-				addr = new RTPIPv6Address(srcaddr.sin6_addr,ntohs(srcaddr.sin6_port));
+				addr = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPADDRESS) RTPIPv6Address(srcaddr.sin6_addr,ntohs(srcaddr.sin6_port));
 				if (addr == 0)
 					return ERR_RTP_OUTOFMEM;
-				datacopy = new uint8_t[recvlen];
+				datacopy = RTPNew(GetMemoryManager(),(rtp)?RTPMEM_TYPE_BUFFER_RECEIVEDRTPPACKET:RTPMEM_TYPE_BUFFER_RECEIVEDRTCPPACKET) uint8_t[recvlen];
 				if (datacopy == 0)
 				{
-					delete addr;
+					RTPDelete(addr,GetMemoryManager());
 					return ERR_RTP_OUTOFMEM;
 				}
 				memcpy(datacopy,packetbuffer,recvlen);
-				pack = new RTPRawPacket(datacopy,recvlen,addr,curtime,rtp);
+				
+				pack = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPRAWPACKET) RTPRawPacket(datacopy,recvlen,addr,curtime,rtp,GetMemoryManager());
 				if (pack == 0)
 				{
-					delete addr;
-					delete [] datacopy;
+					RTPDelete(addr,GetMemoryManager());
+					RTPDeleteByteArray(datacopy,GetMemoryManager());
 					return ERR_RTP_OUTOFMEM;
 				}
 				rawpacketlist.push_back(pack);	
@@ -1430,7 +1364,7 @@ int RTPUDPv6Transmitter::ProcessAddAcceptIgnoreEntry(in6_addr ip,uint16_t port)
 		PortInfo *portinf;
 		int status;
 		
-		portinf = new PortInfo();
+		portinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_ACCEPTIGNOREPORTINFO) PortInfo();
 		if (port == 0) // select all ports
 			portinf->all = true;
 		else
@@ -1439,7 +1373,7 @@ int RTPUDPv6Transmitter::ProcessAddAcceptIgnoreEntry(in6_addr ip,uint16_t port)
 		status = acceptignoreinfo.AddElement(ip,portinf);
 		if (status < 0)
 		{
-			delete portinf;
+			RTPDelete(portinf,GetMemoryManager());
 			return status;
 		}
 	}
@@ -1454,7 +1388,7 @@ void RTPUDPv6Transmitter::ClearAcceptIgnoreInfo()
 		PortInfo *inf;
 
 		inf = acceptignoreinfo.GetCurrentElement();
-		delete inf;
+		RTPDelete(inf,GetMemoryManager());
 		acceptignoreinfo.GotoNextElement();
 	}
 	acceptignoreinfo.Clear();
@@ -1955,8 +1889,6 @@ void RTPUDPv6Transmitter::Dump()
 			
 			std::cout << "Number of raw packets in queue: " << rawpacketlist.size() << std::endl;
 			std::cout << "Maximum allowed packet size:    " << maxpacksize << std::endl;
-			std::cout << "RTP packet count:               " << rtppackcount << std::endl;
-			std::cout << "RTCP packet count:              " << rtcppackcount << std::endl;
 		}
 		
 		MAINMUTEX_UNLOCK

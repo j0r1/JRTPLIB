@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtplibraryversion.h
+ */
+
 #ifndef RTPLIBRARYVERSION_H
 
 #define RTPLIBRARYVERSION_H
@@ -37,16 +41,27 @@
 #include <string>
 #include <stdio.h>
 
+/** 
+ * Used to provide information about the version of the library. 
+ */
 class RTPLibraryVersion
 {
 public:
-      	static RTPLibraryVersion GetVersion();
+	/** Returns an instance of RTPLibraryVersion describing the version of the library. */
+	static RTPLibraryVersion GetVersion();
 private:
 	RTPLibraryVersion(int major,int minor,int debug) 			{ majornr = major; minornr = minor; debugnr = debug; }
 public:
+	/** Returns the major version number. */
 	int GetMajorNumber() const						{ return majornr; }
+
+	/** Returns the minor version number. */
 	int GetMinorNumber() const						{ return minornr; }
+
+	/** Returns the debug version number. */
 	int GetDebugNumber() const						{ return debugnr; }
+
+	/** Returns a string describing the library version. */
 	std::string GetVersionString() const;
 private:
 	int debugnr,minornr,majornr;

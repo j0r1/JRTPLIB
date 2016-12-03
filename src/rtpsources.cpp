@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -51,7 +51,7 @@
 
 #include "rtpdebug.h"
 
-RTPSources::RTPSources(ProbationType probtype)
+RTPSources::RTPSources(ProbationType probtype,RTPMemoryManager *mgr) : RTPMemoryObject(mgr),sourcelist(mgr,RTPMEM_TYPE_CLASS_SOURCETABLEHASHELEMENT)
 {
 	totalcount = 0;
 	sendercount = 0;
@@ -80,7 +80,7 @@ void RTPSources::ClearSourceList()
 		RTPInternalSourceData *sourcedata;
 
 		sourcedata = sourcelist.GetCurrentElement();
-		delete sourcedata;
+		RTPDelete(sourcedata,GetMemoryManager());
 		sourcelist.GotoNextElement();
 	}
 	sourcelist.Clear();
@@ -135,7 +135,7 @@ int RTPSources::DeleteOwnSSRC()
 
 	OnRemoveSource(owndata);
 	
-	delete owndata;
+	RTPDelete(owndata,GetMemoryManager());
 	owndata = 0;
 	return 0;
 }
@@ -174,19 +174,19 @@ int RTPSources::ProcessRawPacket(RTPRawPacket *rawpack,RTPTransmitter *rtptrans[
 		RTPPacket *rtppack;
 		
 		// First, we'll see if the packet can be parsed
-		rtppack = new RTPPacket(*rawpack);
+		rtppack = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPPACKET) RTPPacket(*rawpack,GetMemoryManager());
 		if (rtppack == 0)
 			return ERR_RTP_OUTOFMEM;
 		if ((status = rtppack->GetCreationError()) < 0)
 		{
 			if (status == ERR_RTP_PACKET_INVALIDPACKET)
 			{
-				delete rtppack;
+				RTPDelete(rtppack,GetMemoryManager());
 				rtppack = 0;
 			}
 			else
 			{
-				delete rtppack;
+				RTPDelete(rtppack,GetMemoryManager());
 				return status;
 			}
 		}
@@ -216,7 +216,7 @@ int RTPSources::ProcessRawPacket(RTPRawPacket *rawpack,RTPTransmitter *rtptrans[
 					if ((status = ProcessRTPPacket(rtppack,rawpack->GetReceiveTime(),0,&stored)) < 0)
 					{
 						if (!stored)
-							delete rtppack;
+							RTPDelete(rtppack,GetMemoryManager());
 						return status;
 					}
 				}
@@ -226,17 +226,17 @@ int RTPSources::ProcessRawPacket(RTPRawPacket *rawpack,RTPTransmitter *rtptrans[
 				if ((status = ProcessRTPPacket(rtppack,rawpack->GetReceiveTime(),senderaddress,&stored)) < 0)
 				{
 					if (!stored)
-						delete rtppack;
+						RTPDelete(rtppack,GetMemoryManager());
 					return status;
 				}
 			}
 			if (!stored)
-				delete rtppack;
+				RTPDelete(rtppack,GetMemoryManager());
 		}
 	}
 	else // RTCP packet
 	{
-		RTCPCompoundPacket rtcpcomppack(*rawpack);
+		RTCPCompoundPacket rtcpcomppack(*rawpack,GetMemoryManager());
 		bool valid = false;
 		
 		if ((status = rtcpcomppack.GetCreationError()) < 0)
@@ -800,15 +800,15 @@ int RTPSources::ObtainSourceDataInstance(uint32_t ssrc,RTPInternalSourceData **s
 	if (sourcelist.GotoElement(ssrc) < 0) // No entry for this source
 	{
 #ifdef RTP_SUPPORT_PROBATION
-		srcdat2 = new RTPInternalSourceData(ssrc,probationtype);
+		srcdat2 = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPINTERNALSOURCEDATA) RTPInternalSourceData(ssrc,probationtype,GetMemoryManager());
 #else
-		srcdat2 = new RTPInternalSourceData(ssrc,RTPSources::NoProbation);
+		srcdat2 = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPINTERNALSOURCEDATA) RTPInternalSourceData(ssrc,RTPSources::NoProbation,GetMemoryManager());
 #endif // RTP_SUPPORT_PROBATION
 		if (srcdat2 == 0)
 			return ERR_RTP_OUTOFMEM;
 		if ((status = sourcelist.AddElement(ssrc,srcdat2)) < 0)
 		{
-			delete srcdat2;
+			RTPDelete(srcdat2,GetMemoryManager());
 			return status;
 		}
 		*srcdat = srcdat2;
@@ -903,7 +903,7 @@ void RTPSources::Timeout(const RTPTime &curtime,const RTPTime &timeoutdelay)
 
 			OnTimeout(srcdat);
 			OnRemoveSource(srcdat);
-			delete srcdat;
+			RTPDelete(srcdat,GetMemoryManager());
 		}
 		else
 		{
@@ -1021,7 +1021,7 @@ void RTPSources::BYETimeout(const RTPTime &curtime,const RTPTime &timeoutdelay)
 				sourcelist.DeleteCurrentElement();
 				OnBYETimeout(srcdat);
 				OnRemoveSource(srcdat);
-				delete srcdat;
+				RTPDelete(srcdat,GetMemoryManager());
 			}
 			else
 			{
@@ -1230,7 +1230,7 @@ void RTPSources::MultipleTimeouts(const RTPTime &curtime,const RTPTime &senderti
 			if (normaltimeout)
 				OnTimeout(srcdat);
 			OnRemoveSource(srcdat);
-			delete srcdat;
+			RTPDelete(srcdat,GetMemoryManager());
 		}
 	}	
 	

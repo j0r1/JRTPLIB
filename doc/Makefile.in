@@ -109,9 +109,11 @@ RTP_SUPPORT_INLINETEMPLATEPARAM = @RTP_SUPPORT_INLINETEMPLATEPARAM@
 RTP_SUPPORT_IPV4MULTICAST = @RTP_SUPPORT_IPV4MULTICAST@
 RTP_SUPPORT_IPV6 = @RTP_SUPPORT_IPV6@
 RTP_SUPPORT_IPV6MULTICAST = @RTP_SUPPORT_IPV6MULTICAST@
+RTP_SUPPORT_MEMORYMANAGEMENT = @RTP_SUPPORT_MEMORYMANAGEMENT@
 RTP_SUPPORT_PROBATION = @RTP_SUPPORT_PROBATION@
 RTP_SUPPORT_RANDR = @RTP_SUPPORT_RANDR@
 RTP_SUPPORT_SDESPRIV = @RTP_SUPPORT_SDESPRIV@
+RTP_SUPPORT_SENDAPP = @RTP_SUPPORT_SENDAPP@
 RTP_SUPPORT_THREAD = @RTP_SUPPORT_THREAD@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -160,7 +162,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-EXTRA_DIST = jrtplib.tex
+EXTRA_DIST = jrtplib.h jrtplib.css
 all: all-am
 
 .SUFFIXES:
@@ -265,6 +267,8 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-am
+
 clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
@@ -319,15 +323,6 @@ uninstall-am: uninstall-info-am
 	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-info-am
 
-
-doc: jrtplib.pdf
-
-jrtplib.pdf: jrtplib.tex
-	pdflatex jrtplib.tex
-	pdflatex jrtplib.tex
-
-clean:
-	rm -f jrtplib.{toc,aux,log,pdf}
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

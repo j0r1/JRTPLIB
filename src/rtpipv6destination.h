@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtpipv6destination.h
+ */
+
 #ifndef RTPIPV6DESTINATION_H
 
 #define RTPIPV6DESTINATION_H
@@ -42,6 +46,8 @@
 #include <string.h>
 #ifndef WIN32
 	#include <netinet/in.h>
+	#include <arpa/inet.h>
+	#include <sys/socket.h>
 #endif // WIN32
 #ifdef RTPDEBUG
 	#include "rtpdefines.h"
@@ -52,17 +58,32 @@
 class RTPIPv6Destination
 {
 public:
-	RTPIPv6Destination(in6_addr ip,uint16_t portbase)	 			{ RTPIPv6Destination::ip = ip; rtpport_nbo = htons(portbase); rtcpport_nbo = htons(portbase+1); }
-	in6_addr GetIP() const								{ return ip; }
-	uint16_t GetRTPPort_NBO() const						{ return rtpport_nbo; }
-	uint16_t GetRTCPPort_NBO() const						{ return rtcpport_nbo; }
-	bool operator==(const RTPIPv6Destination &src) const				{ if (src.rtpport_nbo == rtpport_nbo && (memcmp(&(src.ip),&ip,sizeof(in6_addr)) == 0)) return true; return false; } // NOTE: I only check IP and portbase
+	RTPIPv6Destination(in6_addr ip,uint16_t portbase)
+	{ 
+		memset(&rtpaddr,0,sizeof(struct sockaddr_in6));
+		memset(&rtcpaddr,0,sizeof(struct sockaddr_in6));
+		rtpaddr.sin6_family = AF_INET6;
+		rtpaddr.sin6_port = htons(portbase);
+		rtpaddr.sin6_addr = ip;
+		rtpaddr.sin6_family = AF_INET6;
+		rtpaddr.sin6_port = htons(portbase+1);
+		rtpaddr.sin6_addr = ip;
+	}
+	in6_addr GetIP() const								{ return rtpaddr.sin6_addr; }
+	bool operator==(const RTPIPv6Destination &src) const				
+	{ 
+		if (rtpaddr.sin6_port == src.rtpaddr.sin6_port && (memcmp(&(src.rtpaddr.sin6_addr),&(rtpaddr.sin6_addr),sizeof(in6_addr)) == 0)) 
+			return true; 
+		return false; 
+	}
+	const struct sockaddr_in6 *GetRTPSockAddr() const				{ return &rtpaddr; }
+	const struct sockaddr_in6 *GetRTCPSockAddr() const				{ return &rtcpaddr; }
 #ifdef RTPDEBUG
 	std::string GetDestinationString() const;
 #endif // RTPDEBUG
 private:
-	in6_addr ip;
-	uint16_t rtpport_nbo,rtcpport_nbo;
+	struct sockaddr_in6 rtpaddr;
+	struct sockaddr_in6 rtcpaddr;
 };
 
 #ifdef RTPDEBUG

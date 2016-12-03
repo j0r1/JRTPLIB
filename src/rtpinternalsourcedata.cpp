@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -38,7 +38,7 @@
 
 #define RTPINTERNALSOURCEDATA_MAXPROBATIONPACKETS		32
 
-RTPInternalSourceData::RTPInternalSourceData(uint32_t ssrc,RTPSources::ProbationType probtype):RTPSourceData(ssrc)
+RTPInternalSourceData::RTPInternalSourceData(uint32_t ssrc,RTPSources::ProbationType probtype,RTPMemoryManager *mgr):RTPSourceData(ssrc,mgr)
 {
 #ifdef RTP_SUPPORT_PROBATION
 	probationtype = probtype;
@@ -123,7 +123,7 @@ int RTPInternalSourceData::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &re
 		{
 			RTPPacket *p = *(packetlist.begin());
 			packetlist.pop_front();
-			delete p;
+			RTPDelete(p,GetMemoryManager());
 		}
 	}
 
@@ -264,13 +264,13 @@ int RTPInternalSourceData::ProcessBYEPacket(const uint8_t *reason,size_t reasonl
 {
 	if (byereason)
 	{
-		delete [] byereason;
+		RTPDeleteByteArray(byereason,GetMemoryManager());
 		byereason = 0;
 		byereasonlen = 0;
 	}
 
 	byetime = receivetime;
-	byereason = new uint8_t[reasonlen];
+	byereason = RTPNew(GetMemoryManager(),RTPMEM_TYPE_BUFFER_RTCPBYEREASON) uint8_t[reasonlen];
 	if (byereason == 0)
 		return ERR_RTP_OUTOFMEM;
 	memcpy(byereason,reason,reasonlen);

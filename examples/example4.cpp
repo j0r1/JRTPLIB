@@ -66,7 +66,7 @@ void MyRTPSession::OnPollThreadStep()
 			while ((pack = GetNextPacket()) != NULL)
 			{
 				ProcessRTPPacket(*srcdat,*pack);
-				delete pack;
+				DeletePacket(pack);
 			}
 		} while (GotoNextSourceWithData());
 	}
@@ -92,10 +92,9 @@ int main(void)
 #endif // WIN32
 	
 	MyRTPSession sess;
-	uint16_t portbase,destport;
-	uint32_t destip;
+	uint16_t portbase;
 	std::string ipstr;
-	int status,i,num;
+	int status,num;
 
         // First, we'll ask for the necessary information
 		

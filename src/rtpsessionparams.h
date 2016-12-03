@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtpsessionparams.h
+ */
+
 #ifndef RTPSESSIONPARAMS_H
 
 #define RTPSESSIONPARAMS_H
@@ -40,52 +44,151 @@
 #include "rtptimeutilities.h"
 #include "rtpsources.h"
 
+/** Describes the parameters for to be used by an RTPSession instance. 
+ *  Describes the parameters for to be used by an RTPSession instance. Note that the own timestamp 
+ *  unit must be set to a valid number, otherwise the session can't be created.
+ */
 class RTPSessionParams
 {
 public:
 	RTPSessionParams();
-
+	
+	/** If \c usethread is \c true, the session will use a poll thread to automatically process incoming
+	 *  data and to send RTCP packets when necessary.
+	 */
 	int SetUsePollThread(bool usethread);
+
+	/** Returns whether the session should use a poll thread or not (default is \c true). */
 	bool IsUsingPollThread() const						{ return usepollthread; }
+
+	/** Sets the maximum allowed packet size for the session. */
 	void SetMaximumPacketSize(size_t max)					{ maxpacksize = max; }
+
+	/** Returns the maximum allowed packet size (default is 1400 bytes). */
 	size_t GetMaximumPacketSize() const					{ return maxpacksize; }
+
+	/** If the argument is \c true, the session should accept its own packets and store 
+	 *  them accordingly in the source table.
+	 */
 	void SetAcceptOwnPackets(bool accept)					{ acceptown = accept; }
+	
+	/** Returns \c true if the session should accept its own packets (default is \c false). */
 	bool AcceptOwnPackets() const						{ return acceptown; }
+
+	/** Sets the receive mode to be used by the session. */
 	void SetReceiveMode(RTPTransmitter::ReceiveMode recvmode)		{ receivemode = recvmode; }
+
+	/** Sets the receive mode to be used by the session (default is: accept all packets). */
 	RTPTransmitter::ReceiveMode GetReceiveMode() const			{ return receivemode; }
+
+	/** Sets the timestamp unit for our own data.
+	 *  Sets the timestamp unit for our own data. The timestamp unit is defined as a time interval in 
+	 *  seconds divided by the corresponding timestamp interval. For example, for 8000 Hz audio, the 
+	 *  timestamp unit would typically be 1/8000. Since this value is initially set to an illegal value, 
+	 *  the user must set this to an allowed value to be able to create a session.
+	 */
 	void SetOwnTimestampUnit(double tsunit)					{ owntsunit = tsunit; }
+
+	/** Returns the currently set timestamp unit. */
 	double GetOwnTimestampUnit() const					{ return owntsunit; }
+
+	/** Sets a flag indicating if a DNS lookup should be done to determine our hostname (to construct a CNAME item).
+	 *  If \c v is set to \c true, the session will ask the transmitter to find a host name based upon the IP
+	 *  addresses in its list of local IP addresses. If set to \c false, a call to \c gethostname or something
+	 *  similar will be used to find the local hostname. Note that the first method might take some time.
+	 */
 	void SetResolveLocalHostname(bool v)					{ resolvehostname = v; }
+
+	/** Returns whether the local hostname should be determined from the transmitter's list of local IP addresses 
+	 *  or not (default is \c false).
+	 */
 	bool GetResolveLocalHostname() const					{ return resolvehostname; }
 #ifdef RTP_SUPPORT_PROBATION
+	/** If probation support is enabled, this function sets the probation type to be used. */
 	void SetProbationType(RTPSources::ProbationType probtype)		{ probationtype = probtype; }
+
+	/** Returns the probation type which will be used (default is RTPSources::ProbationStore). */
 	RTPSources::ProbationType GetProbationType() const			{ return probationtype; }
 #endif // RTP_SUPPORT_PROBATION
 
+	/** Sets the session bandwidth in bytes per second. */
 	void SetSessionBandwidth(double sessbw)					{ sessionbandwidth = sessbw; }
-	double GetSessionBandwidth() const					{ return sessionbandwidth; }
-	void SetControlTrafficFraction(double frac)				{ controlfrac = frac; }
-	double GetControlTrafficFraction() const				{ return controlfrac; }
-	void SetSenderControlBandwidthFraction(double frac)			{ senderfrac = frac; }
-	double GetSenderControlBandwidthFraction() const			{ return senderfrac; }
-	void SetMinimumRTCPTransmissionInterval(const RTPTime &t)		{ mininterval = t; }
-	RTPTime GetMinimumRTCPTransmissionInterval() const			{ return mininterval; }
-	void SetUseHalfRTCPIntervalAtStartup(bool usehalf)			{ usehalfatstartup = usehalf; }
-	bool GetUseHalfRTCPIntervalAtStartup() const				{ return usehalfatstartup; }
-	void SetRequestImmediateBYE(bool v) 					{ immediatebye = v; }
-	bool GetRequestImmediateBYE() const					{ return immediatebye; }
-	void SetSenderReportForBYE(bool v)					{ SR_BYE = v; }
-	bool GetSenderReportForBYE() const					{ return SR_BYE; }
 
+	/** Returns the session bandwidth in bytes per second (default is 10000 bytes per second). */
+	double GetSessionBandwidth() const					{ return sessionbandwidth; }
+
+	/** Sets the fraction of the session bandwidth to be used for control traffic. */
+	void SetControlTrafficFraction(double frac)				{ controlfrac = frac; }
+
+	/** Returns the fraction of the session bandwidth that will be used for control traffic (default is 5%). */
+	double GetControlTrafficFraction() const				{ return controlfrac; }
+
+	/** Sets the minimum fraction of the control traffic that will be used by senders. */
+	void SetSenderControlBandwidthFraction(double frac)			{ senderfrac = frac; }
+
+	/** Returns the minimum fraction of the control traffic that will be used by senders (default is 25%). */
+	double GetSenderControlBandwidthFraction() const			{ return senderfrac; }
+
+	/** Set the minimal time interval between sending RTCP packets. */
+	void SetMinimumRTCPTransmissionInterval(const RTPTime &t)		{ mininterval = t; }
+
+	/** Returns the minimal time interval between sending RTCP packets (default is 5 seconds). */
+	RTPTime GetMinimumRTCPTransmissionInterval() const			{ return mininterval; }
+
+	/** If \c usehalf is set to \c true, the session will only wait half of the calculated RTCP 
+	 *  interval before sending its first RTCP packet.
+	 */
+	void SetUseHalfRTCPIntervalAtStartup(bool usehalf)			{ usehalfatstartup = usehalf; }
+
+	/** Returns whether the session will only wait half of the calculated RTCP interval before sending its
+	 *  first RTCP packet or not (default is \c true).
+	 */
+	bool GetUseHalfRTCPIntervalAtStartup() const				{ return usehalfatstartup; }
+
+	/** If \c v is \c true, the session will send a BYE packet immediately if this is allowed. */
+	void SetRequestImmediateBYE(bool v) 					{ immediatebye = v; }
+
+	/** Returns whether the session should send a BYE packet immediately (if allowed) or not (default is \c true). */
+	bool GetRequestImmediateBYE() const					{ return immediatebye; }
+
+	/** When sending a BYE packet, this indicates whether it will be part of an RTCP compound packet 
+	 *  that begins with a sender report (if allowed) or a receiver report.
+	 */
+	void SetSenderReportForBYE(bool v)					{ SR_BYE = v; }
+
+	/** Returns \c true if a BYE packet will be sent in an RTCP compound packet which starts with a 
+	 *  sender report; if a receiver report will be used, the function returns \c false (default is \c true).
+	 */
+	bool GetSenderReportForBYE() const					{ return SR_BYE; }
+	
+	/** Sets the multiplier to be used when timing out senders. */
 	void SetSenderTimeoutMultiplier(double m)				{ sendermultiplier = m; }
+
+	/** Returns the multiplier to be used when timing out senders (default is 2). */
 	double GetSenderTimeoutMultiplier() const				{ return sendermultiplier; }
+
+	/** Sets the multiplier to be used when timing out members. */
 	void SetSourceTimeoutMultiplier(double m)				{ generaltimeoutmultiplier = m; }
+
+	/** Returns the multiplier to be used when timing out members (default is 5). */
 	double GetSourceTimeoutMultiplier() const				{ return generaltimeoutmultiplier; }
+
+	/** Sets the multiplier to be used when timing out a member after it has sent a BYE packet. */
 	void SetBYETimeoutMultiplier(double m)					{ byetimeoutmultiplier = m; }
+
+	/** Returns the multiplier to be used when timing out a member after it has sent a BYE packet (default is 1). */
 	double GetBYETimeoutMultiplier() const					{ return byetimeoutmultiplier; }
+
+	/** Sets the multiplier to be used when timing out entries in the collision table. */
 	void SetCollisionTimeoutMultiplier(double m)				{ collisionmultiplier = m; }
+
+	/** Returns the multiplier to be used when timing out entries in the collision table (default is 10). */
 	double GetCollisionTimeoutMultiplier() const				{ return collisionmultiplier; }
+
+	/** Sets the multiplier to be used when timing out SDES NOTE information. */
 	void SetNoteTimeoutMultiplier(double m)					{ notemultiplier = m; }
+
+	/** Returns the multiplier to be used when timing out SDES NOTE information (default is 25). */
 	double GetNoteTimeoutMultiplier() const					{ return notemultiplier; }
 private:
 	bool acceptown;

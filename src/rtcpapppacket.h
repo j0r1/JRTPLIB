@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtcpapppacket.h
+ */
+
 #ifndef RTCPAPPPACKET_H
 
 #define RTCPAPPPACKET_H
@@ -43,16 +47,33 @@
 
 class RTCPCompoundPacket;
 
+/** Describes an RTCP APP packet. */
 class RTCPAPPPacket : public RTCPPacket
 {
 public:
+	/** Creates an instance based on the data in \c data with length \c datalen. 
+	 *  Creates an instance based on the data in \c data with length \c datalen. Since the \c data pointer
+	 *  is referenced inside the class (no copy of the data is made) one must make sure that the memory it 
+	 *  points to is valid as long as the class instance exists.
+	 */
 	RTCPAPPPacket(uint8_t *data,size_t datalen);
 	~RTCPAPPPacket()							{ }
 
+	/** Returns the subtype contained in the APP packet. */
 	uint8_t GetSubType() const;
+
+	/** Returns the SSRC of the source which sent this packet. */
 	uint32_t GetSSRC() const;
-	uint8_t *GetName(); // Note that the name always consists of 4 octets and is not null-terminated
+
+	/** Returns the name contained in the APP packet.
+	 *  Returns the name contained in the APP packet. This alway consists of four bytes and is not NULL-terminated.
+	 */
+	uint8_t *GetName(); 
+
+	/** Returns a pointer to the actual data. */
 	uint8_t *GetAPPData();
+
+	/** Returns the length of the actual data. */
 	size_t GetAPPDataLength() const;
 #ifdef RTPDEBUG
 	void Dump();

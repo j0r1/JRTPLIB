@@ -2,22 +2,22 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="jrtplib_wce"
-	ProjectGUID="{93374307-119F-404E-9B09-3642C6FC96C1}"
+	Name="jrtplib_wce5"
+	ProjectGUID="{EE7B2B39-F807-4BD2-8744-152F5C1C6951}"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
 		<Platform
-			Name="Pocket PC 2003 (ARMV4)"
+			Name="Windows Mobile 5.0 Pocket PC SDK (ARMV4I)"
 		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Debug|Pocket PC 2003 (ARMV4)"
-			OutputDirectory="$(PlatformName)\Debug"
-			IntermediateDirectory="$(PlatformName)\Debug"
+			Name="Debug|Windows Mobile 5.0 Pocket PC SDK (ARMV4I)"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
 			>
@@ -40,8 +40,8 @@
 				Name="VCCLCompilerTool"
 				ExecutionBucket="7"
 				Optimization="0"
-				AdditionalIncludeDirectories="../jthread-1.2.1/src"
-				PreprocessorDefinitions="_WIN32_WCE=$(CEVER);UNDER_CE=$(CEVER);WINCE;$(PLATFORMDEFINES);_DEBUG;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE"
+				AdditionalIncludeDirectories="../jthread-1.2.1/src, src"
+				PreprocessorDefinitions="_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;DEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE"
 				MinimalRebuild="true"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -53,7 +53,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG;_UNICODE;UNICODE;_WIN32_WCE;UNDER_CE"
+				PreprocessorDefinitions="_DEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES)"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -62,8 +62,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=" /subsystem:windowsce,4.20 /machine:ARM"
-				OutputFile="$(OutDir)/jrtplib_wce.lib"
+				AdditionalOptions=" /subsystem:windowsce,5.01"
+				OutputFile="$(OutDir)/jrtplib_wce5.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -90,9 +90,9 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Pocket PC 2003 (ARMV4)"
-			OutputDirectory="$(PlatformName)\Release"
-			IntermediateDirectory="$(PlatformName)\Release"
+			Name="Release|Windows Mobile 5.0 Pocket PC SDK (ARMV4I)"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
 			>
@@ -115,8 +115,8 @@
 				Name="VCCLCompilerTool"
 				ExecutionBucket="7"
 				Optimization="2"
-				AdditionalIncludeDirectories="../jthread-1.2.1/src"
-				PreprocessorDefinitions="_WIN32_WCE=$(CEVER);UNDER_CE=$(CEVER);WINCE;$(PLATFORMDEFINES);NDEBUG;_LIB;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE"
+				AdditionalIncludeDirectories="../jthread-1.2.1/src, src"
+				PreprocessorDefinitions="NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;_LIB;$(ARCHFAM);$(_ARCHFAM_);_UNICODE;UNICODE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -127,7 +127,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG;_UNICODE;UNICODE;_WIN32_WCE;UNDER_CE"
+				PreprocessorDefinitions="NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES)"
 				Culture="1033"
 				AdditionalIncludeDirectories="$(IntDir)"
 			/>
@@ -136,8 +136,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=" /subsystem:windowsce,4.20 /machine:ARM"
-				OutputFile="$(OutDir)/jrtplib_wce.lib"
+				AdditionalOptions=" /subsystem:windowsce,5.01"
+				OutputFile="$(OutDir)/jrtplib_wce5.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -475,7 +475,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\rtpmemorymanager.h"
+				RelativePath=".\src\rtpmemorymanagement.h"
 				>
 			</File>
 			<File

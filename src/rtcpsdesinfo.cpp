@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -40,7 +40,7 @@ void RTCPSDESInfo::Clear()
 	std::list<SDESPrivateItem *>::const_iterator it;
 
 	for (it = privitems.begin() ; it != privitems.end() ; ++it)
-		delete *it;
+		RTPDelete(*it,GetMemoryManager());
 	privitems.clear();
 #endif // RTP_SUPPORT_SDESPRIV
 }
@@ -83,12 +83,12 @@ int RTCPSDESInfo::SetPrivateValue(const uint8_t *prefix,size_t prefixlen,const u
 		
 		int status;
 		
-		item = new SDESPrivateItem();
+		item = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_SDESPRIVATEITEM) SDESPrivateItem(GetMemoryManager());
 		if (item == 0)
 			return ERR_RTP_OUTOFMEM;
 		if ((status = item->SetPrefix(prefix,prefixlen)) < 0)
 		{
-			delete item;
+			RTPDelete(item,GetMemoryManager());
 			return status;
 		}
 		privitems.push_front(item);
@@ -124,7 +124,7 @@ int RTCPSDESInfo::DeletePrivatePrefix(const uint8_t *prefix,size_t prefixlen)
 	if (!found)
 		return ERR_RTP_SDES_PREFIXNOTFOUND;
 	
-	delete (*it);
+	RTPDelete(*it,GetMemoryManager());
 	privitems.erase(it);
 	return 0;
 }

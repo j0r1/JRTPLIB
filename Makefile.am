@@ -1,6 +1,7 @@
 SUBDIRS = src tools doc examples pkgconfig
 EXTRA_DIST = LICENSE.MIT ChangeLog README.TXT jrtplib.dsw jrtplib.dsp jrtplib.vcproj \
-	     jrtplib.sln jrtplib_wce.vcproj jrtplib_wce.sln
+	     jrtplib.sln jrtplib_wce.vcproj jrtplib_wce.sln jrtplib_wce5.sln \
+	     jrtplib_wce5.vcproj Doxyfile
 
 dist-hook: distclean
 	rm -f $(distdir)/src/rtpconfig_unix.h
@@ -15,3 +16,5 @@ dist-hook: distclean
 	chmod a-x $(distdir)/jrtplib.sln
 	chmod a-x $(distdir)/jrtplib_wce.vcproj
 	chmod a-x $(distdir)/jrtplib_wce.sln
+	chmod a-x $(distdir)/jrtplib_wce5.vcproj
+	chmod a-x $(distdir)/jrtplib_wce5.sln

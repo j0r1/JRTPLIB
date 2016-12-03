@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtpudpv6transmitter.h
+ */
+
 #ifndef RTPUDPV6TRANSMITTER_H
 
 #define RTPUDPV6TRANSMITTER_H
@@ -52,23 +56,49 @@
 	#include <jmutex.h>
 #endif // RTP_SUPPORT_THREAD
 
-#define RTPUDPV6TRANS_HASHSIZE									8317
+#define RTPUDPV6TRANS_HASHSIZE										8317
 #define RTPUDPV6TRANS_DEFAULTPORTBASE								5000
 
+/** Parameters for the UDP over IPv6 transmitter. */
 class RTPUDPv6TransmissionParams : public RTPTransmissionParams
 {
 public:
 	RTPUDPv6TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv6UDPProto)	{ portbase = RTPUDPV6TRANS_DEFAULTPORTBASE; for (int i = 0 ; i < 16 ; i++) bindIP.s6_addr[i] = 0; multicastTTL = 1; mcastifidx = 0; }
-	void SetBindIP(in6_addr ip)								{ bindIP = ip; }
+
+	/** Sets the IP address which is used to bind the sockets to \c ip. */
+	void SetBindIP(in6_addr ip)											{ bindIP = ip; }
+
+	/** Sets the multicast interface index. */
 	void SetMulticastInterfaceIndex(unsigned int idx)					{ mcastifidx = idx; }
-	void SetPortbase(uint16_t pbase)							{ portbase = pbase; }
-	void SetMulticastTTL(uint8_t mcastTTL)							{ multicastTTL = mcastTTL; }
+
+	/** Sets the RTP portbase to \c pbase. This has to be an even number. */
+	void SetPortbase(uint16_t pbase)									{ portbase = pbase; }
+
+	/** Sets the multicast TTL to be used to \c mcastTTL. */
+	void SetMulticastTTL(uint8_t mcastTTL)								{ multicastTTL = mcastTTL; }
+
+	/** Passes a list of IP addresses which will be used as the local IP addresses. */
 	void SetLocalIPList(std::list<in6_addr> &iplist)					{ localIPs = iplist; } 
-	void ClearLocalIPList()									{ localIPs.clear(); }
-	in6_addr GetBindIP() const								{ return bindIP; }
+
+	/** Clears the list of local IP addresses.
+	 *  Clears the list of local IP addresses. An empty list will make the transmission component 
+	 *  itself determine the local IP addresses.
+	 */
+	void ClearLocalIPList()												{ localIPs.clear(); }
+
+	/** Returns the IP address which will be used to bind the sockets. */
+	in6_addr GetBindIP() const											{ return bindIP; }
+
+	/** Returns the multicast interface index. */
 	unsigned int GetMulticastInterfaceIndex() const						{ return mcastifidx; }
-	uint16_t GetPortbase() const								{ return portbase; }
-	uint8_t GetMulticastTTL() const							{ return multicastTTL; }
+
+	/** Returns the RTP portbase which will be used (default is 5000). */
+	uint16_t GetPortbase() const										{ return portbase; }
+
+	/** Returns the multicast TTL which will be used (default is 1). */
+	uint8_t GetMulticastTTL() const										{ return multicastTTL; }
+
+	/** Returns the list of local IP addresses. */
 	const std::list<in6_addr> &GetLocalIPList() const					{ return localIPs; }
 private:
 	uint16_t portbase;
@@ -78,6 +108,7 @@ private:
 	uint8_t multicastTTL;
 };
 
+/** Additional information about the UDP over IPv6 transmitter. */
 class RTPUDPv6TransmissionInfo : public RTPTransmissionInfo
 {
 public:
@@ -86,16 +117,21 @@ public:
 #else
 	RTPUDPv6TransmissionInfo(std::list<in6_addr> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv6UDPProto) 
 #endif  // WIN32
-												{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
+															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
 
 	~RTPUDPv6TransmissionInfo()								{ }
-	std::list<in6_addr> GetLocalIPList() const						{ return localIPlist; }
+
+	/** Returns the list of IPv6 addresses the transmitter considers to be the local IP addresses. */
+	std::list<in6_addr> GetLocalIPList() const				{ return localIPlist; }
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
+	/** Returns the socket descriptor used for receiving and transmitting RTP packets. */
 	int GetRTPSocket() const								{ return rtpsocket; }
+
+	/** Returns the socket descriptor used for receiving and transmitting RTCP packets. */
 	int GetRTCPSocket() const								{ return rtcpsocket; }
 #else
 	SOCKET GetRTPSocket() const								{ return rtpsocket; }
-	SOCKET GetRTCPSocket() const								{ return rtcpsocket; }
+	SOCKET GetRTCPSocket() const							{ return rtcpsocket; }
 #endif // WIN32
 private:
 	std::list<in6_addr> localIPlist;
@@ -120,10 +156,17 @@ public:
 
 #define RTPUDPV6TRANS_HEADERSIZE								(40+8)
 	
+/** An UDP over IPv6 transmitter.
+ *  This class inherits the RTPTransmitter interface and implements a transmission component 
+ *  which uses UDP over IPv6 to send and receive RTP and RTCP data. The component's parameters 
+ *  are described by the class RTPUDPv6TransmissionParams. The functions which have an RTPAddress 
+ *  argument require an argument of RTPIPv6Address. The GetTransmissionInfo member function
+ *  returns an instance of type RTPUDPv6TransmissionInfo.
+ */
 class RTPUDPv6Transmitter : public RTPTransmitter
 {
 public:
-	RTPUDPv6Transmitter();
+	RTPUDPv6Transmitter(RTPMemoryManager *mgr);
 	~RTPUDPv6Transmitter();
 
 	int Init(bool treadsafe);
@@ -142,10 +185,6 @@ public:
 	int SendRTPData(const void *data,size_t len);	
 	int SendRTCPData(const void *data,size_t len);
 
-	void ResetPacketCount();
-	uint32_t GetNumRTPPacketsSent();
-	uint32_t GetNumRTCPPacketsSent();
-				
 	int AddDestination(const RTPAddress &addr);
 	int DeleteDestination(const RTPAddress &addr);
 	void ClearDestinations();
@@ -235,8 +274,6 @@ private:
 	JMutex mainmutex,waitmutex;
 	int threadsafe;
 #endif // RTP_SUPPORT_THREAD
-
-	uint32_t rtppackcount,rtcppackcount;
 };
 
 #endif // RTP_SUPPORT_IPV6

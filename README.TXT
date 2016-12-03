@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------------
-                                                                March 26, 2006
+                                                                 June 20, 2006
 
 
-                                   JRTPLIB (v3.5.2)
+                                   JRTPLIB (v3.6.0)
 
 
                       Developed at the The Expertise Centre for 
@@ -21,7 +21,7 @@ from this url:
 	http://research.edm.uhasselt.be/jori/jrtplib/jrtplib.html
 
 If you have questions about the library, you can mail me at:
-	jori@lumumba.uhasselt.be
+	jori.liesenborgs@gmail.com
 	
 There is also a mailing list for the library. To subscribe to the list, 
 send an e-mail with the text 'subscribe jrtplib' as the message body (not 
@@ -118,6 +118,10 @@ INSTALLATION NOTES
 		If set, IPv6 support is enabled.
 	- RTP_SUPPORT_IPV6MULTICAST:
 		If set, IPv6 multicasting support is enabled.
+	- RTP_SUPPORT_SENDAPP:
+		If set, sending of RTCP app packets is enabled.
+	- RTP_SUPPORT_MEMORYMANAGEMENT:
+		If set, the memory management system is enabled.
 	- RTPDEBUG:
 		Enables some memory tracking functions and some debug routines.
 	

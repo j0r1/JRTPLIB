@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtpinternalsourcedata.h
+ */
+
 #ifndef RTPINTERNALSOURCEDATA_H
 
 #define RTPINTERNALSOURCEDATA_H
@@ -43,7 +47,7 @@
 class RTPInternalSourceData : public RTPSourceData
 {
 public:
-	RTPInternalSourceData(uint32_t ssrc, RTPSources::ProbationType probtype);
+	RTPInternalSourceData(uint32_t ssrc, RTPSources::ProbationType probtype, RTPMemoryManager *mgr = 0);
 	~RTPInternalSourceData();
 
 	int ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,bool *stored);
@@ -80,18 +84,18 @@ inline int RTPInternalSourceData::SetRTPDataAddress(const RTPAddress *a)
 	{
 		if (rtpaddr)
 		{
-			delete rtpaddr;
+			RTPDelete(rtpaddr,GetMemoryManager());
 			rtpaddr = 0;
 		}
 	}
 	else
 	{
-		RTPAddress *newaddr = a->CreateCopy();
+		RTPAddress *newaddr = a->CreateCopy(GetMemoryManager());
 		if (newaddr == 0)
 			return ERR_RTP_OUTOFMEM;
 		
 		if (rtpaddr && a != rtpaddr)
-			delete rtpaddr;
+			RTPDelete(rtpaddr,GetMemoryManager());
 		rtpaddr = newaddr;
 	}
 	isrtpaddrset = true;
@@ -104,18 +108,18 @@ inline int RTPInternalSourceData::SetRTCPDataAddress(const RTPAddress *a)
 	{
 		if (rtcpaddr)
 		{
-			delete rtcpaddr;
+			RTPDelete(rtcpaddr,GetMemoryManager());
 			rtcpaddr = 0;
 		}
 	}
 	else
 	{
-		RTPAddress *newaddr = a->CreateCopy();
+		RTPAddress *newaddr = a->CreateCopy(GetMemoryManager());
 		if (newaddr == 0)
 			return ERR_RTP_OUTOFMEM;
 		
 		if (rtcpaddr && a != rtcpaddr)
-			delete rtcpaddr;
+			RTPDelete(rtcpaddr,GetMemoryManager());
 		rtcpaddr = newaddr;
 	}
 	isrtcpaddrset = true;

@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtcpbyepacket.h
+ */
+
 #ifndef RTCPBYEPACKET_H
 
 #define RTCPBYEPACKET_H
@@ -43,16 +47,33 @@
 
 class RTCPCompoundPacket;
 
+/** Describes an RTCP BYE packet. */
 class RTCPBYEPacket : public RTCPPacket
 {
 public:
+	/** Creates an instance based on the data in \c data with length \c datalen. 
+	 *  Creates an instance based on the data in \c data with length \c datalen. Since the \c data pointer
+	 *  is referenced inside the class (no copy of the data is made) one must make sure that the memory it 
+	 *  points to is valid as long as the class instance exists.
+	 */
 	RTCPBYEPacket(uint8_t *data,size_t datalen);
 	~RTCPBYEPacket()							{ }
 	
+	/** Returns the number of SSRC identifiers present in this BYE packet. */
 	int GetSSRCCount() const;
+
+	/** Returns the SSRC described by \c index which may have a value from 0 to GetSSRCCount()-1 
+	 *  (note that no check is performed to see if \c index is valid).
+	 */
 	uint32_t GetSSRC(int index) const; // note: no check is performed to see if index is valid!
+
+	/** Returns true if the BYE packet contains a reason for leaving. */
 	bool HasReasonForLeaving() const;
+
+	/** Returns the length of the string which describes why the source(s) left. */
 	size_t GetReasonLength() const;
+
+	/** Returns the actual reason for leaving data. */
 	uint8_t *GetReasonData();
 
 #ifdef RTPDEBUG

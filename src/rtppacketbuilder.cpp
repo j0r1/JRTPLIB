@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -42,7 +42,7 @@
 
 #include "rtpdebug.h"
 
-RTPPacketBuilder::RTPPacketBuilder() : lastwallclocktime(0,0)
+RTPPacketBuilder::RTPPacketBuilder(RTPMemoryManager *mgr) : lastwallclocktime(0,0),RTPMemoryObject(mgr)
 {
 	init = false;
 #if (defined(WIN32) || defined(_WIN32_WCE))
@@ -63,7 +63,7 @@ int RTPPacketBuilder::Init(size_t max)
 		return ERR_RTP_PACKBUILD_INVALIDMAXPACKETSIZE;
 	
 	maxpacksize = max;
-	buffer = new uint8_t [max];
+	buffer = RTPNew(GetMemoryManager(),RTPMEM_TYPE_BUFFER_RTPPACKETBUILDERBUFFER) uint8_t [max];
 	if (buffer == 0)
 		return ERR_RTP_OUTOFMEM;
 	packetlength = 0;
@@ -84,7 +84,7 @@ void RTPPacketBuilder::Destroy()
 {
 	if (!init)
 		return;
-	delete [] buffer;
+	RTPDeleteByteArray(buffer,GetMemoryManager());
 	init = false;
 }
 
@@ -94,11 +94,11 @@ int RTPPacketBuilder::SetMaximumPacketSize(size_t max)
 
 	if (max <= 0)
 		return ERR_RTP_PACKBUILD_INVALIDMAXPACKETSIZE;
-	newbuf = new uint8_t[max];
+	newbuf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_BUFFER_RTPPACKETBUILDERBUFFER) uint8_t[max];
 	if (newbuf == 0)
 		return ERR_RTP_OUTOFMEM;
 	
-	delete [] buffer;
+	RTPDeleteByteArray(buffer,GetMemoryManager());
 	buffer = newbuf;
 	maxpacksize = max;
 	return 0;
@@ -237,7 +237,7 @@ int RTPPacketBuilder::PrivateBuildPacket(const void *data,size_t len,
 	                  uint16_t hdrextID,const void *hdrextdata,size_t numhdrextwords)
 {
 	RTPPacket p(pt,data,len,seqnr,timestamp,ssrc,mark,numcsrcs,csrcs,gotextension,hdrextID,
-	            (uint16_t)numhdrextwords,hdrextdata,buffer,maxpacksize);
+	            (uint16_t)numhdrextwords,hdrextdata,buffer,maxpacksize,GetMemoryManager());
 	int status = p.GetCreationError();
 
 	if (status < 0)
@@ -261,7 +261,6 @@ int RTPPacketBuilder::PrivateBuildPacket(const void *data,size_t len,
 	numpackets++;
 	timestamp += timestampinc;
 	seqnr++;
-
 
 	return 0;
 }

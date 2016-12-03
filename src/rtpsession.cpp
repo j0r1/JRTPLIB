@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -40,7 +40,10 @@
 #include "rtprawpacket.h"
 #include "rtppacket.h"
 #include "rtptimeutilities.h"
-#include "rtcpcompoundpacket.h"
+#include "rtpmemorymanager.h"
+#ifdef RTP_SUPPORT_SENDAPP
+	#include "rtcpcompoundpacket.h"
+#endif // RTP_SUPPORT_SENDAPP
 #ifndef WIN32
 	#include <unistd.h>
 	#include <stdlib.h>
@@ -61,6 +64,8 @@
 	#define BUILDER_UNLOCK					{ if (usingpollthread) buildermutex.Unlock(); }
 	#define SCHED_LOCK					{ if (usingpollthread) schedmutex.Lock(); }
 	#define SCHED_UNLOCK					{ if (usingpollthread) schedmutex.Unlock(); }
+	#define PACKSENT_LOCK					{ if (usingpollthread) packsentmutex.Lock(); }
+	#define PACKSENT_UNLOCK					{ if (usingpollthread) packsentmutex.Unlock(); } 
 #else
 	#define SOURCES_LOCK
 	#define SOURCES_UNLOCK
@@ -68,10 +73,13 @@
 	#define BUILDER_UNLOCK
 	#define SCHED_LOCK
 	#define SCHED_UNLOCK
+	#define PACKSENT_LOCK
+	#define PACKSENT_UNLOCK
 #endif // RTP_SUPPORT_THREAD
 
-RTPSession::RTPSession(RTPTransmitter::TransmissionProtocol proto /* = RTPTransmitter::IPv4UDPProto */ ) 
-	: protocol(proto),sources(*this),rtcpsched(sources),rtcpbuilder(sources,packetbuilder)
+RTPSession::RTPSession(RTPMemoryManager *mgr) 
+	: sources(*this,mgr),rtcpsched(sources),rtcpbuilder(sources,packetbuilder,mgr),RTPMemoryObject(mgr),
+	  packetbuilder(mgr),collisionlist(mgr)
 {
 	created = false;
 #if (defined(WIN32) || defined(_WIN32_WCE))
@@ -84,7 +92,8 @@ RTPSession::~RTPSession()
 	Destroy();
 }
 
-int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionParams *transparams /* = 0 */)
+int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionParams *transparams /* = 0 */,
+		       RTPTransmitter::TransmissionProtocol protocol)
 {
 	int status;
 	
@@ -93,6 +102,7 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 
 	usingpollthread = sessparams.IsUsingPollThread();
 	useSR_BYEifpossible = sessparams.GetSenderReportForBYE();
+	sentpackets = false;
 	
 	// Check max packet size
 	
@@ -105,11 +115,11 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	switch(protocol)
 	{
 	case RTPTransmitter::IPv4UDPProto:
-		rtptrans = new RTPUDPv4Transmitter();
+		rtptrans = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMITTER) RTPUDPv4Transmitter(GetMemoryManager());
 		break;
 #ifdef RTP_SUPPORT_IPV6
 	case RTPTransmitter::IPv6UDPProto:
-		rtptrans = new RTPUDPv6Transmitter();
+		rtptrans = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMITTER) RTPUDPv6Transmitter(GetMemoryManager());
 		break;
 #endif // RTP_SUPPORT_IPV6
 	case RTPTransmitter::UserDefinedProto:
@@ -125,20 +135,54 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		return ERR_RTP_OUTOFMEM;
 	if ((status = rtptrans->Init(usingpollthread)) < 0)
 	{
-		delete rtptrans;
+		RTPDelete(rtptrans,GetMemoryManager());
 		return status;
 	}
 	if ((status = rtptrans->Create(maxpacksize,transparams)) < 0)
 	{
-		delete rtptrans;
+		RTPDelete(rtptrans,GetMemoryManager());
 		return status;
 	}
+
+	deletetransmitter = true;
+	return InternalCreate(sessparams);
+}
+
+int RTPSession::Create(const RTPSessionParams &sessparams,RTPTransmitter *transmitter)
+{
+	int status;
+	
+	if (created)
+		return ERR_RTP_SESSION_ALREADYCREATED;
+
+	usingpollthread = sessparams.IsUsingPollThread();
+	useSR_BYEifpossible = sessparams.GetSenderReportForBYE();
+	sentpackets = false;
+	
+	// Check max packet size
+	
+	if ((maxpacksize = sessparams.GetMaximumPacketSize()) < RTP_MINPACKETSIZE)
+		return ERR_RTP_SESSION_MAXPACKETSIZETOOSMALL;
+		
+	rtptrans = transmitter;
+
+	if ((status = rtptrans->SetMaximumPacketSize(maxpacksize)) < 0)
+		return status;
+
+	deletetransmitter = false;
+	return InternalCreate(sessparams);
+}
+
+int RTPSession::InternalCreate(const RTPSessionParams &sessparams)
+{
+	int status;
 
 	// Initialize packet builder
 	
 	if ((status = packetbuilder.Init(maxpacksize)) < 0)
 	{
-		delete rtptrans;
+		if (deletetransmitter)
+			RTPDelete(rtptrans,GetMemoryManager());
 		return status;
 	}
 
@@ -154,7 +198,8 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	if ((status = sources.CreateOwnSSRC(packetbuilder.GetSSRC())) < 0)
 	{
 		packetbuilder.Destroy();
-		delete rtptrans;
+		if (deletetransmitter)
+			RTPDelete(rtptrans,GetMemoryManager());
 		return status;
 	}
 
@@ -164,7 +209,8 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	{
 		packetbuilder.Destroy();
 		sources.Clear();
-		delete rtptrans;
+		if (deletetransmitter)
+			RTPDelete(rtptrans,GetMemoryManager());
 		return status;
 	}
 
@@ -178,7 +224,8 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	{
 		packetbuilder.Destroy();
 		sources.Clear();
-		delete rtptrans;
+		if (deletetransmitter)
+			RTPDelete(rtptrans,GetMemoryManager());
 		return status;
 	}
 	
@@ -186,7 +233,8 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	{
 		packetbuilder.Destroy();
 		sources.Clear();
-		delete rtptrans;
+		if (deletetransmitter)
+			RTPDelete(rtptrans,GetMemoryManager());
 		return status;
 	}
 
@@ -202,7 +250,8 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	
 	if ((status = schedparams.SetRTCPBandwidth(sessionbandwidth*controlfragment)) < 0)
 	{
-		delete rtptrans;
+		if (deletetransmitter)
+			RTPDelete(rtptrans,GetMemoryManager());
 		packetbuilder.Destroy();
 		sources.Clear();
 		rtcpbuilder.Destroy();
@@ -210,7 +259,8 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	}
 	if ((status = schedparams.SetSenderBandwidthFraction(sessparams.GetSenderControlBandwidthFraction())) < 0)
 	{
-		delete rtptrans;
+		if (deletetransmitter)
+			RTPDelete(rtptrans,GetMemoryManager());
 		packetbuilder.Destroy();
 		sources.Clear();
 		rtcpbuilder.Destroy();
@@ -218,7 +268,8 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	}
 	if ((status = schedparams.SetMinimumTransmissionInterval(sessparams.GetMinimumRTCPTransmissionInterval())) < 0)
 	{
-		delete rtptrans;
+		if (deletetransmitter)
+			RTPDelete(rtptrans,GetMemoryManager());
 		packetbuilder.Destroy();
 		sources.Clear();
 		rtcpbuilder.Destroy();
@@ -248,7 +299,8 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		{
 			if (sourcesmutex.Init() < 0)
 			{
-				delete rtptrans;
+				if (deletetransmitter)
+					RTPDelete(rtptrans,GetMemoryManager());
 				packetbuilder.Destroy();
 				sources.Clear();
 				rtcpbuilder.Destroy();
@@ -259,7 +311,8 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		{
 			if (buildermutex.Init() < 0)
 			{
-				delete rtptrans;
+				if (deletetransmitter)
+					RTPDelete(rtptrans,GetMemoryManager());
 				packetbuilder.Destroy();
 				sources.Clear();
 				rtcpbuilder.Destroy();
@@ -270,7 +323,20 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		{
 			if (schedmutex.Init() < 0)
 			{
-				delete rtptrans;
+				if (deletetransmitter)
+					RTPDelete(rtptrans,GetMemoryManager());
+				packetbuilder.Destroy();
+				sources.Clear();
+				rtcpbuilder.Destroy();
+				return ERR_RTP_SESSION_CANTINITMUTEX;
+			}
+		}
+		if (!packsentmutex.IsInitialized())
+		{
+			if (packsentmutex.Init() < 0)
+			{
+				if (deletetransmitter)
+					RTPDelete(rtptrans,GetMemoryManager());
 				packetbuilder.Destroy();
 				sources.Clear();
 				rtcpbuilder.Destroy();
@@ -278,10 +344,11 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 			}
 		}
 		
-		pollthread = new RTPPollThread(*this,rtcpsched);
+		pollthread = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPPOLLTHREAD) RTPPollThread(*this,rtcpsched);
 		if (pollthread == 0)
 		{
-			delete rtptrans;
+			if (deletetransmitter)
+				RTPDelete(rtptrans,GetMemoryManager());
 			packetbuilder.Destroy();
 			sources.Clear();
 			rtcpbuilder.Destroy();
@@ -289,8 +356,9 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		}
 		if ((status = pollthread->Start(rtptrans)) < 0)
 		{
-			delete rtptrans;
-			delete pollthread;
+			if (deletetransmitter)
+				RTPDelete(rtptrans,GetMemoryManager());
+			RTPDelete(pollthread,GetMemoryManager());
 			packetbuilder.Destroy();
 			sources.Clear();
 			rtcpbuilder.Destroy();
@@ -303,6 +371,7 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	return 0;
 }
 
+
 void RTPSession::Destroy()
 {
 	if (!created)
@@ -310,10 +379,11 @@ void RTPSession::Destroy()
 
 #ifdef RTP_SUPPORT_THREAD
 	if (pollthread)
-		delete pollthread;
+		RTPDelete(pollthread,GetMemoryManager());
 #endif // RTP_SUPPORT_THREAD
 	
-	delete rtptrans;
+	if (deletetransmitter)
+		RTPDelete(rtptrans,GetMemoryManager());
 	packetbuilder.Destroy();
 	rtcpbuilder.Destroy();
 	rtcpsched.Reset();
@@ -323,7 +393,7 @@ void RTPSession::Destroy()
 	std::list<RTCPCompoundPacket *>::const_iterator it;
 
 	for (it = byepackets.begin() ; it != byepackets.end() ; it++)
-		delete (*it);
+		RTPDelete(*it,GetMemoryManager());
 	byepackets.clear();
 	
 	created = false;
@@ -338,7 +408,7 @@ void RTPSession::BYEDestroy(const RTPTime &maxwaittime,const void *reason,size_t
 	
 #ifdef RTP_SUPPORT_THREAD
 	if (pollthread)
-		delete pollthread;
+		RTPDelete(pollthread,GetMemoryManager());
 #endif // RTP_SUPPORT_THREAD
 
 	RTPTime stoptime = RTPTime::CurrentTime();
@@ -348,7 +418,7 @@ void RTPSession::BYEDestroy(const RTPTime &maxwaittime,const void *reason,size_t
 
 	RTCPCompoundPacket *pack;
 
-	if (rtptrans->GetNumRTPPacketsSent() != 0 || rtptrans->GetNumRTCPPacketsSent() != 0)
+	if (sentpackets)
 	{
 		int status;
 		
@@ -383,7 +453,7 @@ void RTPSession::BYEDestroy(const RTPTime &maxwaittime,const void *reason,size_t
 				
 				OnSendRTCPCompoundPacket(pack); // we'll place this after the actual send to avoid tampering
 				
-				delete pack;
+				RTPDelete(pack,GetMemoryManager());
 				if (!byepackets.empty()) // more bye packets to send, schedule them
 					rtcpsched.ScheduleBYEPacket((*(byepackets.begin()))->GetCompoundPacketLength());
 				else
@@ -394,7 +464,8 @@ void RTPSession::BYEDestroy(const RTPTime &maxwaittime,const void *reason,size_t
 		}
 	}
 	
-	delete rtptrans;
+	if (deletetransmitter)
+		RTPDelete(rtptrans,GetMemoryManager());
 	packetbuilder.Destroy();
 	rtcpbuilder.Destroy();
 	rtcpsched.Reset();
@@ -405,7 +476,7 @@ void RTPSession::BYEDestroy(const RTPTime &maxwaittime,const void *reason,size_t
 	std::list<RTCPCompoundPacket *>::const_iterator it;
 
 	for (it = byepackets.begin() ; it != byepackets.end() ; it++)
-		delete (*it);
+		RTPDelete(*it,GetMemoryManager());
 	byepackets.clear();
 	
 	created = false;
@@ -501,6 +572,9 @@ int RTPSession::SendPacket(const void *data,size_t len)
 	SOURCES_LOCK
 	sources.SentRTPPacket();
 	SOURCES_UNLOCK
+	PACKSENT_LOCK
+	sentpackets = true;
+	PACKSENT_UNLOCK
 	return 0;
 }
 
@@ -528,6 +602,9 @@ int RTPSession::SendPacket(const void *data,size_t len,
 	SOURCES_LOCK
 	sources.SentRTPPacket();
 	SOURCES_UNLOCK
+	PACKSENT_LOCK
+	sentpackets = true;
+	PACKSENT_UNLOCK
 	return 0;
 }
 
@@ -555,6 +632,9 @@ int RTPSession::SendPacketEx(const void *data,size_t len,
 	SOURCES_LOCK
 	sources.SentRTPPacket();
 	SOURCES_UNLOCK
+	PACKSENT_LOCK
+	sentpackets = true;
+	PACKSENT_UNLOCK
 	return 0;
 }
 
@@ -583,8 +663,71 @@ int RTPSession::SendPacketEx(const void *data,size_t len,
 	SOURCES_LOCK
 	sources.SentRTPPacket();
 	SOURCES_UNLOCK
+	PACKSENT_LOCK
+	sentpackets = true;
+	PACKSENT_UNLOCK
 	return 0;
 }
+
+#ifdef RTP_SUPPORT_SENDAPP
+
+int RTPSession::SendRTCPAPPPacket(uint8_t subtype, const uint8_t name[4], const void *appdata, size_t appdatalen)
+{
+	int status;
+
+	if (!created)
+		return ERR_RTP_SESSION_NOTCREATED;
+
+	BUILDER_LOCK
+	uint32_t ssrc = packetbuilder.GetSSRC();
+	BUILDER_UNLOCK
+	
+	RTCPCompoundPacketBuilder pb(GetMemoryManager());
+
+	status = pb.InitBuild(maxpacksize);
+	
+	if(status < 0)
+		return status;
+
+	//first packet in an rtcp compound packet should always be SR or RR
+	if((status = pb.StartReceiverReport(ssrc)) < 0)
+		return status;
+
+	//add SDES packet with CNAME item
+	if ((status = pb.AddSDESSource(ssrc)) < 0)
+		return status;
+	
+	BUILDER_LOCK
+	size_t owncnamelen = 0;
+	uint8_t *owncname = rtcpbuilder.GetLocalCNAME(&owncnamelen);
+
+	if ((status = pb.AddSDESNormalItem(RTCPSDESPacket::CNAME,owncname,owncnamelen)) < 0)
+	{
+		BUILDER_UNLOCK
+		return status;
+	}
+	BUILDER_UNLOCK
+	
+	//add our application specific packet
+	if((status = pb.AddAPPPacket(subtype, ssrc, name, appdata, appdatalen)) < 0)
+		return status;
+
+	if((status = pb.EndBuild()) < 0)
+		return status;
+
+	//send packet
+	status = rtptrans->SendRTCPData(pb.GetCompoundPacketData(),pb.GetCompoundPacketLength());
+	if(status < 0)
+		return status;
+
+	PACKSENT_LOCK
+	sentpackets = true;
+	PACKSENT_UNLOCK
+
+	return pb.GetCompoundPacketLength();
+}
+
+#endif // RTP_SUPPORT_SENDAPP
 
 int RTPSession::SetDefaultPayloadType(uint8_t pt)
 {
@@ -669,6 +812,11 @@ RTPTransmissionInfo *RTPSession::GetTransmissionInfo()
 	if (!created)
 		return 0;
 	return rtptrans->GetTransmissionInfo();
+}
+
+void RTPSession::DeleteTransmissionInfo(RTPTransmissionInfo *inf)
+{
+	RTPDelete(inf,GetMemoryManager());
 }
 
 int RTPSession::Poll()
@@ -786,6 +934,11 @@ RTPPacket *RTPSession::GetNextPacket()
 	if (!created)
 		return 0;
 	return sources.GetNextPacket();
+}
+
+void RTPSession::DeletePacket(RTPPacket *p)
+{
+	RTPDelete(p,GetMemoryManager());
 }
 
 int RTPSession::EndDataAccess()
@@ -1053,7 +1206,7 @@ int RTPSession::ProcessPolledData()
 		{
 			SCHED_UNLOCK
 			SOURCES_UNLOCK
-			delete rawpack;
+			RTPDelete(rawpack,GetMemoryManager());
 			return status;
 		}
 		SCHED_UNLOCK
@@ -1065,13 +1218,17 @@ int RTPSession::ProcessPolledData()
 			if ((status = collisionlist.UpdateAddress(rawpack->GetSenderAddress(),rawpack->GetReceiveTime(),&created)) < 0)
 			{
 				SOURCES_UNLOCK
-				delete rawpack;
+				RTPDelete(rawpack,GetMemoryManager());
 				return status;
 			}
 
 			if (created) // first time we've encountered this address, send bye packet and
 			{            // change our own SSRC
-				if (rtptrans->GetNumRTPPacketsSent() != 0 || rtptrans->GetNumRTCPPacketsSent() != 0)
+				PACKSENT_LOCK
+				bool hassentpackets = sentpackets;
+				PACKSENT_UNLOCK
+
+				if (hassentpackets)
 				{
 					// Only send BYE packet if we've actually sent data using this
 					// SSRC
@@ -1083,7 +1240,7 @@ int RTPSession::ProcessPolledData()
 					{
 						BUILDER_UNLOCK
 						SOURCES_UNLOCK
-						delete rawpack;
+						RTPDelete(rawpack,GetMemoryManager());
 						return status;
 					}
 					BUILDER_UNLOCK
@@ -1103,26 +1260,27 @@ int RTPSession::ProcessPolledData()
 				uint32_t newssrc = packetbuilder.CreateNewSSRC(sources);
 				BUILDER_UNLOCK
 					
-				rtptrans->ResetPacketCount();
-
+				PACKSENT_LOCK
+				sentpackets = false;
+				PACKSENT_UNLOCK
+	
 				// remove old entry in source table and add new one
 
 				if ((status = sources.DeleteOwnSSRC()) < 0)
 				{
 					SOURCES_UNLOCK
-					delete rawpack;
+					RTPDelete(rawpack,GetMemoryManager());
 					return status;
 				}
 				if ((status = sources.CreateOwnSSRC(newssrc)) < 0)
 				{
 					SOURCES_UNLOCK
-					delete rawpack;
+					RTPDelete(rawpack,GetMemoryManager());
 					return status;
 				}
 			}
 		}
-		
-		delete rawpack;
+		RTPDelete(rawpack,GetMemoryManager());
 	}
 
 	SCHED_LOCK
@@ -1165,9 +1323,13 @@ int RTPSession::ProcessPolledData()
 			if ((status = rtptrans->SendRTCPData(pack->GetCompoundPacketData(),pack->GetCompoundPacketLength())) < 0)
 			{
 				SOURCES_UNLOCK
-				delete pack;
+				RTPDelete(pack,GetMemoryManager());
 				return status;
 			}
+		
+			PACKSENT_LOCK
+			sentpackets = true;
+			PACKSENT_UNLOCK
 
 			OnSendRTCPCompoundPacket(pack); // we'll place this after the actual send to avoid tampering
 		}
@@ -1179,9 +1341,13 @@ int RTPSession::ProcessPolledData()
 			if ((status = rtptrans->SendRTCPData(pack->GetCompoundPacketData(),pack->GetCompoundPacketLength())) < 0)
 			{
 				SOURCES_UNLOCK
-				delete pack;
+				RTPDelete(pack,GetMemoryManager());
 				return status;
 			}
+			
+			PACKSENT_LOCK
+			sentpackets = true;
+			PACKSENT_UNLOCK
 
 			OnSendRTCPCompoundPacket(pack); // we'll place this after the actual send to avoid tampering
 			
@@ -1197,7 +1363,7 @@ int RTPSession::ProcessPolledData()
 		rtcpsched.AnalyseOutgoing(*pack);
 		SCHED_UNLOCK
 
-		delete pack;
+		RTPDelete(pack,GetMemoryManager());
 	}
 	SOURCES_UNLOCK
 	return 0;

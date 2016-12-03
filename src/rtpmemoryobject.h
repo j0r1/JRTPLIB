@@ -30,23 +30,40 @@
 
 */
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+/**
+ * \file rtpmemoryobject.h
+ */
 
-#include "rtptimeutilities.h"
-#ifdef RTPDEBUG
-	#include <iostream>
-#endif // RTPDEBUG
+#ifndef RTPMEMORYOBJECT_H
 
-RTPTimeInitializer::RTPTimeInitializer()
+#define RTPMEMORYOBJECT_H
+
+#include "rtpconfig.h"
+#include "rtpmemorymanager.h"
+
+class RTPMemoryObject
 {
-#ifdef RTPDEBUG
-	std::cout << "RTPTimeInitializer: Initializing RTPTime::CurrentTime()" << std::endl;
-#endif // RTPDEBUG
-	RTPTime curtime = RTPTime::CurrentTime();
-	dummy = -1;
-}
+protected:	
+#ifdef RTP_SUPPORT_MEMORYMANAGEMENT
+	RTPMemoryObject(RTPMemoryManager *memmgr) : mgr(memmgr)					{ }
+#else
+	RTPMemoryObject(RTPMemoryManager *memmgr)						{ }
+#endif // RTP_SUPPORT_MEMORYMANAGEMENT
+	virtual ~RTPMemoryObject()								{ }
 
-RTPTimeInitializer timeinit;
+#ifdef RTP_SUPPORT_MEMORYMANAGEMENT	
+	RTPMemoryManager *GetMemoryManager() const						{ return mgr; }
+	void SetMemoryManager(RTPMemoryManager *m)						{ mgr = m; }
+#else
+	RTPMemoryManager *GetMemoryManager() const						{ return 0; }
+	void SetMemoryManager(RTPMemoryManager *m)						{ }
+#endif // RTP_SUPPORT_MEMORYMANAGEMENT
+	
+#ifdef RTP_SUPPORT_MEMORYMANAGEMENT
+private:
+	RTPMemoryManager *mgr;
+#endif // RTP_SUPPORT_MEMORYMANAGEMENT
+};
 
-#endif // WIN32 || _WIN32_WCE
+#endif // RTPMEMORYOBJECT_H
 

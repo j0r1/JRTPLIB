@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtpipv4destination.h
+ */
+
 #ifndef RTPIPV4DESTINATION_H
 
 #define RTPIPV4DESTINATION_H
@@ -37,32 +41,55 @@
 #include "rtpconfig.h"
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
 	#include <netinet/in.h>
+	#include <arpa/inet.h>
+	#include <sys/socket.h>
 #endif // WIN32
 #ifdef RTPDEBUG
 	#include "rtpdefines.h"
 	#include <stdio.h>
 	#include <string>
 #endif // RTPDEBUG
+#include <string.h>
 
 class RTPIPv4Destination
 {
 public:
-	// (nbo = network byte order, hbo = host byte order)
-	
-	RTPIPv4Destination(uint32_t ip,uint16_t rtpportbase)					{ ipaddr_hbo = ip; ipaddr_nbo = htonl(ip); rtpport_nbo = htons(rtpportbase); rtcpport_nbo = htons(rtpportbase+1); }
-	uint32_t GetIP_HBO() const								{ return ipaddr_hbo; }
-	uint32_t GetIP_NBO() const								{ return ipaddr_nbo; }
-	uint16_t GetRTPPort_NBO() const							{ return rtpport_nbo; }
-	uint16_t GetRTCPPort_NBO() const							{ return rtcpport_nbo; }
-	bool operator==(const RTPIPv4Destination &src) const		{ if (src.ipaddr_nbo == ipaddr_nbo && src.rtpport_nbo == rtpport_nbo) return true; return false; } // NOTE: I only check IP and portbase
+	RTPIPv4Destination(uint32_t ip,uint16_t rtpportbase)					
+	{
+		memset(&rtpaddr,0,sizeof(struct sockaddr_in));
+		memset(&rtcpaddr,0,sizeof(struct sockaddr_in));
+		
+		rtpaddr.sin_family = AF_INET;
+		rtpaddr.sin_port = htons(rtpportbase);
+		rtpaddr.sin_addr.s_addr = htonl(ip);
+		
+		rtcpaddr.sin_family = AF_INET;
+		rtcpaddr.sin_port = htons(rtpportbase+1);
+		rtcpaddr.sin_addr.s_addr = htonl(ip);
+
+		RTPIPv4Destination::ip = ip;
+	}
+
+	bool operator==(const RTPIPv4Destination &src) const					
+	{ 
+		if (rtpaddr.sin_addr.s_addr == src.rtpaddr.sin_addr.s_addr && rtpaddr.sin_port == src.rtpaddr.sin_port) 
+			return true; 
+		return false; 
+	}
+	uint32_t GetIP() const									{ return ip; }
+	// nbo = network byte order
+	uint32_t GetIP_NBO() const								{ return rtpaddr.sin_addr.s_addr; }
+	uint16_t GetRTPPort_NBO() const								{ return rtpaddr.sin_port; }
+	uint16_t GetRTCPPort_NBO() const							{ return rtcpaddr.sin_port; }
+	const struct sockaddr_in *GetRTPSockAddr() const					{ return &rtpaddr; }
+	const struct sockaddr_in *GetRTCPSockAddr() const					{ return &rtcpaddr; }
 #ifdef RTPDEBUG
 	std::string GetDestinationString() const;
 #endif // RTPDEBUG
 private:
-	uint32_t ipaddr_hbo;
-	uint32_t ipaddr_nbo;
-	uint16_t rtpport_nbo;
-	uint16_t rtcpport_nbo;
+	uint32_t ip;
+	struct sockaddr_in rtpaddr;
+	struct sockaddr_in rtcpaddr;
 };
 
 #ifdef RTPDEBUG
@@ -78,3 +105,4 @@ inline std::string RTPIPv4Destination::GetDestinationString() const
 #endif // RTPDEBUG
 
 #endif // RTPIPV4DESTINATION_H
+

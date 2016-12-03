@@ -3,7 +3,7 @@
   This file is a part of JRTPLIB
   Copyright (c) 1999-2006 Jori Liesenborgs
 
-  Contact: jori@lumumba.uhasselt.be
+  Contact: jori.liesenborgs@gmail.com
 
   This library was developed at the "Expertisecentrum Digitale Media"
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
@@ -30,6 +30,10 @@
 
 */
 
+/**
+ * \file rtptimeutilities.h
+ */
+
 #ifndef RTPTIMEUTILITIES_H
 
 #define RTPTIMEUTILITIES_H
@@ -47,31 +51,68 @@
 
 #define RTP_NTPTIMEOFFSET									2208988800UL
 
+/**
+ * This is a simple wrapper for the most significant word (MSW) and least 
+ * significant word (LSW) of an NTP timestamp.
+ */
 class RTPNTPTime
 {
 public:
+	/** This constructor creates and instance with MSW \c m and LSW \c l. */
 	RTPNTPTime(uint32_t m,uint32_t l)							{ msw = m ; lsw = l; }
+
+	/** Returns the most significant word. */
 	uint32_t GetMSW() const								{ return msw; }
+
+	/** Returns the least significant word. */
 	uint32_t GetLSW() const								{ return lsw; }
 private:
 	uint32_t msw,lsw;
 };
 
+/** This class is used to specify wallclock time, delay intervals etc.
+ *  This class is used to specify wallclock time, delay intervals etc. 
+ *  It stores a number of seconds and a number of microseconds.
+ */
 class RTPTime
 {
 public:
+	/** Returns an RTPTime instance representing the current wallclock time. 
+	 *  Returns an RTPTime instance representing the current wallclock time. This is expressed 
+	 *  as a number of seconds since 00:00:00 UTC, January 1, 1970.
+	 */
 	static RTPTime CurrentTime();
+
+	/** This function waits the amount of time specified in \c delay. */
 	static void Wait(const RTPTime &delay);
 		
+	/** Creates an RTPTime instance representing \c t, which is expressed in units of seconds. */
 	RTPTime(double t);
+
+	/** Creates an instance that corresponds to \c ntptime. 
+	 *  Creates an instance that corresponds to \c ntptime.  If
+	 *  the conversion cannot be made, both the seconds and the
+	 *  microseconds are set to zero.
+	 */
 	RTPTime(RTPNTPTime ntptime);
+
+	/** Creates an instance corresponding to \c seconds and \c microseconds. */
 	RTPTime(uint32_t seconds,uint32_t microseconds)					{ sec = seconds; microsec = microseconds; }
-	uint32_t GetSeconds() const							{ return sec; }
-	uint32_t GetMicroSeconds() const						{ return microsec; }
-	double GetDouble() const 							{ return (((double)sec)+(((double)microsec)/1000000.0)); }
+
+	/** Returns the number of seconds stored in this instance. */
+	uint32_t GetSeconds() const										{ return sec; }
+
+	/** Returns the number of microseconds stored in this instance. */
+	uint32_t GetMicroSeconds() const								{ return microsec; }
+
+	/** Returns the time stored in this instance, expressed in units of seconds. */
+	double GetDouble() const 										{ return (((double)sec)+(((double)microsec)/1000000.0)); }
+
+	/** Returns the NTP time corresponding to the time stored in this instance. */
+	RTPNTPTime GetNTPTime() const;
+
 	RTPTime &operator-=(const RTPTime &t);
 	RTPTime &operator+=(const RTPTime &t);
-	RTPNTPTime GetNTPTime() const;
 	bool operator<(const RTPTime &t) const;
 	bool operator>(const RTPTime &t) const;
 	bool operator<=(const RTPTime &t) const;
@@ -152,7 +193,9 @@ class RTPTimeInitializer
 {
 public:
 	RTPTimeInitializer();
-	void Dummy() { }
+	void Dummy() { dummy++; }
+private:
+	int dummy;
 };
 
 extern RTPTimeInitializer timeinit;
