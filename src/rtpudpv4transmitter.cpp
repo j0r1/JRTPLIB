@@ -1342,7 +1342,7 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 	{
 		RTPTime curtime = RTPTime::CurrentTime();
 		fromlen = sizeof(struct sockaddr_in);
-		recvlen = recvfrom(sock,packetbuffer,(int)len,0,(struct sockaddr *)&srcaddr,&fromlen);
+		recvlen = recvfrom(sock,packetbuffer,RTPUDPV4TRANS_MAXPACKSIZE,0,(struct sockaddr *)&srcaddr,&fromlen);
 		if (recvlen > 0)
 		{
 			bool acceptdata;

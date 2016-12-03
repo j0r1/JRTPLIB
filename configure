@@ -1806,7 +1806,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=jrtplib
- VERSION=3.5.1
+ VERSION=3.5.2
 
 
 cat >>confdefs.h <<_ACEOF

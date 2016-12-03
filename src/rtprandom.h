@@ -50,7 +50,7 @@ public:
 private:
 #if defined(RTP_SUPPORT_GNUDRAND)
 	struct drand48_data drandbuffer;
-#elif defined(RTP_SUPPORT_RANDR) || defined(WIN32) || defined(_WIN32_WCE)
+#elif defined(RTP_SUPPORT_RANDR)
 	unsigned int state;
 #endif // RTP_SUPPORT_GNUDRAND
 };

@@ -1356,7 +1356,7 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 	{
 		RTPTime curtime = RTPTime::CurrentTime();
 		fromlen = sizeof(struct sockaddr_in6);
-		recvlen = recvfrom(sock,packetbuffer,(int)len,0,(struct sockaddr *)&srcaddr,&fromlen);
+		recvlen = recvfrom(sock,packetbuffer,RTPUDPV6TRANS_MAXPACKSIZE,0,(struct sockaddr *)&srcaddr,&fromlen);
 		if (recvlen > 0)
 		{
 			bool acceptdata;

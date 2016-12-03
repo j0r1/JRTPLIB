@@ -1,9 +1,16 @@
-							       March 24, 2006
+							       March 26, 2006
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.5.2 (March 2006)
+ 	* Fixed bug in the random number functions which are used with
+	  MS Visual Studio 2005. Thanks to Jun Ohasi (jun@jnb.odn.ne.jp)
+	  for bringing the incorrect use of rand_s to my attention.
+	* Changed types like u_int32_t to types like uint32_t in the 
+	  documentation.
 
  3.5.1 (March 2006)
 	* Fixed bug in RTCP scheduler. Due to -= operation on an RTPTime
