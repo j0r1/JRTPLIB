@@ -144,6 +144,7 @@ public:
 
 #ifdef RTPDEBUG
 	void DumpSources();
+	void DumpTransmitter();
 #endif // RTPDEBUG
 protected:
 	virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime,

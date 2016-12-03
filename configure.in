@@ -1,5 +1,5 @@
 AC_INIT(configure.in)
-AM_INIT_AUTOMAKE(jrtplib,3.0.0)
+AM_INIT_AUTOMAKE(jrtplib,3.0.1)
 
 RTP_FILIO="// Don't have <sys/filio.h>"
 RTP_SOCKIO="// Don't have <sys/sockio.h>"
@@ -84,32 +84,50 @@ if test "$checkjthread" = "yes" ; then
 	AC_ARG_WITH(jthread-includes,[  --with-jthread-includes Directory where JThread include files are located],
 		[
 		if test -e "$withval"/jthread.h && test -e "$withval"/jmutex.h ; then
-			RTP_JTHREADINCLUDES="-I $withval"
 			AC_MSG_RESULT(in "$withval")
-			RTP_SUPPORT_THREAD="#define RTP_SUPPORT_THREAD"
+			AC_MSG_CHECKING(JThread version)
+			AC_COMPILE_IFELSE([ 
+				#include "$withval/jthread.h"
+				class MyThread : public JThread
+				{
+				public:
+					void *Thread() { JThread::ThreadStarted(); }
+				};],[
+				RTP_JTHREADINCLUDES="-I $withval"
+				RTP_SUPPORT_THREAD="#define RTP_SUPPORT_THREAD"
+				AC_MSG_RESULT(>= 1.1.0) ],[
+				AC_MSG_RESULT(< 1.1.0)
+				AC_MSG_WARN(You need at least JThread version 1.1.0. Support for JThread has been disabled)])
 		else
 			AC_MSG_RESULT(not found)
-			AC_MSG_WARN(
-    The JThread include files were not found in $withval. Support for JThread has been
-    disabled)
+			AC_MSG_WARN(The JThread include files were not found in $withval. Support for JThread has been disabled)
 		fi
 		],
 		[
 			for i in $searchdirs ; do
 				if test -e $i/jthread.h && test -e $i/jmutex.h ; then
-					RTP_JTHREADINCLUDES="-I $i"
+					RTP_JTHREADINCLUDEDIR="$i"
 					AC_MSG_RESULT($i)
 					break
 				fi
 			done
-			if test "BLAAI$RTP_JTHREADINCLUDES" = "BLAAI" ; then
+			if test "BLAAI$RTP_JTHREADINCLUDEDIR" = "BLAAI" ; then
 				AC_MSG_RESULT(not found)
-				AC_MSG_WARN(
-    Unable to locate the JThread include files.
-    Please specify the include path with --with-jthread-includes if they
-    exist on your system. JThread support has been disabled)
+				AC_MSG_WARN(Unable to locate the JThread include files. Please specify the include path with --with-jthread-includes if they exist on your system. JThread support has been disabled)
 			else
-				RTP_SUPPORT_THREAD="#define RTP_SUPPORT_THREAD"
+				AC_MSG_CHECKING(JThread version)
+				AC_COMPILE_IFELSE([ 
+					#include "$RTP_JTHREADINCLUDEDIR/jthread.h"
+					class MyThread : public JThread
+					{
+					public:
+						void *Thread() { JThread::ThreadStarted(); }
+					};],[
+					RTP_JTHREADINCLUDES="-I $RTP_JTHREADINCLUDEDIR"
+					RTP_SUPPORT_THREAD="#define RTP_SUPPORT_THREAD"
+					AC_MSG_RESULT(>= 1.1.0) ],[
+					AC_MSG_RESULT(< 1.1.0)
+					AC_MSG_WARN(You need at least JThread version 1.1.0. Support for JThread has been disabled)])
 			fi
 		])
 fi

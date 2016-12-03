@@ -338,7 +338,7 @@ void RTPPacket::Dump()
 	if (HasExtension())
 	{
 		printf("    Extension ID:            0x%04x\n",GetExtensionID());
-		printf("    Extension data:          %s\n",ExtensionData());
+		printf("    Extension data:          %s\n",GetExtensionData());
 		printf("    Extension length:        %d\n",GetExtensionLength());
 	}
 }

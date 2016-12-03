@@ -1797,7 +1797,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=jrtplib
- VERSION=3.0.0
+ VERSION=3.0.1
 
 
 cat >>confdefs.h <<_ACEOF
@@ -19121,40 +19121,129 @@ if test "${with_jthread_includes+set}" = set; then
   withval="$with_jthread_includes"
 
 		if test -e "$withval"/jthread.h && test -e "$withval"/jmutex.h ; then
-			RTP_JTHREADINCLUDES="-I $withval"
 			echo "$as_me:$LINENO: result: in \"$withval\"" >&5
 echo "${ECHO_T}in \"$withval\"" >&6
-			RTP_SUPPORT_THREAD="#define RTP_SUPPORT_THREAD"
+			echo "$as_me:$LINENO: checking JThread version" >&5
+echo $ECHO_N "checking JThread version... $ECHO_C" >&6
+			cat >conftest.$ac_ext <<_ACEOF
+
+				#include "$withval/jthread.h"
+				class MyThread : public JThread
+				{
+				public:
+					void *Thread() { JThread::ThreadStarted(); }
+				};
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+				RTP_JTHREADINCLUDES="-I $withval"
+				RTP_SUPPORT_THREAD="#define RTP_SUPPORT_THREAD"
+				echo "$as_me:$LINENO: result: >= 1.1.0" >&5
+echo "${ECHO_T}>= 1.1.0" >&6
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+				echo "$as_me:$LINENO: result: < 1.1.0" >&5
+echo "${ECHO_T}< 1.1.0" >&6
+				{ echo "$as_me:$LINENO: WARNING: You need at least JThread version 1.1.0. Support for JThread has been disabled" >&5
+echo "$as_me: WARNING: You need at least JThread version 1.1.0. Support for JThread has been disabled" >&2;}
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 		else
 			echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-			{ echo "$as_me:$LINENO: WARNING: The JThread include files were not found in $withval. Support for JThread has been
-    disabled" >&5
-echo "$as_me: WARNING: The JThread include files were not found in $withval. Support for JThread has been
-    disabled" >&2;}
+			{ echo "$as_me:$LINENO: WARNING: The JThread include files were not found in $withval. Support for JThread has been disabled" >&5
+echo "$as_me: WARNING: The JThread include files were not found in $withval. Support for JThread has been disabled" >&2;}
 		fi
 
 else
 
 			for i in $searchdirs ; do
 				if test -e $i/jthread.h && test -e $i/jmutex.h ; then
-					RTP_JTHREADINCLUDES="-I $i"
+					RTP_JTHREADINCLUDEDIR="$i"
 					echo "$as_me:$LINENO: result: $i" >&5
 echo "${ECHO_T}$i" >&6
 					break
 				fi
 			done
-			if test "BLAAI$RTP_JTHREADINCLUDES" = "BLAAI" ; then
+			if test "BLAAI$RTP_JTHREADINCLUDEDIR" = "BLAAI" ; then
 				echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-				{ echo "$as_me:$LINENO: WARNING: Unable to locate the JThread include files.
-    Please specify the include path with --with-jthread-includes if they
-    exist on your system. JThread support has been disabled" >&5
-echo "$as_me: WARNING: Unable to locate the JThread include files.
-    Please specify the include path with --with-jthread-includes if they
-    exist on your system. JThread support has been disabled" >&2;}
+				{ echo "$as_me:$LINENO: WARNING: Unable to locate the JThread include files. Please specify the include path with --with-jthread-includes if they exist on your system. JThread support has been disabled" >&5
+echo "$as_me: WARNING: Unable to locate the JThread include files. Please specify the include path with --with-jthread-includes if they exist on your system. JThread support has been disabled" >&2;}
 			else
-				RTP_SUPPORT_THREAD="#define RTP_SUPPORT_THREAD"
+				echo "$as_me:$LINENO: checking JThread version" >&5
+echo $ECHO_N "checking JThread version... $ECHO_C" >&6
+				cat >conftest.$ac_ext <<_ACEOF
+
+					#include "$RTP_JTHREADINCLUDEDIR/jthread.h"
+					class MyThread : public JThread
+					{
+					public:
+						void *Thread() { JThread::ThreadStarted(); }
+					};
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_cxx_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+					RTP_JTHREADINCLUDES="-I $RTP_JTHREADINCLUDEDIR"
+					RTP_SUPPORT_THREAD="#define RTP_SUPPORT_THREAD"
+					echo "$as_me:$LINENO: result: >= 1.1.0" >&5
+echo "${ECHO_T}>= 1.1.0" >&6
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+					echo "$as_me:$LINENO: result: < 1.1.0" >&5
+echo "${ECHO_T}< 1.1.0" >&6
+					{ echo "$as_me:$LINENO: WARNING: You need at least JThread version 1.1.0. Support for JThread has been disabled" >&5
+echo "$as_me: WARNING: You need at least JThread version 1.1.0. Support for JThread has been disabled" >&2;}
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 			fi
 
 fi;

@@ -1216,5 +1216,11 @@ void RTPSession::DumpSources()
 	sources.Dump();
 	EndDataAccess();
 }
+
+void RTPSession::DumpTransmitter()
+{
+	if (created)
+		rtptrans->Dump();
+}
 #endif // RTPDEBUG
 

@@ -40,6 +40,10 @@
 #else
 	#include <winsock2.h>
 #endif // WIN32
+#ifdef RTPDEBUG
+	#include <stdio.h>
+	#include <string>
+#endif // RTPDEBUG
 
 class RTPIPv4Destination
 {
@@ -52,11 +56,26 @@ public:
 	u_int16_t GetRTPPort_NBO() const							{ return rtpport_nbo; }
 	u_int16_t GetRTCPPort_NBO() const							{ return rtcpport_nbo; }
 	bool operator==(const RTPIPv4Destination &src) const		{ if (src.ipaddr_nbo == ipaddr_nbo && src.rtpport_nbo == rtpport_nbo) return true; return false; } // NOTE: I only check IP and portbase
+#ifdef RTPDEBUG
+	std::string GetDestinationString() const;
+#endif // RTPDEBUG
 private:
 	u_int32_t ipaddr_hbo;
 	u_int32_t ipaddr_nbo;
 	u_int16_t rtpport_nbo;
 	u_int16_t rtcpport_nbo;
 };
+
+#ifdef RTPDEBUG
+inline std::string RTPIPv4Destination::GetDestinationString() const
+{
+	char str[1024];
+	u_int32_t ip = ipaddr_hbo;
+	u_int16_t portbase = ntohs(rtpport_nbo);
+	
+	sprintf(str,"%d.%d.%d.%d:%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF),(int)(portbase));
+	return std::string(str);
+}
+#endif // RTPDEBUG
 
 #endif // RTPIPV4DESTINATION

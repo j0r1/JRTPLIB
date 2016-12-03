@@ -1,10 +1,19 @@
-                                                             August 18, 2004
+                                                           September 4, 2004
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
- 
+
+ 3.0.1 (September 2004)
+ 	* Bugfix in rtpudpv4transmitter.cpp and rtpudpv6transmitter.cpp in
+	  method SetReceiveMode
+	* Removed unused 'acceptownpackets' variable from
+	  rtpudpv4transmitter.cpp and rtpudpv6transmitter.cpp
+	* Added a 'Dump' function (for debugging) in RTPUDPv4Transmitter
+	  and RTPUDPv6Transmitter
+	* Now using JThread 1.1.0
+
  3.0.0 (August 2004)
  	* Complete rewrite of the library to provide better extensibility
 	  and compliance with RFC 3550

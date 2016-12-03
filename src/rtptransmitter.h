@@ -102,6 +102,9 @@ public:
 	
 	virtual bool NewDataAvailable() = 0;
 	virtual RTPRawPacket *GetNextPacket() = 0;
+#ifdef RTPDEBUG
+	virtual void Dump() = 0;
+#endif // RTPDEBUG
 };
 
 // Abstract class from which actual transmission parameters should be derived

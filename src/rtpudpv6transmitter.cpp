@@ -433,13 +433,14 @@ int RTPUDPv6Transmitter::GetLocalHostName(u_int8_t *buffer,size_t *bufferlength)
 				{
 					found = true;
 					localhostnamelength = (*it).length();
-					localhostname = new u_int8_t [localhostnamelength];
+					localhostname = new u_int8_t [localhostnamelength+1];
 					if (localhostname == 0)
 					{
 						MAINMUTEX_UNLOCK
 						return ERR_RTP_OUTOFMEM;
 					}
 					memcpy(localhostname,(*it).c_str(),localhostnamelength);
+					localhostname[localhostnamelength] = 0;
 				}
 			}
 		}
@@ -465,13 +466,14 @@ int RTPUDPv6Transmitter::GetLocalHostName(u_int8_t *buffer,size_t *bufferlength)
 			len = strlen(str);
 	
 			localhostnamelength = len;
-			localhostname = new u_int8_t [localhostnamelength];
+			localhostname = new u_int8_t [localhostnamelength+1];
 			if (localhostname == 0)
 			{
 				MAINMUTEX_UNLOCK
 				return ERR_RTP_OUTOFMEM;
 			}
 			memcpy(localhostname,str,localhostnamelength);
+			localhostname[localhostnamelength] = 0;
 		}
 	}
 	
@@ -1004,7 +1006,7 @@ int RTPUDPv6Transmitter::SetReceiveMode(RTPTransmitter::ReceiveMode m)
 	}
 	if (m != receivemode)
 	{
-		m = receivemode;
+		receivemode = m;
 		acceptignoreinfo.Clear();
 	}
 	MAINMUTEX_UNLOCK
@@ -1778,6 +1780,137 @@ void RTPUDPv6Transmitter::AddLoopbackAddress()
 	if (!found)
 		localIPs.push_back(in6addr_loopback);
 }
+
+#ifdef RTPDEBUG
+void RTPUDPv6Transmitter::Dump()
+{
+	if (!init)
+		std::cout << "Not initialized" << std::endl;
+	else
+	{
+		MAINMUTEX_LOCK
+	
+		if (!created)
+			std::cout << "Not created" << std::endl;
+		else
+		{
+			char str[1024];
+			in6_addr ip;
+			u_int16_t ip16[8];
+			std::list<in6_addr>::const_iterator it;
+			int i,j;
+			
+			std::cout << "Portbase:                       " << portbase << std::endl;
+			std::cout << "RTP socket descriptor:          " << rtpsock << std::endl;
+			std::cout << "RTCP socket descriptor:         " << rtcpsock << std::endl;
+			ip = bindIP;
+			for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((u_int16_t)ip.s6_addr[i])<<8); ip16[j] |= ((u_int16_t)ip.s6_addr[i+1]); }
+			sprintf(str,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
+			std::cout << "Bind IP address:                " << str << std::endl;
+			std::cout << "Local IP addresses:" << std::endl;
+			for (it = localIPs.begin() ; it != localIPs.end() ; it++)
+			{
+				ip = (*it);
+				for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((u_int16_t)ip.s6_addr[i])<<8); ip16[j] |= ((u_int16_t)ip.s6_addr[i+1]); }
+				sprintf(str,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
+				std::cout << "    " << str << std::endl;
+			}
+			std::cout << "Multicast TTL:                  " << (int)multicastTTL << std::endl;
+			std::cout << "Receive mode:                   ";
+			switch (receivemode)
+			{
+			case RTPTransmitter::AcceptAll:
+				std::cout << "Accept all";
+				break;
+			case RTPTransmitter::AcceptSome:
+				std::cout << "Accept some";
+				break;
+			case RTPTransmitter::IgnoreSome:
+				std::cout << "Ignore some";
+			}
+			std::cout << std::endl;
+			if (receivemode != RTPTransmitter::AcceptAll)
+			{
+				acceptignoreinfo.GotoFirstElement();
+				while(acceptignoreinfo.HasCurrentElement())
+				{
+					ip = acceptignoreinfo.GetCurrentKey();
+					for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((u_int16_t)ip.s6_addr[i])<<8); ip16[j] |= ((u_int16_t)ip.s6_addr[i+1]); }
+					sprintf(str,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
+					PortInfo *pinfo = acceptignoreinfo.GetCurrentElement();
+					std::cout << "    " << str << ": ";
+					if (pinfo->all)
+					{
+						std::cout << "All ports";
+						if (!pinfo->portlist.empty())
+							std::cout << ", except ";
+					}
+					
+					std::list<u_int16_t>::const_iterator it;
+					
+					for (it = pinfo->portlist.begin() ; it != pinfo->portlist.end() ; )
+					{
+						std::cout << (*it);
+						it++;
+						if (it != pinfo->portlist.end())
+							std::cout << ", ";
+					}
+					std::cout << std::endl;
+				}
+			}
+			
+			std::cout << "Local host name:                ";
+			if (localhostname == 0)
+				std::cout << "Not set";
+			else
+				std::cout << localhostname;
+			std::cout << std::endl;
+
+			std::cout << "List of destinations:           ";
+			destinations.GotoFirstElement();
+			if (destinations.HasCurrentElement())
+			{
+				std::cout << std::endl;
+				do
+				{
+					std::cout << "    " << destinations.GetCurrentElement().GetDestinationString() << std::endl;
+					destinations.GotoNextElement();
+				} while (destinations.HasCurrentElement());
+			}
+			else
+				std::cout << "Empty" << std::endl;
+		
+			std::cout << "Supports multicasting:          " << ((supportsmulticasting)?"Yes":"No") << std::endl;
+#ifdef RTP_SUPPORT_IPV6MULTICAST
+			std::cout << "List of multicast groups:       ";
+			multicastgroups.GotoFirstElement();
+			if (multicastgroups.HasCurrentElement())
+			{
+				std::cout << std::endl;
+				do
+				{
+					ip = multicastgroups.GetCurrentElement();
+					for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((u_int16_t)ip.s6_addr[i])<<8); ip16[j] |= ((u_int16_t)ip.s6_addr[i+1]); }
+					sprintf(str,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
+					std::cout << "    " << str << std::endl;
+					multicastgroups.GotoNextElement();
+				} while (multicastgroups.HasCurrentElement());
+			}
+			else
+				std::cout << "Empty" << std::endl;
+#endif // RTP_SUPPORT_IPV6MULTICAST
+			
+			std::cout << "Number of raw packets in queue: " << rawpacketlist.size() << std::endl;
+			std::cout << "Maximum allowed packet size:    " << maxpacksize << std::endl;
+			std::cout << "RTP packet count:               " << rtppackcount << std::endl;
+			std::cout << "RTCP packet count:              " << rtcppackcount << std::endl;
+		}
+		
+		MAINMUTEX_UNLOCK
+	}
+
+}
+#endif // RTPDEBUG
 
 #endif // RTP_SUPPORT_IPV6
 

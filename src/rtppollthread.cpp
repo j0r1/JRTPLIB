@@ -99,6 +99,8 @@ void RTPPollThread::Stop()
 
 void *RTPPollThread::Thread()
 {
+	JThread::ThreadStarted();
+	
 	bool stopthread;
 
 	stopmutex.Lock();

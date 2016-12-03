@@ -132,6 +132,9 @@ public:
 	
 	bool NewDataAvailable();
 	RTPRawPacket *GetNextPacket();
+#ifdef RTPDEBUG
+	void Dump();
+#endif // RTPDEBUG
 private:
 	int CreateLocalIPList();
 	bool GetLocalIPList_Interfaces();
@@ -158,7 +161,6 @@ private:
 	in6_addr bindIP;
 	std::list<in6_addr> localIPs;
 	u_int16_t portbase;
-	bool acceptownpackets;
 	u_int8_t multicastTTL;
 	RTPTransmitter::ReceiveMode receivemode;
 
