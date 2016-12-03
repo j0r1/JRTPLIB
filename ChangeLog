@@ -1,10 +1,17 @@
-                                                           September 19, 2005
+							   September 26, 2005
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
 
+
+ 3.2.1 (September 2005)
+ 	* The library wouldn't compile when probation support was disabled. 
+	  Thanks to Herman Bastiaens (herman.bastiaens@student.luc.ac.be) for
+	  bringing this to my attention.
+	* When parsed from an RTPRawPacket, the receive time is also stored
+	  in the RTPPacket instance.
 
  3.2.0 (September 2005)
  	* Modified the routine in the RTPSession class which creates the

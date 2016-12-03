@@ -206,7 +206,6 @@ int RTPSources::ProcessRawPacket(RTPRawPacket *rawpack,RTPTransmitter *rtptrans[
 					ownpacket = true;
 			}
 			
-			
 			// Check if the packet is our own.
 			if (ownpacket)
 			{
@@ -801,7 +800,11 @@ int RTPSources::ObtainSourceDataInstance(u_int32_t ssrc,RTPInternalSourceData **
 	
 	if (sourcelist.GotoElement(ssrc) < 0) // No entry for this source
 	{
+#ifdef RTP_SUPPORT_PROBATION
 		srcdat2 = new RTPInternalSourceData(ssrc,probationtype);
+#else
+		srcdat2 = new RTPInternalSourceData(ssrc,RTPSources::NoProbation);
+#endif // RTP_SUPPORT_PROBATION
 		if (srcdat2 == 0)
 			return ERR_RTP_OUTOFMEM;
 		if ((status = sourcelist.AddElement(ssrc,srcdat2)) < 0)

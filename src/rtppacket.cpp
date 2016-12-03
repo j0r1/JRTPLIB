@@ -65,7 +65,7 @@ void RTPPacket::Clear()
 	externalbuffer = false;
 }
 
-RTPPacket::RTPPacket(RTPRawPacket &rawpack)
+RTPPacket::RTPPacket(RTPRawPacket &rawpack) : receivetime(rawpack.GetReceiveTime())
 {
 	Clear();
 	error = ParseRawPacket(rawpack);
@@ -74,7 +74,7 @@ RTPPacket::RTPPacket(RTPRawPacket &rawpack)
 RTPPacket::RTPPacket(u_int8_t payloadtype,const void *payloaddata,size_t payloadlen,u_int16_t seqnr,
 		  u_int32_t timestamp,u_int32_t ssrc,bool gotmarker,u_int8_t numcsrcs,const u_int32_t *csrcs,
 		  bool gotextension,u_int16_t extensionid,u_int16_t extensionlen_numwords,const void *extensiondata,
-		  size_t maxpacksize /* = 0 */ )
+		  size_t maxpacksize /* = 0 */ ) : receivetime(0,0)
 {
 	Clear();
 	error = BuildPacket(payloadtype,payloaddata,payloadlen,seqnr,timestamp,ssrc,gotmarker,numcsrcs,
@@ -84,7 +84,7 @@ RTPPacket::RTPPacket(u_int8_t payloadtype,const void *payloaddata,size_t payload
 RTPPacket::RTPPacket(u_int8_t payloadtype,const void *payloaddata,size_t payloadlen,u_int16_t seqnr,
 		  u_int32_t timestamp,u_int32_t ssrc,bool gotmarker,u_int8_t numcsrcs,const u_int32_t *csrcs,
 		  bool gotextension,u_int16_t extensionid,u_int16_t extensionlen_numwords,const void *extensiondata,
-		  void *buffer,size_t buffersize)
+		  void *buffer,size_t buffersize) : receivetime(0,0)
 {
 	Clear();
 	if (buffer == 0)

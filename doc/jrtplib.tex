@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 
-\newcommand{\jversion}{3.2.0}
+\newcommand{\jversion}{3.2.1}
 \newcommand{\headerfile}[1]{\marginpar{\scriptsize Header:\\{\tt #1}}}
 \newcommand{\inherits}[1]{\marginpar{\scriptsize Inherits:\\{\tt #1}}}
 \newcommand{\Paragraph}[1]{\paragraph{#1}\ \\\addcontentsline{toc}{subsection}{\ \hspace{3cm}\ {#1}}}
@@ -22,7 +22,7 @@
 \begin{document}
 	\title{\ \vspace{3.5cm}\ \\{\bf JRTPLIB \jversion}}
 	\author{Jori Liesenborgs\\{\tt jori@lumumba.uhasselt.be}}
-	\date{September 19, 2005\\\vspace{0.5cm}\ \\
+	\date{September 26, 2005\\\vspace{0.5cm}\ \\
 	      {\small{\em Developed at the The Expertise Centre for \\Digital Media (EDM),
 	      a research institute\\of the Hasselt University}\\\ \\
 		  {\tt http://www.edm.uhasselt.be/}\\
@@ -586,9 +586,11 @@ session.BYEDestroy(delay,"Time's up",9);
 					\item {\tt RTPRawPacket *GetNextPacket()}\\
 						Returns the raw data of a received RTP packet (received during
 						the {\tt Poll} function) in an {\tt RTPRawPacket} instance.
-					\item {\tt int WaitForIncomingData(const RTPTime \&delay)}\\
+					\item {\tt int WaitForIncomingData(const RTPTime \&delay,bool *dataavailable = 0)}\\
 						Waits at most a time {\tt delay} until incoming data has
-						been detected.
+						been detected. If {\tt dataavailable} is not {\tt NULL}, it should
+						be set to {\tt true} if data was actually read and to {\tt false}
+						otherwise.
 					\item {\tt int AbortWait()}\\
 						If the previous function has been called, this one aborts
 						the waiting.
@@ -1010,6 +1012,11 @@ session.BYEDestroy(delay,"Time's up",9);
 						Returns a pointer to the header extension data.
 					\item {\tt size\_t GetExtensionLength() const}\\
 						Returns the length of the header extension data.
+					\item {\tt RTPTime GetReceiveTime() const}\\
+						When an {\tt RTPPacket} instance is created from 
+						an {\tt RTPRawPacket} instance, the raw packet's 
+						reception time is stored in the {\tt RTPPacket}
+						instance. This function then retrieves that time.
 				\end{itemize}
 
 			\subsubsection{\tt RTCPCompoundPacket}\headerfile{rtpcompoundpacket.h}
@@ -2413,10 +2420,12 @@ session.BYEDestroy(delay,"Time's up",9);
 						If you're not using the poll thread, this function
 						must be called regularly to process incoming data
 						and to send RTCP data when necessary.
-					\item {\tt int WaitForIncomingData(const RTPTime \&delay)}\\
+					\item {\tt int WaitForIncomingData(const RTPTime \&delay,bool *dataavailable = 0)}\\
 						Waits at most a time {\tt delay} until incoming data has
 						been detected. Only works when you're not using the poll
-						thread.
+						thread. If {\tt dataavailable} is not {\tt NULL}, it should
+						be set to {\tt true} if data was actually read and to {\tt false}
+						otherwise.
 					\item {\tt int AbortWait()}\\
 						If the previous function has been called, this one aborts
 						the waiting. Only works when you're not using the poll

@@ -36,6 +36,7 @@
 
 #include "rtpconfig.h"
 #include "rtptypes.h"
+#include "rtptimeutilities.h"
 
 class RTPRawPacket;
 
@@ -88,6 +89,10 @@ public:
 #ifdef RTPDEBUG
 	void Dump();
 #endif // RTPDEBUG
+
+	// If parsed from a raw packet, the receive time is also copied.
+	// This function can be used to retrieve it.
+	RTPTime GetReceiveTime() const						{ return receivetime; }
 private:
 	void Clear();
 	int ParseRawPacket(RTPRawPacket &rawpack);
@@ -111,6 +116,8 @@ private:
 	size_t extensionlength;
 
 	bool externalbuffer;
+
+	RTPTime receivetime;
 };
 
 #endif // RTPPACKET_H
