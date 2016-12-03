@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2011 Jori Liesenborgs
+  Copyright (c) 1999-2016 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -112,7 +112,6 @@ int RTPPacket::ParseRawPacket(RTPRawPacket &rawpack)
 	int payloadoffset,payloadlength;
 	int numpadbytes;
 	RTPExtensionHeader *rtpextheader;
-	uint16_t exthdrlen;
 	
 	if (!rawpack.IsRTP()) // If we didn't receive it on the RTP port, we'll ignore it
 		return ERR_RTP_PACKET_INVALIDPACKET;
@@ -159,13 +158,13 @@ int RTPPacket::ParseRawPacket(RTPRawPacket &rawpack)
 	{
 		rtpextheader = (RTPExtensionHeader *)(packetbytes+payloadoffset);
 		payloadoffset += sizeof(RTPExtensionHeader);
-		exthdrlen = ntohs(rtpextheader->length);
+		
+		uint16_t exthdrlen = ntohs(rtpextheader->length);
 		payloadoffset += ((int)exthdrlen)*sizeof(uint32_t);
 	}
 	else
 	{
 		rtpextheader = 0;
-		exthdrlen = 0;
 	}	
 	
 	payloadlength = packetlen-numpadbytes-payloadoffset;

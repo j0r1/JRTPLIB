@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------------
-                                                              November 8, 2011
+                                                              December 2, 2016
 
 
-                                   JRTPLIB (v3.9.1)
+                                   JRTPLIB (v3.9.2)
 
 
                       Developed at the The Expertise Centre for 
@@ -23,10 +23,6 @@ from this url:
 If you have questions about the library, you can mail me at:
 	jori.liesenborgs@gmail.com
 	
-There is also a mailing list for the library. To subscribe to the list, 
-just send an e-mail to jrtplib-subscribe@edm.uhasselt.be and you'll 
-receive further instructions.
-
 ACKNOWLEDGMENT
 ==============
 

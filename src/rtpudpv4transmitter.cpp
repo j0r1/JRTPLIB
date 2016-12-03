@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2011 Jori Liesenborgs
+  Copyright (c) 1999-2016 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -1263,6 +1263,9 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 	int sock;
 #endif // WIN32
 	struct sockaddr_in srcaddr;
+	bool dataavailable;
+	fd_set fdset;
+	struct timeval zerotv;
 	
 	if (rtp)
 		sock = rtpsock;
@@ -1271,10 +1274,32 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 	
 	len = 0;
 	RTPIOCTL(sock,FIONREAD,&len);
-	if (len <= 0)
-		return 0;
 
-	while (len > 0)
+	if (len <= 0) // make sure a packet of length zero is not queued
+	{
+		// An alternative workaround would be to just use non-blocking sockets.
+		// However, since the user does have access to the sockets and I do not
+		// know how this would affect anyone else's code, I chose to do it using
+		// an extra select call in case ioctl says the length is zero.
+		
+		FD_ZERO(&fdset);
+		FD_SET(sock,&fdset);
+		
+		zerotv.tv_sec = 0;
+		zerotv.tv_usec = 0;
+
+		if (select(FD_SETSIZE,&fdset,0,0,&zerotv) < 0)
+			return ERR_RTP_UDPV4TRANS_ERRORINSELECT;
+
+		if (FD_ISSET(sock, &fdset))
+			dataavailable = true;
+		else
+			dataavailable = false;
+	}
+	else
+		dataavailable = true;
+	
+	while (dataavailable)
 	{
 		RTPTime curtime = RTPTime::CurrentTime();
 		fromlen = sizeof(struct sockaddr_in);
@@ -1318,6 +1343,25 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 		}
 		len = 0;
 		RTPIOCTL(sock,FIONREAD,&len);
+
+		if (len <= 0) // make sure a packet of length zero is not queued
+		{
+			FD_ZERO(&fdset);
+			FD_SET(sock,&fdset);
+			
+			zerotv.tv_sec = 0;
+			zerotv.tv_usec = 0;
+
+			if (select(FD_SETSIZE,&fdset,0,0,&zerotv) < 0)
+				return ERR_RTP_UDPV4TRANS_ERRORINSELECT;
+
+			if (FD_ISSET(sock, &fdset))
+				dataavailable = true;
+			else
+				dataavailable = false;
+		}
+		else
+			dataavailable = true;
 	}
 	return 0;
 }
@@ -1762,7 +1806,6 @@ void RTPUDPv4Transmitter::GetLocalIPList_DNS()
 {
 	struct hostent *he;
 	char name[1024];
-	uint32_t ip;
 	bool done;
 	int i,j;
 
@@ -1772,7 +1815,6 @@ void RTPUDPv4Transmitter::GetLocalIPList_DNS()
 	if (he == 0)
 		return;
 	
-	ip = 0;
 	i = 0;
 	done = false;
 	while (!done)
@@ -1781,7 +1823,8 @@ void RTPUDPv4Transmitter::GetLocalIPList_DNS()
 			done = true;
 		else
 		{
-			ip = 0;
+			uint32_t ip = 0;
+
 			for (j = 0 ; j < 4 ; j++)
 				ip |= ((uint32_t)((unsigned char)he->h_addr_list[i][j])<<((3-j)*8));
 			localIPs.push_back(ip);

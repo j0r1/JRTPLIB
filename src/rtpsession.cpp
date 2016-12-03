@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2011 Jori Liesenborgs
+  Copyright (c) 1999-2016 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -85,7 +85,7 @@ namespace jrtplib
 {
 
 RTPSession::RTPSession(RTPRandom *r,RTPMemoryManager *mgr) 
-	: RTPMemoryObject(mgr),sources(*this,mgr),rtprnd(GetRandomNumberGenerator(r)),packetbuilder(*rtprnd,mgr),rtcpsched(sources,*rtprnd),
+	: RTPMemoryObject(mgr),rtprnd(GetRandomNumberGenerator(r)),sources(*this,mgr),packetbuilder(*rtprnd,mgr),rtcpsched(sources,*rtprnd),
 	  rtcpbuilder(sources,packetbuilder,mgr),collisionlist(mgr)
 {
 	created = false;

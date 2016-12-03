@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2011 Jori Liesenborgs
+  Copyright (c) 1999-2016 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -87,7 +87,7 @@ int RTCPSchedulerParams::SetMinimumTransmissionInterval(const RTPTime &t)
 	return 0;
 }
 
-RTCPScheduler::RTCPScheduler(RTPSources &s, RTPRandom &r) : rtprand(r),sources(s),nextrtcptime(0,0),prevrtcptime(0,0)
+RTCPScheduler::RTCPScheduler(RTPSources &s, RTPRandom &r) : sources(s),nextrtcptime(0,0),prevrtcptime(0,0),rtprand(r)
 {
 	Reset();
 

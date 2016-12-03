@@ -8,6 +8,7 @@
 #include "rtpipv4address.h"
 #include "rtpsessionparams.h"
 #include "rtperrors.h"
+#include "rtplibraryversion.h"
 #ifndef WIN32
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
@@ -52,7 +53,9 @@ int main(void)
 	std::string ipstr;
 	int status,i,num;
 
-        // First, we'll ask for the necessary information
+	std::cout << "Using version " << RTPLibraryVersion::GetVersion().GetVersionString() << std::endl;
+
+	// First, we'll ask for the necessary information
 		
 	std::cout << "Enter local portbase:" << std::endl;
 	std::cin >> portbase;

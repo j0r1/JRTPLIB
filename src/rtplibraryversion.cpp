@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2011 Jori Liesenborgs
+  Copyright (c) 1999-2016 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -32,6 +32,7 @@
 
 #include "rtplibraryversion.h"
 #include "rtpdefines.h"
+#include "rtplibraryversioninternal.h"
 #include <stdio.h>
 
 namespace jrtplib
@@ -39,7 +40,7 @@ namespace jrtplib
 
 RTPLibraryVersion RTPLibraryVersion::GetVersion()
 {
-	return RTPLibraryVersion(3,9,1);
+	return RTPLibraryVersion(JRTPLIB_VERSION_MAJOR, JRTPLIB_VERSION_MINOR, JRTPLIB_VERSION_DEBUG);
 }
 
 std::string RTPLibraryVersion::GetVersionString() const

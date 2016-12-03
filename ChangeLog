@@ -1,9 +1,12 @@
-							     November 8, 2011
-				
 				
 				JRTPLIB ChangeLog
-				
-				   -----------
+				-----------------
+
+ 3.9.2 (December 2016)
+ 	* Major bugfix: zero length UDP packets should no longer block
+	  the reception of packets.
+	* Various compiler warnings were fixed. Thanks to Ruotger Skupin
+	  (roddi@me.com) for supplying the patch.
 
  3.9.1 (November 2011)
  	* Fixed a bug in the CMake configuration: was unable to handle

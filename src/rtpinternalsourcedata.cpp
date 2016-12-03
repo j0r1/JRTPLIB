@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2011 Jori Liesenborgs
+  Copyright (c) 1999-2016 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -209,20 +209,18 @@ int RTPInternalSourceData::ProcessSDESItem(uint8_t sdesid,const uint8_t *data,si
 		break;
 	case RTCP_SDES_ID_NAME:
 		{
-			uint8_t *oldname;
 			size_t oldlen;
 
-			oldname = SDESinf.GetName(&oldlen);
+            		SDESinf.GetName(&oldlen);
 			if (oldlen == 0) // Name not set
 				return SDESinf.SetName(data,itemlen);
 		}
 		break;
 	case RTCP_SDES_ID_EMAIL:
 		{
-			uint8_t *oldemail;
 			size_t oldlen;
 
-			oldemail = SDESinf.GetEMail(&oldlen);
+			SDESinf.GetEMail(&oldlen);
 			if (oldlen == 0)
 				return SDESinf.SetEMail(data,itemlen);
 		}
@@ -233,10 +231,9 @@ int RTPInternalSourceData::ProcessSDESItem(uint8_t sdesid,const uint8_t *data,si
 		return SDESinf.SetLocation(data,itemlen);
 	case RTCP_SDES_ID_TOOL:
 		{
-			uint8_t *oldtool;
 			size_t oldlen;
 
-			oldtool = SDESinf.GetTool(&oldlen);
+			SDESinf.GetTool(&oldlen);
 			if (oldlen == 0)
 				return SDESinf.SetTool(data,itemlen);
 		}

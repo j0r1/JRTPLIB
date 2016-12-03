@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2011 Jori Liesenborgs
+  Copyright (c) 1999-2016 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -140,7 +140,6 @@ private:
 #ifdef RTP_SUPPORT_PROBATION
 	uint16_t prevseqnr;
 	int probation;
-	RTPSources::ProbationType probationtype;
 #endif // RTP_SUPPORT_PROBATION
 };
 	

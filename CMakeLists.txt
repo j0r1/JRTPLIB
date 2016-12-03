@@ -1,7 +1,10 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 project(jrtplib)
-set(VERSION 3.9.1)
+set(VERSION_MAJOR 3)
+set(VERSION_MINOR 9)
+set(VERSION_DEBUG 2)
+set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_DEBUG}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
@@ -118,6 +121,7 @@ endif (UNIX OR JRTPLIB_COMPILE_STATIC)
 
 configure_file("${PROJECT_SOURCE_DIR}/src/rtptypes.h.in" "${PROJECT_BINARY_DIR}/src/rtptypes.h")
 configure_file("${PROJECT_SOURCE_DIR}/src/rtpconfig.h.in" "${PROJECT_BINARY_DIR}/src/rtpconfig.h")
+configure_file("${PROJECT_SOURCE_DIR}/src/rtplibraryversioninternal.h.in" "${PROJECT_BINARY_DIR}/src/rtplibraryversioninternal.h")
 
 save_paths(JRTPLIB_INTERNAL_INCLUDES "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}/src")
 
