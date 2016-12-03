@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 
-\newcommand{\jversion}{3.4.0}
+\newcommand{\jversion}{3.5.0}
 \newcommand{\headerfile}[1]{\marginpar{\scriptsize Header:\\{\tt #1}}}
 \newcommand{\inherits}[1]{\marginpar{\scriptsize Inherits:\\{\tt #1}}}
 \newcommand{\Paragraph}[1]{\paragraph{#1}\ \\\addcontentsline{toc}{subsection}{\ \hspace{3cm}\ {#1}}}
@@ -22,7 +22,7 @@
 \begin{document}
 	\title{\ \vspace{3.5cm}\ \\{\bf JRTPLIB \jversion}}
 	\author{Jori Liesenborgs\\{\tt jori@lumumba.uhasselt.be}}
-	\date{January 19, 2006\\\vspace{0.5cm}\ \\
+	\date{March 17, 2006\\\vspace{0.5cm}\ \\
 	      {\small{\em Developed at the The Expertise Centre for \\Digital Media (EDM),
 	      a research institute\\of the Hasselt University}\\\ \\
 		  {\tt http://www.edm.uhasselt.be/}\\
@@ -2614,10 +2614,10 @@ session.BYEDestroy(delay,"Time's up",9);
 				\begin{itemize}
 					\item {\tt void OnRTPPacket(RTPPacket *pack, const RTPTime \&receivetime,
 					                                    const RTPAddress *senderaddress)}\\
-						Is called when an RTP packet is about to be processed.
+						Is called when an incoming RTP packet is about to be processed.
 					\item {\tt void OnRTCPCompoundPacket(RTCPCompoundPacket *pack, const RTPTime \&receivetime,
 					                                             const RTPAddress *senderaddress)}\\
-						Is called when an RTCP packet is about to be processed.
+						Is called when an incoming RTCP packet is about to be processed.
 					\item {\tt void OnSSRCCollision(RTPSourceData *srcdat, const RTPAddress *senderaddress, bool isrtp)}\\
 						Is called when an SSRC collision was detected. The instance
 						{\tt srcdat} is the one present in the table, the address
@@ -2656,6 +2656,9 @@ session.BYEDestroy(delay,"Time's up",9);
 					\item {\tt void OnNoteTimeout(RTPSourceData *srcdat)}\\
 						Is called when the SDES NOTE item for source {\tt srcdat}
 						has been timed out.
+					\item {\tt void OnSendRTCPCompoundPacket(RTCPCompoundPacket *pack)}\\
+						Is called when an RTCP compound packet has just been sent. Useful
+						to inspect outgoing RTCP data.
 					\item {\tt void OnPollThreadError(int errcode)}\\
 						Is called when error {\tt errcode} was detected in the
 						poll thread.

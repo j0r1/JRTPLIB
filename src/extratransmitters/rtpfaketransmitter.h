@@ -63,7 +63,7 @@
 
 // Definition of a callback that is called when a packet is ready for sending
 // params (*data, data_len, dest_addr, dest_port, rtp [1 if rtp, 0 if rtcp])
-typedef void(*packet_ready_cb)(uint8_t*, uint16_t, uint32_t, uint16_t, int rtp);
+typedef void(*packet_ready_cb)(void*, uint8_t*, uint16_t, uint32_t, uint16_t, int rtp);
 
 class RTPFakeTransmissionParams : public RTPTransmissionParams
 {
@@ -80,6 +80,7 @@ public:
     void SetCurrentDataPort(uint16_t port)                 { currentdataport = port; }
     void SetCurrentDataType(bool type)                      { currentdatatype = type; }
     void SetPacketReadyCB(packet_ready_cb cb)                 { packetreadycb = cb; };
+    void SetPacketReadyCBData(void *data)                 { packetreadycbdata = data; };
 	uint32_t GetBindIP() const								{ return bindIP; }
 	uint16_t GetPortbase() const								{ return portbase; }
 	uint8_t GetMulticastTTL() const							{ return multicastTTL; }
@@ -90,6 +91,7 @@ public:
     uint16_t GetCurrentDataPort() const                 { return currentdataport; }
     bool GetCurrentDataType() const                     { return currentdatatype; }
     packet_ready_cb GetPacketReadyCB() const             { return packetreadycb; }
+    void* GetPacketReadyCBData() const             { return packetreadycbdata; }
 private:
 	uint16_t portbase;
 	uint32_t bindIP;
@@ -101,6 +103,7 @@ private:
     uint16_t currentdataport;
     bool currentdatatype;
     packet_ready_cb packetreadycb;
+    void *packetreadycbdata;
 };
 
 class RTPFakeTransmissionInfo : public RTPTransmissionInfo
@@ -119,13 +122,17 @@ private:
     RTPFakeTransmissionParams *params;
 };
 	
-#ifdef RTP_SUPPORT_INLINETEMPLATEPARAM
-	inline int RTPFakeTrans_GetHashIndex_IPv4Dest(const RTPIPv4Destination &d)				{ return d.GetIP_HBO()%RTPFAKETRANS_HASHSIZE; }
-	inline int RTPFakeTrans_GetHashIndex_uint32_t(const uint32_t &k)					{ return k%RTPFAKETRANS_HASHSIZE; }
-#else // No support for inline function as template parameter
-	int RTPFakeTrans_GetHashIndex_IPv4Dest(const RTPIPv4Destination &d);
-	int RTPFakeTrans_GetHashIndex_uint32_t(const uint32_t &k);
-#endif // RTP_SUPPORT_INLINETEMPLATEPARAM
+class RTPFakeTrans_GetHashIndex_IPv4Dest
+{
+public:
+	static int GetIndex(const RTPIPv4Destination &d)					{ return d.GetIP_HBO()%RTPFAKETRANS_HASHSIZE; }
+};
+
+class RTPFakeTrans_GetHashIndex_uint32_t
+{
+public:
+	static int GetIndex(const uint32_t &k)							{ return k%RTPFAKETRANS_HASHSIZE; }
+};
 
 #define RTPFAKETRANS_HEADERSIZE						(20+8)
 	

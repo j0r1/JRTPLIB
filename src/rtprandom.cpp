@@ -30,6 +30,10 @@
 
 */
 
+#if defined(WIN32) && !defined(_WIN32_WCE)
+	#define _CRT_RAND_S
+#endif // WIN32 || _WIN32_WCE
+
 #include "rtprandom.h"
 #include <time.h>
 #ifndef WIN32
@@ -46,19 +50,24 @@
 
 #include "rtpdebug.h"
 
-#if !defined(RTP_SUPPORT_GNUDRAND) && !defined(RTP_SUPPORT_RANDR)
-bool RTPRandom::init = false;
-#endif // WIN32
+#if (!defined(_WIN32_WCE)) && (defined(_MSC_VER) && _MSC_VER >= 1400 )
+	#define RTP_SUPPORT_RANDS
+#endif
 
 RTPRandom::RTPRandom()
 {
-#if defined(RTP_SUPPORT_GNUDRAND) || defined(RTP_SUPPORT_RANDR)
+#if defined(RTP_SUPPORT_GNUDRAND) || defined(RTP_SUPPORT_RANDR) || defined(RTP_SUPPORT_RANDS)
 	uint32_t x;
 
+#if defined(WIN32)
+	x = (uint32_t)_getpid();
+#else
 	x = (uint32_t)getpid();
+#endif // WIN32 || _WIN32_WCE
+
 	x += (uint32_t)time(0);
 	x -= (uint32_t)clock();
-	x ^= (uint32_t)(this);
+	x ^= (uint32_t)((uint8_t *)this - (uint8_t *)0);
 
 #ifdef RTP_SUPPORT_GNUDRAND
 	srand48_r(x,&drandbuffer);
@@ -67,9 +76,6 @@ RTPRandom::RTPRandom()
 #endif
 	
 #else // use simple rand and srand functions
-	if (init)
-		return;
-
 	uint32_t x;
 
 #ifndef _WIN32_WCE
@@ -89,8 +95,6 @@ RTPRandom::RTPRandom()
 #endif // _WIN32_WCE
 	x ^= (uint32_t)(this);
 	srand((unsigned int)x);
-
-	init = true;
 #endif
 }
 
@@ -98,7 +102,7 @@ RTPRandom::~RTPRandom()
 {
 }
 
-#ifdef RTP_SUPPORT_GNUDRAND
+#if defined(RTP_SUPPORT_GNUDRAND)
 
 uint8_t RTPRandom::GetRandom8()
 {
@@ -131,8 +135,7 @@ double RTPRandom::GetRandomDouble()
 	return x;
 }
 
-#else 
-#ifdef RTP_SUPPORT_RANDR
+#elif defined(RTP_SUPPORT_RANDR)
 
 uint8_t RTPRandom::GetRandom8()
 {
@@ -167,6 +170,44 @@ uint32_t RTPRandom::GetRandom32()
 double RTPRandom::GetRandomDouble()
 {
 	double x = ((double)rand_r(&state))/((double)RAND_MAX+1.0);
+	return x;
+}
+
+#elif defined(RTP_SUPPORT_RANDS)
+
+uint8_t RTPRandom::GetRandom8()
+{
+	uint8_t x;
+
+	x = (uint8_t)(256.0*((double)rand_s(&state))/((double)RAND_MAX+1.0));
+	return x;
+}
+
+uint16_t RTPRandom::GetRandom16()
+{
+	uint16_t x;
+
+	x = (uint16_t)(65536.0*((double)rand_s(&state))/((double)RAND_MAX+1.0));
+	return x;
+}
+
+uint32_t RTPRandom::GetRandom32()
+{
+	uint32_t x,y;
+
+	x = (uint32_t)(65536.0*((double)rand_s(&state))/((double)RAND_MAX+1.0));
+	y = x;
+	x = (uint32_t)(65536.0*((double)rand_s(&state))/((double)RAND_MAX+1.0));
+	y ^= (x<<8);
+	x = (uint32_t)(65536.0*((double)rand_s(&state))/((double)RAND_MAX+1.0));
+	y ^= (x<<16);
+
+	return y;
+}
+
+double RTPRandom::GetRandomDouble()
+{
+	double x = ((double)rand_s(&state))/((double)RAND_MAX+1.0);
 	return x;
 }
 
@@ -208,6 +249,5 @@ double RTPRandom::GetRandomDouble()
 	return x;
 }
 
-#endif // RTP_SUPPORT_RANDR
 #endif // RTP_SUPPORT_GNUDRAND
 

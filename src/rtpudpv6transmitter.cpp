@@ -37,6 +37,7 @@
 #include "rtprawpacket.h"
 #include "rtpipv6address.h"
 #include "rtptimeutilities.h"
+#include "rtpdefines.h"
 #include <stdio.h>
 #if (defined(WIN32) || defined(_WIN32_WCE))
 	#define RTPSOCKERR								INVALID_SOCKET
@@ -103,11 +104,6 @@
 										mreq.ipv6mr_interface = mcastifidx;\
 										status = setsockopt(socket,IPPROTO_IPV6,type,(const char *)&mreq,sizeof(struct ipv6_mreq));\
 									}
-#ifndef RTP_SUPPORT_INLINETEMPLATEPARAM
-	int RTPUDPv6Trans_GetHashIndex_IPv6Dest(const RTPIPv6Destination &d)		{ in6_addr ip = d.GetIP(); return ((((uint32_t)ip.s6_addr[12])<<24)|(((uint32_t)ip.s6_addr[13])<<16)|(((uint32_t)ip.s6_addr[14])<<8)|((uint32_t)ip.s6_addr[15]))%RTPUDPV6TRANS_HASHSIZE; }
-	int RTPUDPv6Trans_GetHashIndex_in6_addr(const in6_addr &ip)			{ return ((((uint32_t)ip.s6_addr[12])<<24)|(((uint32_t)ip.s6_addr[13])<<16)|(((uint32_t)ip.s6_addr[14])<<8)|((uint32_t)ip.s6_addr[15]))%RTPUDPV6TRANS_HASHSIZE; }
-#endif // !RTP_SUPPORT_INLINETEMPLATEPARAM
-	
 #ifdef RTP_SUPPORT_THREAD
 	#define MAINMUTEX_LOCK 		{ if (threadsafe) mainmutex.Lock(); }
 	#define MAINMUTEX_UNLOCK	{ if (threadsafe) mainmutex.Unlock(); }
@@ -522,11 +518,7 @@ int RTPUDPv6Transmitter::GetLocalHostName(uint8_t *buffer,size_t *bufferlength)
 				ip16[j] |= ((uint16_t)ip.s6_addr[i+1]);
 			}			
 			
-#if (defined(WIN32) || defined(_WIN32_WCE))
-			_snprintf(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
-#else
-			snprintf(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
-#endif // WIN32 || _WIN32_WCE
+			RTP_SNPRINTF(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
 			len = strlen(str);
 	
 			localhostnamelength = len;
@@ -1865,7 +1857,7 @@ void RTPUDPv6Transmitter::Dump()
 			std::cout << "RTCP socket descriptor:         " << rtcpsock << std::endl;
 			ip = bindIP;
 			for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((uint16_t)ip.s6_addr[i])<<8); ip16[j] |= ((uint16_t)ip.s6_addr[i+1]); }
-			snprintf(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
+			RTP_SNPRINTF(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
 			std::cout << "Bind IP address:                " << str << std::endl;
 			std::Cout << "Multicast interface index:      " << mcastifidx << std::endl;
 			std::cout << "Local IP addresses:" << std::endl;
@@ -1873,7 +1865,7 @@ void RTPUDPv6Transmitter::Dump()
 			{
 				ip = (*it);
 				for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((uint16_t)ip.s6_addr[i])<<8); ip16[j] |= ((uint16_t)ip.s6_addr[i+1]); }
-				snprintf(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
+				RTP_SNPRINTF(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
 				std::cout << "    " << str << std::endl;
 			}
 			std::cout << "Multicast TTL:                  " << (int)multicastTTL << std::endl;
@@ -1897,7 +1889,7 @@ void RTPUDPv6Transmitter::Dump()
 				{
 					ip = acceptignoreinfo.GetCurrentKey();
 					for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((uint16_t)ip.s6_addr[i])<<8); ip16[j] |= ((uint16_t)ip.s6_addr[i+1]); }
-					snprintf(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
+					RTP_SNPRINTF(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
 					PortInfo *pinfo = acceptignoreinfo.GetCurrentElement();
 					std::cout << "    " << str << ": ";
 					if (pinfo->all)
@@ -1952,7 +1944,7 @@ void RTPUDPv6Transmitter::Dump()
 				{
 					ip = multicastgroups.GetCurrentElement();
 					for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((uint16_t)ip.s6_addr[i])<<8); ip16[j] |= ((uint16_t)ip.s6_addr[i+1]); }
-					snprintf(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
+					RTP_SNPRINTF(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
 					std::cout << "    " << str << std::endl;
 					multicastgroups.GotoNextElement();
 				} while (multicastgroups.HasCurrentElement());

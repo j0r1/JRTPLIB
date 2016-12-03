@@ -171,6 +171,7 @@ protected:
 	                                   const RTPAddress *senderaddress)				{ }
 	virtual void OnNoteTimeout(RTPSourceData *srcdat)						{ }
 	virtual void OnBYEPacket(RTPSourceData *srcdat)							{ }
+	virtual void OnSendRTCPCompoundPacket(RTCPCompoundPacket *pack)					{ }
 #ifdef RTP_SUPPORT_THREAD
 	virtual void OnPollThreadError(int errcode)							{ }
 	virtual void OnPollThreadStep()									{ }
@@ -210,6 +211,7 @@ private:
 	friend class RTPPollThread;
 #endif // RTP_SUPPORT_THREAD
 	friend class RTPSessionSources;
+	friend class RTCPSessionPacketBuilder;
 };
 
 #endif // RTPSESSION_H

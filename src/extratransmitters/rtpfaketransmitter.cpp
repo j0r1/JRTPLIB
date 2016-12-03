@@ -80,11 +80,6 @@
 										mreq.imr_interface.s_addr = htonl(bindIP);\
 										status = setsockopt(socket,IPPROTO_IP,type,(const char *)&mreq,sizeof(struct ip_mreq));\
 									}*/
-#ifndef RTP_SUPPORT_INLINETEMPLATEPARAM
-	int RTPFakeTrans_GetHashIndex_IPv4Dest(const RTPIPv4Destination &d)				{ return d.GetIP_HBO()%RTPFAKETRANS_HASHSIZE; }
-	int RTPFakeTrans_GetHashIndex_uint32_t(const uint32_t &k)					{ return k%RTPFAKETRANS_HASHSIZE; }
-#endif // !RTP_SUPPORT_INLINETEMPLATEPARAM
-	
 #ifdef RTP_SUPPORT_THREAD
 	#define MAINMUTEX_LOCK 		{ if (threadsafe) mainmutex.Lock(); }
 	#define MAINMUTEX_UNLOCK	{ if (threadsafe) mainmutex.Unlock(); }
@@ -562,7 +557,7 @@ int RTPFakeTransmitter::SendRTPData(const void *data,size_t len)
     // send to each destination
 	while (destinations.HasCurrentElement())
 	{
-        (*params->GetPacketReadyCB())((uint8_t*)data, len,
+        (*params->GetPacketReadyCB())(params->GetPacketReadyCBData(), (uint8_t*)data, len,
         destinations.GetCurrentElement().GetIP_NBO(),
         destinations.GetCurrentElement().GetRTPPort_NBO(),
         1);
@@ -596,7 +591,7 @@ int RTPFakeTransmitter::SendRTCPData(const void *data,size_t len)
     // send to each destination
 	while (destinations.HasCurrentElement())
 	{
-        (*params->GetPacketReadyCB())((uint8_t*)data, len,
+        (*params->GetPacketReadyCB())(params->GetPacketReadyCBData(), (uint8_t*)data, len,
         destinations.GetCurrentElement().GetIP_NBO(),
         destinations.GetCurrentElement().GetRTCPPort_NBO(), 
         0);
