@@ -44,7 +44,7 @@
 namespace jrtplib
 {
 
-class RTPMemoryObject
+class JRTPLIB_IMPORTEXPORT RTPMemoryObject
 {
 protected:	
 #ifdef RTP_SUPPORT_MEMORYMANAGEMENT

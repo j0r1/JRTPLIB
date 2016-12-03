@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 project(jrtplib)
-set(VERSION 3.9.0)
+set(VERSION 3.9.1)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
@@ -103,12 +103,21 @@ if (NOT UNIX AND WIN32)
 	set(RTP_WINSOCK_HEADERS "#if defined(WIN32) || defined(_WIN32_WCE)\n	#include <winsock2.h>	\n	#include <ws2tcpip.h>\n#ifndef _WIN32_WCE\n	#include <sys/types.h>\n#endif // _WIN32_WCE\n#endif // WIN32 || _WIN32_WCE\n")
 endif (NOT UNIX AND WIN32)
 
-configure_file("${PROJECT_SOURCE_DIR}/src/rtptypes.h.in" "${PROJECT_BINARY_DIR}/src/rtptypes.h")
-configure_file("${PROJECT_SOURCE_DIR}/src/rtpconfig.h.in" "${PROJECT_BINARY_DIR}/src/rtpconfig.h")
-
 if (NOT UNIX)
+	set(JRTPLIB_COMPILE_STATIC ON CACHE BOOL "Flag indicating if a static library should be built, or a dynamic one")
 	list(APPEND JRTPLIB_LINK_LIBS "ws2_32")
 endif (NOT UNIX)
+
+if (UNIX OR JRTPLIB_COMPILE_STATIC)
+	set(JRTPLIB_IMPORT "")
+	set(JRTPLIB_EXPORT "")
+else (UNIX OR JRTPLIB_COMPILE_STATIC)
+	set(JRTPLIB_IMPORT "__declspec(dllimport)")
+	set(JRTPLIB_EXPORT "__declspec(dllexport)")
+endif (UNIX OR JRTPLIB_COMPILE_STATIC)
+
+configure_file("${PROJECT_SOURCE_DIR}/src/rtptypes.h.in" "${PROJECT_BINARY_DIR}/src/rtptypes.h")
+configure_file("${PROJECT_SOURCE_DIR}/src/rtpconfig.h.in" "${PROJECT_BINARY_DIR}/src/rtpconfig.h")
 
 save_paths(JRTPLIB_INTERNAL_INCLUDES "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}/src")
 
@@ -120,12 +129,19 @@ if (UNIX)
 	get_filename_component(JRTPLIB_LIBNAME "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME)
 	set(JRTPLIB_LIBS "${LIBRARY_INSTALL_DIR}/${JRTPLIB_LIBNAME}")
 else (UNIX)
-	get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-static RELEASE_LOCATION)
-	get_filename_component(JRTPLIB_LIBNAME_RELEASE "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME)
-	get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-static DEBUG_LOCATION)
-	get_filename_component(JRTPLIB_LIBNAME_DEBUG "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME)
-	set(JRTPLIB_LIBS optimized "${LIBRARY_INSTALL_DIR}/${JRTPLIB_LIBNAME_RELEASE}" 
-		         debug "${LIBRARY_INSTALL_DIR}/${JRTPLIB_LIBNAME_DEBUG}")
+	if (JRTPLIB_COMPILE_STATIC)
+		get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-static RELEASE_LOCATION)
+		get_filename_component(JRTPLIB_LIBNAME_RELEASE "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME_WE)
+		get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-static DEBUG_LOCATION)
+		get_filename_component(JRTPLIB_LIBNAME_DEBUG "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME_WE)
+	else (JRTPLIB_COMPILE_STATIC)
+		get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-shared RELEASE_LOCATION)
+		get_filename_component(JRTPLIB_LIBNAME_RELEASE "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME_WE)
+		get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-shared DEBUG_LOCATION)
+		get_filename_component(JRTPLIB_LIBNAME_DEBUG "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME_WE)
+	endif (JRTPLIB_COMPILE_STATIC)
+	set(JRTPLIB_LIBS optimized "${LIBRARY_INSTALL_DIR}/${JRTPLIB_LIBNAME_RELEASE}.lib" 
+		         debug "${LIBRARY_INSTALL_DIR}/${JRTPLIB_LIBNAME_DEBUG}.lib")
 endif (UNIX)
 
 set(JRTPLIB_INCDIRS ${JRTPLIB_EXTERNAL_INCLUDES} ${CMAKE_INSTALL_PREFIX}/include)
@@ -133,6 +149,13 @@ set(JRTPLIB_LIBS ${JRTPLIB_LIBS} ${JRTPLIB_LINK_LIBS})
 remove_empty(JRTPLIB_INCDIRS)
 list(REMOVE_DUPLICATES JRTPLIB_INCDIRS)
 remove_empty(JRTPLIB_LIBS)
+
+foreach(ARG ${JRTPLIB_LIBS})
+	set(JRTPLIB_LIBS_CMAKECONFIG "${JRTPLIB_LIBS_CMAKECONFIG} \"${ARG}\"")
+endforeach()
+foreach(ARG ${JRTPLIB_INCDIRS})
+	set(JRTPLIB_INCDIRS_CMAKECONFIG "${JRTPLIB_INCDIRS_CMAKECONFIG} \"${ARG}\"")
+endforeach()
 
 configure_file("${PROJECT_SOURCE_DIR}/cmake/JRTPLIBConfig.cmake.in" "${PROJECT_BINARY_DIR}/cmake/JRTPLIBConfig.cmake")
 install(FILES "${PROJECT_BINARY_DIR}/cmake/JRTPLIBConfig.cmake" DESTINATION ${LIBRARY_INSTALL_DIR}/cmake/JRTPLIB)

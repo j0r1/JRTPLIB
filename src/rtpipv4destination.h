@@ -54,7 +54,7 @@
 namespace jrtplib
 {
 
-class RTPIPv4Destination
+class JRTPLIB_IMPORTEXPORT RTPIPv4Destination
 {
 public:
 	RTPIPv4Destination(uint32_t ip,uint16_t rtpportbase)					

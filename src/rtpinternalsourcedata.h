@@ -47,7 +47,7 @@
 namespace jrtplib
 {
 
-class RTPInternalSourceData : public RTPSourceData
+class JRTPLIB_IMPORTEXPORT RTPInternalSourceData : public RTPSourceData
 {
 public:
 	RTPInternalSourceData(uint32_t ssrc, RTPSources::ProbationType probtype, RTPMemoryManager *mgr = 0);

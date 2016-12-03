@@ -50,7 +50,7 @@ class RTPPacket;
 class RTPSources;
 
 /** Describes parameters used by the RTCPScheduler class. */
-class RTCPSchedulerParams
+class JRTPLIB_IMPORTEXPORT RTCPSchedulerParams
 {
 public:
 	RTCPSchedulerParams();
@@ -98,7 +98,7 @@ private:
 };
 
 /** This class determines when RTCP compound packets should be sent. */
-class RTCPScheduler
+class JRTPLIB_IMPORTEXPORT RTCPScheduler
 {
 public:
 	/** Creates an instance which will use the source table RTPSources to determine when RTCP compound 

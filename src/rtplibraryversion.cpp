@@ -39,7 +39,7 @@ namespace jrtplib
 
 RTPLibraryVersion RTPLibraryVersion::GetVersion()
 {
-	return RTPLibraryVersion(3,9,0);
+	return RTPLibraryVersion(3,9,1);
 }
 
 std::string RTPLibraryVersion::GetVersionString() const

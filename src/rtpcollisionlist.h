@@ -50,7 +50,7 @@ namespace jrtplib
 class RTPAddress;
 
 /** This class represents a list of addresses from which SSRC collisions were detected. */
-class RTPCollisionList : public RTPMemoryObject
+class JRTPLIB_IMPORTEXPORT RTPCollisionList : public RTPMemoryObject
 {
 public:
 	/** Constructs an instance, optionally installing a memory manager. */

@@ -53,7 +53,7 @@ class RTPMemoryManager;
 /** A very general kind of address consisting of a port number and a number of bytes describing the host address.
  *  A very general kind of address, consisting of a port number and a number of bytes describing the host address.
  */
-class RTPByteAddress : public RTPAddress
+class JRTPLIB_IMPORTEXPORT RTPByteAddress : public RTPAddress
 {
 public:
 	/** Creates an instance of the class using \c addrlen bytes of \c hostaddress as host identification,

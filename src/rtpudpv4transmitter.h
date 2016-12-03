@@ -61,7 +61,7 @@ namespace jrtplib
 {
 
 /** Parameters for the UDP over IPv4 transmitter. */
-class RTPUDPv4TransmissionParams : public RTPTransmissionParams
+class JRTPLIB_IMPORTEXPORT RTPUDPv4TransmissionParams : public RTPTransmissionParams
 {
 public:
 	RTPUDPv4TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	{ portbase = RTPUDPV4TRANS_DEFAULTPORTBASE; bindIP = 0; multicastTTL = 1; mcastifaceIP = 0; rtpsendbuf = RTPUDPV4TRANS_RTPTRANSMITBUFFER; rtprecvbuf= RTPUDPV4TRANS_RTPRECEIVEBUFFER; rtcpsendbuf = RTPUDPV4TRANS_RTCPTRANSMITBUFFER; rtcprecvbuf = RTPUDPV4TRANS_RTCPRECEIVEBUFFER; }
@@ -135,7 +135,7 @@ private:
 };
 
 /** Additional information about the UDP over IPv4 transmitter. */
-class RTPUDPv4TransmissionInfo : public RTPTransmissionInfo
+class JRTPLIB_IMPORTEXPORT RTPUDPv4TransmissionInfo : public RTPTransmissionInfo
 {
 public:
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
@@ -168,13 +168,13 @@ private:
 #endif // WIN32
 };
 	
-class RTPUDPv4Trans_GetHashIndex_IPv4Dest
+class JRTPLIB_IMPORTEXPORT RTPUDPv4Trans_GetHashIndex_IPv4Dest
 {
 public:
 	static int GetIndex(const RTPIPv4Destination &d)							{ return d.GetIP()%RTPUDPV4TRANS_HASHSIZE; }
 };
 
-class RTPUDPv4Trans_GetHashIndex_uint32_t
+class JRTPLIB_IMPORTEXPORT RTPUDPv4Trans_GetHashIndex_uint32_t
 {
 public:
 	static int GetIndex(const uint32_t &k)									{ return k%RTPUDPV4TRANS_HASHSIZE; }
@@ -189,7 +189,7 @@ public:
  *  argument require an argument of RTPIPv4Address. The GetTransmissionInfo member function
  *  returns an instance of type RTPUDPv4TransmissionInfo.
  */
-class RTPUDPv4Transmitter : public RTPTransmitter
+class JRTPLIB_IMPORTEXPORT RTPUDPv4Transmitter : public RTPTransmitter
 {
 public:
 	RTPUDPv4Transmitter(RTPMemoryManager *mgr);

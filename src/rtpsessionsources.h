@@ -46,7 +46,7 @@ namespace jrtplib
 
 class RTPSession;
 
-class RTPSessionSources : public RTPSources
+class JRTPLIB_IMPORTEXPORT RTPSessionSources : public RTPSources
 {
 public:
 	RTPSessionSources(RTPSession &sess,RTPMemoryManager *mgr) : RTPSources(RTPSources::ProbationStore,mgr),rtpsession(sess)

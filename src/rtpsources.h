@@ -49,7 +49,7 @@
 namespace jrtplib
 {
 
-class RTPSources_GetHashIndex
+class JRTPLIB_IMPORTEXPORT RTPSources_GetHashIndex
 {
 public:
 	static int GetIndex(const uint32_t &ssrc)				{ return ssrc%RTPSOURCES_HASHSIZE; }
@@ -71,7 +71,7 @@ class RTPSourceData;
  *  is used to identify packets from our own session. The class also provides some overridable functions 
  *  which can be used to catch certain events (new SSRC, SSRC collision, ...).
  */
-class RTPSources : public RTPMemoryObject
+class JRTPLIB_IMPORTEXPORT RTPSources : public RTPMemoryObject
 {
 public:
 	/** Type of probation to use for new sources. */

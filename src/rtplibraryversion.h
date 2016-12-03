@@ -38,6 +38,7 @@
 
 #define RTPLIBRARYVERSION_H
 
+#include "rtpconfig.h"
 #include <string>
 #include <stdio.h>
 
@@ -47,7 +48,7 @@ namespace jrtplib
 /** 
  * Used to provide information about the version of the library. 
  */
-class RTPLibraryVersion
+class JRTPLIB_IMPORTEXPORT RTPLibraryVersion
 {
 public:
 	/** Returns an instance of RTPLibraryVersion describing the version of the library. */

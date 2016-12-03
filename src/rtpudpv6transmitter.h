@@ -68,7 +68,7 @@ namespace jrtplib
 {
 
 /** Parameters for the UDP over IPv6 transmitter. */
-class RTPUDPv6TransmissionParams : public RTPTransmissionParams
+class JRTPLIB_IMPORTEXPORT RTPUDPv6TransmissionParams : public RTPTransmissionParams
 {
 public:
 	RTPUDPv6TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv6UDPProto)	{ portbase = RTPUDPV6TRANS_DEFAULTPORTBASE; for (int i = 0 ; i < 16 ; i++) bindIP.s6_addr[i] = 0; multicastTTL = 1; mcastifidx = 0; rtpsendbuf = RTPUDPV6TRANS_RTPTRANSMITBUFFER; rtprecvbuf= RTPUDPV6TRANS_RTPRECEIVEBUFFER; rtcpsendbuf = RTPUDPV6TRANS_RTCPTRANSMITBUFFER; rtcprecvbuf = RTPUDPV6TRANS_RTCPRECEIVEBUFFER; }
@@ -143,7 +143,7 @@ private:
 };
 
 /** Additional information about the UDP over IPv6 transmitter. */
-class RTPUDPv6TransmissionInfo : public RTPTransmissionInfo
+class JRTPLIB_IMPORTEXPORT RTPUDPv6TransmissionInfo : public RTPTransmissionInfo
 {
 public:
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
@@ -176,13 +176,13 @@ private:
 #endif // WIN32
 };
 		
-class RTPUDPv6Trans_GetHashIndex_IPv6Dest
+class JRTPLIB_IMPORTEXPORT RTPUDPv6Trans_GetHashIndex_IPv6Dest
 {
 public:
 	static int GetIndex(const RTPIPv6Destination &d)					{ in6_addr ip = d.GetIP(); return ((((uint32_t)ip.s6_addr[12])<<24)|(((uint32_t)ip.s6_addr[13])<<16)|(((uint32_t)ip.s6_addr[14])<<8)|((uint32_t)ip.s6_addr[15]))%RTPUDPV6TRANS_HASHSIZE; }
 };
 
-class RTPUDPv6Trans_GetHashIndex_in6_addr
+class JRTPLIB_IMPORTEXPORT RTPUDPv6Trans_GetHashIndex_in6_addr
 {
 public:
 	static int GetIndex(const in6_addr &ip)							{ return ((((uint32_t)ip.s6_addr[12])<<24)|(((uint32_t)ip.s6_addr[13])<<16)|(((uint32_t)ip.s6_addr[14])<<8)|((uint32_t)ip.s6_addr[15]))%RTPUDPV6TRANS_HASHSIZE; }
@@ -197,7 +197,7 @@ public:
  *  argument require an argument of RTPIPv6Address. The GetTransmissionInfo member function
  *  returns an instance of type RTPUDPv6TransmissionInfo.
  */
-class RTPUDPv6Transmitter : public RTPTransmitter
+class JRTPLIB_IMPORTEXPORT RTPUDPv6Transmitter : public RTPTransmitter
 {
 public:
 	RTPUDPv6Transmitter(RTPMemoryManager *mgr);

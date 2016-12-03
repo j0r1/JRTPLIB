@@ -50,7 +50,7 @@ class RTPRawPacket;
 class RTCPPacket;
 
 /** Represents an RTCP compound packet. */
-class RTCPCompoundPacket : public RTPMemoryObject
+class JRTPLIB_IMPORTEXPORT RTCPCompoundPacket : public RTPMemoryObject
 {
 public:
 	/** Creates an RTCPCompoundPacket instance from the data in \c rawpack, installing a memory manager if specified. */

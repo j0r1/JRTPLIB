@@ -52,7 +52,7 @@ namespace jrtplib
 
 class RTPAddress;
 
-class RTCPSenderReportInfo
+class JRTPLIB_IMPORTEXPORT RTCPSenderReportInfo
 {
 public:
 	RTCPSenderReportInfo():ntptimestamp(0,0),receivetime(0,0)		{ hasinfo = false; rtptimestamp = 0; packetcount = 0; bytecount = 0; }
@@ -74,7 +74,7 @@ private:
 	RTPTime receivetime;
 };
 
-class RTCPReceiverReportInfo
+class JRTPLIB_IMPORTEXPORT RTCPReceiverReportInfo
 {
 public:
 	RTCPReceiverReportInfo():receivetime(0,0)				{ hasinfo = false; fractionlost = 0; packetslost = 0; exthighseqnr = 0; jitter = 0; lsr = 0; dlsr = 0; } 
@@ -100,7 +100,7 @@ private:
 	RTPTime receivetime;
 };
 
-class RTPSourceStats
+class JRTPLIB_IMPORTEXPORT RTPSourceStats
 {
 public:
 	RTPSourceStats();
@@ -164,7 +164,7 @@ inline RTPSourceStats::RTPSourceStats():prevpacktime(0,0),lastmsgtime(0,0),lastr
 }
 
 /** Describes an entry in the RTPSources source table. */
-class RTPSourceData : public RTPMemoryObject
+class JRTPLIB_IMPORTEXPORT RTPSourceData : public RTPMemoryObject
 {
 protected:
 	RTPSourceData(uint32_t ssrc, RTPMemoryManager *mgr = 0);

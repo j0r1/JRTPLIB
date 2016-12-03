@@ -46,7 +46,7 @@ namespace jrtplib
 {
 
 /** A random number generator which uses bytes delivered by the /dev/urandom device. */
-class RTPRandomURandom : public RTPRandom
+class JRTPLIB_IMPORTEXPORT RTPRandomURandom : public RTPRandom
 {
 public:
 	RTPRandomURandom();

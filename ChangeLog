@@ -1,9 +1,17 @@
-							        July 25, 2011
+							     November 8, 2011
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.9.1 (November 2011)
+ 	* Fixed a bug in the CMake configuration: was unable to handle
+	  path names with spaces.
+	* Fixed bug in rtcpsdespacket.h: end namespace curly bracket
+	  was in wrong place.
+	* In an MS-Windows environment you can now choose to build a
+	  DLL instead of a static library.
 
  3.9.0 (July 2011)
 	* Switched to CMake build system.

@@ -54,7 +54,7 @@ namespace jrtplib
 class RTPSession;
 class RTCPScheduler;
 
-class RTPPollThread : private jthread::JThread
+class JRTPLIB_IMPORTEXPORT RTPPollThread : private jthread::JThread
 {
 public:
 	RTPPollThread(RTPSession &session,RTCPScheduler &rtcpsched);

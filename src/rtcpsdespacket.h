@@ -52,7 +52,7 @@ namespace jrtplib
 	class RTCPCompoundPacket;
 
 /** Describes an RTCP source description packet. */
-class RTCPSDESPacket : public RTCPPacket
+class JRTPLIB_IMPORTEXPORT RTCPSDESPacket : public RTCPPacket
 {
 public:
 	/** Identifies the type of an SDES item. */
@@ -378,9 +378,9 @@ inline uint8_t *RTCPSDESPacket::GetPRIVValueData()
 	return (currentchunk+itemoffset+sizeof(RTCPSDESHeader)+1+prefixlength);
 }
 
-} // end namespace
-
 #endif // RTP_SUPPORT_SDESPRIV
+
+} // end namespace
 
 #endif // RTCPSDESPACKET_H
 

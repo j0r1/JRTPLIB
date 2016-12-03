@@ -47,7 +47,7 @@ namespace jrtplib
 class RTCPCompoundPacket;
 
 /** Base class for specific types of RTCP packets. */
-class RTCPPacket 
+class JRTPLIB_IMPORTEXPORT RTCPPacket 
 {
 public:
 	/** Identifies the specific kind of RTCP packet. */

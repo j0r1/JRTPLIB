@@ -48,7 +48,7 @@ namespace jrtplib
 {
 
 /** Interface for generating random numbers. */
-class RTPRandom
+class JRTPLIB_IMPORTEXPORT RTPRandom
 {
 public:
 	RTPRandom()											{ }

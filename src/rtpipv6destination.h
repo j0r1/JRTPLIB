@@ -58,7 +58,7 @@
 namespace jrtplib
 {
 
-class RTPIPv6Destination
+class JRTPLIB_IMPORTEXPORT RTPIPv6Destination
 {
 public:
 	RTPIPv6Destination(in6_addr ip,uint16_t portbase)

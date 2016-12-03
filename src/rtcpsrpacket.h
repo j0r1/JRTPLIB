@@ -52,7 +52,7 @@ namespace jrtplib
 class RTCPCompoundPacket;
 
 /** Describes an RTCP sender report packet. */
-class RTCPSRPacket : public RTCPPacket
+class JRTPLIB_IMPORTEXPORT RTCPSRPacket : public RTCPPacket
 {
 public:
 	/** Creates an instance based on the data in \c data with length \c datalen. 

@@ -51,7 +51,7 @@ namespace jrtplib
 class RTCPCompoundPacket;
 
 /** Describes an RTCP BYE packet. */
-class RTCPBYEPacket : public RTCPPacket
+class JRTPLIB_IMPORTEXPORT RTCPBYEPacket : public RTCPPacket
 {
 public:
 	/** Creates an instance based on the data in \c data with length \c datalen. 

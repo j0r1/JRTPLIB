@@ -144,7 +144,7 @@ namespace jrtplib
 {
 
 /** A memory manager. */
-class RTPMemoryManager
+class JRTPLIB_IMPORTEXPORT RTPMemoryManager
 {
 public:	
 	RTPMemoryManager()									{ }

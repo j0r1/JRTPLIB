@@ -58,7 +58,7 @@ namespace jrtplib
  *  the accept or ignore functions of the transmitter, a zero port number represents 
  *  all ports for the specified IP address.
  */
-class RTPIPv6Address : public RTPAddress
+class JRTPLIB_IMPORTEXPORT RTPIPv6Address : public RTPAddress
 {
 public:
 	/** Creates an instance with IP address and port number set to zero. */

@@ -53,7 +53,7 @@ class RTPRawPacket;
  *  The class can also be used to create a new RTP packet according to the parameters specified by
  *  the user.
  */
-class RTPPacket : public RTPMemoryObject
+class JRTPLIB_IMPORTEXPORT RTPPacket : public RTPMemoryObject
 {
 public:
 	/** Creates an RTPPacket instance based upon the data in \c rawpack, optionally installing a memory manager.

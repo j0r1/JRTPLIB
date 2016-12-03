@@ -58,7 +58,7 @@ class RTPTransmissionInfo;
  *  an UDP over IPv4 transmitter, an UDP over IPv6 transmitter and a transmitter
  *  which can be used to use an external transmission mechanism.
  */
-class RTPTransmitter : public RTPMemoryObject
+class JRTPLIB_IMPORTEXPORT RTPTransmitter : public RTPMemoryObject
 {
 public:
 	/** Used to identify a specific transmitter. 
@@ -224,7 +224,7 @@ public:
  *  GetTransmissionProtocol function which identifies the component type for which
  *  these parameters are valid.
  */
-class RTPTransmissionParams
+class JRTPLIB_IMPORTEXPORT RTPTransmissionParams
 {
 protected:
 	RTPTransmissionParams(RTPTransmitter::TransmissionProtocol p)				{ protocol = p; }
@@ -243,7 +243,7 @@ private:
  *  GetTransmissionProtocol function which identifies the component type for which
  *  these parameters are valid.
  */
-class RTPTransmissionInfo
+class JRTPLIB_IMPORTEXPORT RTPTransmissionInfo
 {
 protected:
 	RTPTransmissionInfo(RTPTransmitter::TransmissionProtocol p)				{ protocol = p; }

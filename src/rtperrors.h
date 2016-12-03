@@ -38,13 +38,14 @@
 
 #define RTPERRORS_H
 
+#include "rtpconfig.h"
 #include <string>
 
 namespace jrtplib
 {
 
 /** Returns a string describing the error code \c errcode. */
-std::string RTPGetErrorString(int errcode);
+std::string JRTPLIB_IMPORTEXPORT RTPGetErrorString(int errcode);
 
 } // end namespace
 
