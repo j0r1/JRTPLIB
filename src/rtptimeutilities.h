@@ -118,6 +118,10 @@ public:
 	bool operator<=(const RTPTime &t) const;
 	bool operator>=(const RTPTime &t) const;
 private:
+#if (defined(WIN32) || defined(_WIN32_WCE))
+	static inline unsigned __int64 CalculateMicroseconds(unsigned __int64 performancecount,unsigned __int64 performancefrequency);
+#endif // WIN32 || _WIN32_WCE
+
 	uint32_t sec,microsec;
 };
 
@@ -150,6 +154,16 @@ inline RTPTime::RTPTime(RTPNTPTime ntptime)
 
 #if (defined(WIN32) || defined(_WIN32_WCE))
 
+inline unsigned __int64 RTPTime::CalculateMicroseconds(unsigned __int64 performancecount,unsigned __int64 performancefrequency)
+{
+	unsigned __int64 f = performancefrequency;
+	unsigned __int64 a = performancecount;
+	unsigned __int64 b = a/f;
+	unsigned __int64 c = a%f; // a = b*f+c => (a*1000000)/f = b*1000000+(c*1000000)/f
+
+	return b*1000000ui64+(c*1000000ui64)/f;
+}
+
 inline RTPTime RTPTime::CurrentTime()
 {
 	static int inited = 0;
@@ -171,10 +185,10 @@ inline RTPTime RTPTime::CurrentTime()
 		SystemTimeToFileTime(&systemtime,&filetime);
 		microseconds = ( ((unsigned __int64)(filetime.dwHighDateTime) << 32) + (unsigned __int64)(filetime.dwLowDateTime) ) / 10ui64;
 		microseconds-= 11644473600000000ui64; // EPOCH
-		initmicroseconds = ( ( performancecount.QuadPart * 1000000ui64 ) / performancefrequency.QuadPart );
+		initmicroseconds = CalculateMicroseconds(performancecount.QuadPart, performancefrequency.QuadPart);
 	}
     
-	emulate_microseconds = ( ( performancecount.QuadPart * 1000000ui64 ) / performancefrequency.QuadPart );
+	emulate_microseconds = CalculateMicroseconds(performancecount.QuadPart, performancefrequency.QuadPart);
 
 	microdiff = emulate_microseconds - initmicroseconds;
 

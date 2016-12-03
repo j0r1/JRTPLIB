@@ -1,9 +1,15 @@
-							     January 31, 2007
+							         May 23, 2007
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+
+ 3.7.1 (May 2007)
+ 	* Fixed bug in the CurrentTime implementation (Win32/WinCE version). 
+	  Thanks to Dani Baeyens (dani@warp.es) and Eric Johnson 
+	  (EJohnson@pelco.com) for helping me solve this problem.
 
  3.7.0 (January 2007)
  	* Send and receive socket buffer sizes can now be set in the
