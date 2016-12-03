@@ -30,33 +30,36 @@
 
 */
 
-#ifndef RTPTYPES_H
+/**
+ * \file rtprandomrands.h
+ */
 
-#define RTPTYPES_H
+#ifndef RTPRANDOMRANDS_H
 
-#ifndef _WIN32_WCE
-	#include <winsock2.h>	
-	#include <ws2tcpip.h>
-	#include <sys/types.h>
-#else
-	#include <winsock2.h>	
-	#include <ws2tcpip.h>
-#endif // _WIN32_WCE
+#define RTPRANDOMRANDS_H
 
-#ifndef INTTYPES_DEFINED
+#include "rtpconfig.h"
+#include "rtprandom.h"
 
-#define INTTYPES_DEFINED
+/** A random number generator which tries to use the \c rand_s function on the
+ *  Win32 platform. 
+ */
+class RTPRandomRandS : public RTPRandom
+{
+public:
+	RTPRandomRandS();
+	~RTPRandomRandS();
 
-typedef char int8_t;
-typedef unsigned char uint8_t;
-typedef short int16_t;
-typedef unsigned short uint16_t;
-typedef int int32_t;
-typedef unsigned int uint32_t;
-typedef __int64 int64_t;
-typedef unsigned __int64 uint64_t;
+	/** Initialize the random number generator. */
+	int Init();
 
-#endif // INTTYPES_DEFINED
+	uint8_t GetRandom8();
+	uint16_t GetRandom16();
+	uint32_t GetRandom32();
+	double GetRandomDouble();
+private:
+	bool initialized;
+};
 
-#endif // RTPTYPES_H
+#endif // RTPRANDOMRANDS_H
 

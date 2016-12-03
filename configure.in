@@ -1,5 +1,5 @@
 AC_INIT(configure.in)
-AM_INIT_AUTOMAKE(jrtplib,3.7.1)
+AM_INIT_AUTOMAKE(jrtplib,3.8.0)
 
 RTP_FILIO="// Don't have <sys/filio.h>"
 RTP_SOCKIO="// Don't have <sys/sockio.h>"
@@ -11,13 +11,12 @@ RTP_SUPPORT_IPV6MULTICAST="// No IPv6 multicasting support"
 RTP_SUPPORT_THREAD="// No support for jthread"
 RTP_SUPPORT_SDESPRIV="// No support for SDES PRIV items"
 RTP_SUPPORT_PROBATION="// Do not wait for a number of consecutive packets to validate source"
-RTP_SUPPORT_GNUDRAND="// Not using drand48_r and srand48_r"
-RTP_SUPPORT_RANDR="// Not using rand_r"
 RTP_SUPPORT_GETLOGINR="// Not using getlogin_r"
 RTP_SUPPORT_IPV6="// No IPv6 support"
 RTP_SUPPORT_IFADDRS="// No ifaddrs support"
 RTP_SUPPORT_SENDAPP="// No direct support for sending RTCP APP packets"
 RTP_SUPPORT_MEMORYMANAGEMENT="// No memory management support"
+RTP_SUPPORT_RTCPUNKNOWN="// No support for sending unknown RTCP packets"
 RTP_LINKLIBS=""
 
 RTP_CHECK_JTHREADLINK="no"
@@ -75,7 +74,7 @@ dnl ---------------------------------------------------------------------------
 
 AC_ARG_ENABLE(sendapp,[  --disable-sendapp       Disable support for sending RTCP APP packets],[
 	if test "$enableval" = yes ; then
-		sendappupport="yes"
+		sendappsupport="yes"
 	else
 		sendappsupport="no"
 	fi],[
@@ -84,6 +83,23 @@ AC_ARG_ENABLE(sendapp,[  --disable-sendapp       Disable support for sending RTC
 	
 if test "$sendappsupport" = "yes" ; then
 	RTP_SUPPORT_SENDAPP="#define RTP_SUPPORT_SENDAPP"
+fi
+
+dnl ---------------------------------------------------------------------------
+dnl Check for RTCP unknown sending support
+dnl ---------------------------------------------------------------------------
+
+AC_ARG_ENABLE(rtcpunknown,[  --enable-rtcpunknown    Disable support for sending unknown RTCP packets],[
+	if test "$enableval" = yes ; then
+		rtcpunknownsupport="yes"
+	else
+		rtcpunknownsupport="no"
+	fi],[
+	rtcpunknownsupport="no"
+	])
+	
+if test "$rtcpunknownsupport" = "yes" ; then
+	RTP_SUPPORT_RTCPUNKNOWN="#define RTP_SUPPORT_RTCPUNKNOWN"
 fi
 
 dnl ---------------------------------------------------------------------------
@@ -323,7 +339,8 @@ AC_TRY_COMPILE([
 	uint32_t x;
 	x = 0;],
 	[AC_MSG_RESULT(yes)
-	echo -e "#include <inttypes.h>\n#include <sys/types.h>" >src/rtptypes_unix.h
+	echo "#include <inttypes.h>" >src/rtptypes_unix.h
+	echo "#include <sys/types.h>" >>src/rtptypes_unix.h
 	],[
 	AC_MSG_RESULT(no)
 	echo "Generating src/rtptypes.h ..."
@@ -333,42 +350,6 @@ AC_TRY_COMPILE([
 	if ! ( tools/gettypes >src/rtptypes_unix.h ) ; then
 		AC_MSG_ERROR(Unable to create src/rtptypes_unix.h)
 	fi
-	])
-
-dnl ---------------------------------------------------------------------------
-dnl Check random functions
-dnl ---------------------------------------------------------------------------
-
-AC_MSG_CHECKING(for drand48_r and srand48_r)
-AC_COMPILE_IFELSE([
-	#include <stdlib.h>
-	int main(void)
-	{
-		struct drand48_data drandbuffer;
-		double x;
-		srand48_r(12345,&drandbuffer);
-		drand48_r(&drandbuffer,&x);
-		return 0;
-	}
-	],
-	[AC_MSG_RESULT(yes)
-		RTP_SUPPORT_GNUDRAND="#define RTP_SUPPORT_GNUDRAND"],
-	[
-	AC_MSG_RESULT(no)
-	AC_MSG_CHECKING(for rand_r)
-	AC_COMPILE_IFELSE([
-		#include <stdlib.h>
-		int main(void)
-		{
-			unsigned int x;
-			x = 12345;
-			rand_r(&x);
-			return 0;
-		}
-		],
-		[ AC_MSG_RESULT(yes)
-			RTP_SUPPORT_RANDR="#define RTP_SUPPORT_RANDR"],
-		[ AC_MSG_RESULT(no)])
 	])
 
 dnl ---------------------------------------------------------------------------
@@ -486,14 +467,13 @@ AC_SUBST(RTP_SUPPORT_THREAD)
 AC_SUBST(RTP_SUPPORT_SDESPRIV)
 AC_SUBST(RTP_SUPPORT_INLINETEMPLATEPARAM)
 AC_SUBST(RTP_SUPPORT_PROBATION)
-AC_SUBST(RTP_SUPPORT_GNUDRAND)
-AC_SUBST(RTP_SUPPORT_RANDR)
 AC_SUBST(RTP_SUPPORT_GETLOGINR)
 AC_SUBST(RTP_SUPPORT_IPV6)
 AC_SUBST(RTP_SUPPORT_IPV6MULTICAST)
 AC_SUBST(RTP_SUPPORT_IFADDRS)
 AC_SUBST(RTP_SUPPORT_SENDAPP)
 AC_SUBST(RTP_SUPPORT_MEMORYMANAGEMENT)
+AC_SUBST(RTP_SUPPORT_RTCPUNKNOWN)
 AC_SUBST(RTP_LINKLIBS)
 AC_OUTPUT(Makefile \
 	  src/Makefile \

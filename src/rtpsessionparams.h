@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -190,6 +190,24 @@ public:
 
 	/** Returns the multiplier to be used when timing out SDES NOTE information (default is 25). */
 	double GetNoteTimeoutMultiplier() const					{ return notemultiplier; }
+
+	/** Sets a flag which indicates if a predefined SSRC identifier should be used. */
+	void SetUsePredefinedSSRC(bool f)					{ usepredefinedssrc = f; }
+
+	/** Returns a flag indicating if a predefined SSRC should be used. */
+	bool GetUsePredefinedSSRC() const					{ return usepredefinedssrc; }
+
+	/** Sets the SSRC which will be used if RTPSessionParams::GetUsePredefinedSSRC returns true. */
+	void SetPredefinedSSRC(uint32_t ssrc)					{ predefinedssrc = ssrc; }
+	
+	/** Returns the SSRC which will be used if RTPSessionParams::GetUsePredefinedSSRC returns true. */
+	uint32_t GetPredefinedSSRC() const					{ return predefinedssrc; }
+
+	/** Forces this string to be used as the CNAME identifier. */
+	void SetCNAME(const std::string &s)					{ cname = s; }
+
+	/** Returns the currently set CNAME, is blank when this will be generated automatically (the default). */
+	std::string GetCNAME() const						{ return cname; }
 private:
 	bool acceptown;
 	bool usepollthread;
@@ -214,6 +232,11 @@ private:
 	double byetimeoutmultiplier;
 	double collisionmultiplier;
 	double notemultiplier;
+
+	bool usepredefinedssrc;
+	uint32_t predefinedssrc;
+
+	std::string cname;
 };
 
 #endif // RTPSESSIONPARAMS_H

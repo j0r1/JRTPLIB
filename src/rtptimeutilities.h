@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -97,7 +97,7 @@ public:
 	RTPTime(RTPNTPTime ntptime);
 
 	/** Creates an instance corresponding to \c seconds and \c microseconds. */
-	RTPTime(uint32_t seconds,uint32_t microseconds)					{ sec = seconds; microsec = microseconds; }
+	RTPTime(uint32_t seconds, uint32_t microseconds)						{ sec = seconds; microsec = microseconds; }
 
 	/** Returns the number of seconds stored in this instance. */
 	uint32_t GetSeconds() const										{ return sec; }

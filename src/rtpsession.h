@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -76,8 +76,16 @@ class RTCPAPPPacket;
 class RTPSession : public RTPMemoryObject
 {
 public:
-	/** Constructs an RTPSession instance, optionally installing a memory manager. */
-	RTPSession(RTPMemoryManager *mgr = 0);
+	/** Constructs an RTPSession instance, optionally using a specific instance of a random
+	 *  number generator, and optionally installing a memory manager. 
+	 *  Constructs an RTPSession instance, optionally using a specific instance of a random
+	 *  number generator, and optionally installing a memory manager. If no random number generator
+	 *  is specified, the RTPSession object will try to use either a RTPRandomURandom or 
+	 *  RTPRandomRandS instance. If neither is available on the current platform, a RTPRandomRand48
+	 *  instance will be used instead. By specifying a random number generator yourself, it is
+	 *  possible to use the same generator in several RTPSession instances.
+	 */
+	RTPSession(RTPRandom *rnd = 0, RTPMemoryManager *mgr = 0);
 	virtual ~RTPSession();
 	
 	/** Creates an RTP session.
@@ -177,6 +185,14 @@ public:
 	int SendRTCPAPPPacket(uint8_t subtype, const uint8_t name[4], const void *appdata, size_t appdatalen);
 #endif // RTP_SUPPORT_SENDAPP
 
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	/** Tries to send an Unknown packet immediately. 
+	 *  Tries to send an Unknown packet immediately. If successful, the function returns the number 
+	 *  of bytes in the RTCP compound packet. Note that this immediate sending is not compliant with the RTP 
+	 *  specification, so use with care.  Can send message along with a receiver report or a sender report
+	 */
+	int SendUnknownPacket(bool sr, uint8_t payload_type, uint8_t subtype, const void *data, size_t len);
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	/** Sets the default payload type for RTP packets to \c pt. */
 	int SetDefaultPayloadType(uint8_t pt);
 
@@ -435,7 +451,7 @@ protected:
  	 */
 	virtual RTPTransmitter *NewUserDefinedTransmitter()						{ return 0; }
 	
-	/** Is called when an incoming RTCP packet is about to be processed. */
+	/** Is called when an incoming RTP packet is about to be processed. */
 	virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime,
 	                         const RTPAddress *senderaddress) 					{ }
 
@@ -497,13 +513,30 @@ protected:
 	 *  detected or when it's time to send an RTCP compound packet.
 	 */
 	virtual void OnPollThreadStep()									{ }
+
+	/** Is called when the poll thread is started.
+	 *  Is called when the poll thread is started. This happens just before entering the
+	 *  thread main loop.
+	 *  \param stop This can be used to stop the thread immediately without entering the loop.
+	*/
+	virtual void OnPollThreadStart(bool &stop)							{ }
+
+	/** Is called when the poll thread is going to stop.
+	 *  Is called when the poll thread is going to stop. This happens just before termitating the thread.
+	 */
+	virtual void OnPollThreadStop()									{ }
+
 #endif // RTP_SUPPORT_THREAD
 private:
 	int InternalCreate(const RTPSessionParams &sessparams);
 	int CreateCNAME(uint8_t *buffer,size_t *bufferlength,bool resolve);
 	int ProcessPolledData();
 	int ProcessRTCPCompoundPacket(RTCPCompoundPacket &rtcpcomppack,RTPRawPacket *pack);
+	RTPRandom *GetRandomNumberGenerator(RTPRandom *r);
 	
+	RTPRandom *rtprnd;
+	bool deletertprnd;
+
 	RTPTransmitter *rtptrans;
 	bool created;
 	bool deletetransmitter;

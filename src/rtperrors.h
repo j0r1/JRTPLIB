@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -202,8 +202,9 @@ std::string RTPGetErrorString(int errcode);
 #define ERR_RTP_FAKETRANS_SRCADDRNOTSET        		-157
 #define ERR_RTP_FAKETRANS_NOTNETBUFFER         		-158
 #define ERR_RTP_FAKETRANS_WAITNOTIMPLEMENTED			-159
-
-
+#define ERR_RTP_RTPRANDOMURANDOM_CANTOPEN			-160
+#define ERR_RTP_RTPRANDOMURANDOM_ALREADYOPEN			-161
+#define ERR_RTP_RTPRANDOMRANDS_NOTSUPPORTED			-162
 
 #endif // RTPERRORS_H
 

@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -96,8 +96,8 @@ private:
 inline std::string RTPIPv4Destination::GetDestinationString() const
 {
 	char str[24];
-	uint32_t ip = ipaddr_hbo;
-	uint16_t portbase = ntohs(rtpport_nbo);
+	uint32_t ip = GetIP();
+	uint16_t portbase = ntohs(GetRTPPort_NBO());
 	
 	RTP_SNPRINTF(str,24,"%d.%d.%d.%d:%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF),(int)(portbase));
 	return std::string(str);

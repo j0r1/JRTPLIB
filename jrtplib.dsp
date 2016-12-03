@@ -173,6 +173,18 @@ SOURCE=.\src\rtprandom.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\rtprandomrand48.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\rtprandomrands.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\rtprandomurandom.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\rtpsession.cpp
 # End Source File
 # Begin Source File
@@ -321,6 +333,14 @@ SOURCE=.\src\rtplibraryversion.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\rtpmemorymanager.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\rtpmemoryobject.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\rtppacket.h
 # End Source File
 # Begin Source File
@@ -334,6 +354,18 @@ SOURCE=.\src\rtppollthread.h
 # Begin Source File
 
 SOURCE=.\src\rtprandom.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\rtprandomrand48.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\rtprandomrands.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\rtprandomurandom.h
 # End Source File
 # Begin Source File
 
@@ -386,14 +418,6 @@ SOURCE=.\src\rtpudpv4transmitter.h
 # Begin Source File
 
 SOURCE=.\src\rtpudpv6transmitter.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\rtpmemorymanager.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\rtpmemoryobject.h
 # End Source File
 # End Group
 # End Target

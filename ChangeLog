@@ -1,10 +1,33 @@
-							         May 23, 2007
+							   September 30, 2010
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
 
+ 3.8.0 (September 2010)
+ 	* Fixed bug in RTPSources implementation. An incorrect 
+	  'GotoNextElement' call was replaced by a 'GotoPreviousElement'
+	  call.
+	* Added functionality to send unknown RTCP packets. Patch
+	  was supplied by Tom Harper (d.thomas.harper@gmail.com)
+	* Fixed bug in INF_GetEstimatedTimestampUnit (possibility of
+	  division by zero). Thanks to Gilson Yi (gilson.yi@gmail.com)
+	  for bringing this to my attention.
+	* Added some code to allow a specific SSRC to be used.
+	* Fixed bug in jitter calculation code. Thanks to Uwe Andersen
+	  (uandersen@mayah.com) for bringing this to my attention.
+	* Added OnPollThreadStart and OnPollThreadStop to RTPSession.
+	  Thanks to Daniele Barzotti (daniele.barzotti@eurocomtel.com)
+	  for suggesting this.
+	* Added method to RTPSessionParams to force a specific CNAME.
+	  Thanks to Lars Rohwedder (L.Rohwedder@mocotec.de) for the
+	  suggestion.
+	* Removed old RTPRandom code and made RTPRandom an abstract
+	  interface. Added a /dev/urandom implementation, a rand_s
+	  implementation and a rand48 implementation. By default, 
+	  /dev/urandom and rand_s are tried, and rand48 is used as a 
+	  fall-back mechanism.
 
  3.7.1 (May 2007)
  	* Fixed bug in the CurrentTime implementation (Win32/WinCE version). 
@@ -224,7 +247,7 @@
 	* Added the possibility to set the timestamp unit for a particular
 	  source. Previously, it was assumed that their timestamp unit
 	  was the same as that of the local session.
-	
+
  2.4 (July 2000)
  	* Fixed a bug which caused all CSRS's except one to be incorrect.
  	* Added RTP header extension support (for both sending and receiving).
@@ -248,7 +271,7 @@
  	  and much more understandable :)
  	* Added better support for RTCP 'APP' packets. You can now both send
  	  and receive APP packets.
-				
+
  2.3 (April 2000)
  	* The routine which creates and sends RTCP packets is now a bit faster.
  	* Added a sample that demonstrates the round-trip time function.
@@ -275,7 +298,7 @@
  	* Added multicasting support.
 	* A bug in rtpsourcedata.cpp was pointed out and fixed by Ramon Clout
 	  (ramonc@win.tue.nl). Many thanks for this, Ramon.
-				
+
  2.2 (February 2000)
  	* Extra support for Sun and HP. Thanks to Henry Lau (hlau@nuera.com)
  	  and Justin Matthews (jmatthews@nuera.com) for this information.
@@ -296,7 +319,7 @@
 
  2.0 (August 1999)
  	* First decent implementation of RTP. Entirely rewritten since 1.0.
- 	
+
  1.0 (August 1999)
  	* First implementation of RTP. There were a lot of things that weren't
  	  quite right and the organisation of the classes was quite nasty.

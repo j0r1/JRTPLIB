@@ -261,6 +261,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\rtprandomrand48.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\rtprandomrands.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\rtprandomurandom.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\rtpsession.cpp"
 				>
 			</File>
@@ -407,6 +419,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\rtpmemorymanagement.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\rtpmemorymanager.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\rtpmemoryobject.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\rtppacket.h"
 				>
 			</File>
@@ -420,6 +444,18 @@
 			</File>
 			<File
 				RelativePath=".\src\rtprandom.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\rtprandomrand48.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\rtprandomrands.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\rtprandomurandom.h"
 				>
 			</File>
 			<File
@@ -472,14 +508,6 @@
 			</File>
 			<File
 				RelativePath=".\src\rtpudpv6transmitter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\rtpmemorymanagement.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\rtpmemoryobject.h"
 				>
 			</File>
 		</Filter>

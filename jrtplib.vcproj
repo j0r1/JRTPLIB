@@ -721,6 +721,60 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="src\rtprandomrand48.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="src\rtprandomrands.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\rtprandomurandom.cpp"
+				>
+			</File>
+			<File
 				RelativePath="src\rtpsession.cpp"
 				>
 				<FileConfiguration
@@ -1038,6 +1092,14 @@
 				>
 			</File>
 			<File
+				RelativePath="src\rtpmemorymanager.h"
+				>
+			</File>
+			<File
+				RelativePath="src\rtpmemoryobject.h"
+				>
+			</File>
+			<File
 				RelativePath="src\rtppacket.h"
 				>
 			</File>
@@ -1051,6 +1113,18 @@
 			</File>
 			<File
 				RelativePath="src\rtprandom.h"
+				>
+			</File>
+			<File
+				RelativePath="src\rtprandomrand48.h"
+				>
+			</File>
+			<File
+				RelativePath="src\rtprandomrands.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\rtprandomurandom.h"
 				>
 			</File>
 			<File
@@ -1103,14 +1177,6 @@
 			</File>
 			<File
 				RelativePath="src\rtpudpv6transmitter.h"
-				>
-			</File>
-			<File
-				RelativePath="src\rtpmemorymanager.h"
-				>
-			</File>
-			<File
-				RelativePath="src\rtpmemoryobject.h"
 				>
 			</File>
 		</Filter>

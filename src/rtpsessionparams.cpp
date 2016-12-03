@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -66,6 +66,9 @@ RTPSessionParams::RTPSessionParams() : mininterval(0,0)
 	byetimeoutmultiplier = RTP_BYETIMEOUTMULTIPLIER;
 	collisionmultiplier = RTP_COLLISIONTIMEOUTMULTIPLIER;
 	notemultiplier = RTP_NOTETTIMEOUTMULTIPLIER;
+	
+	usepredefinedssrc = false;
+	predefinedssrc = 0;
 }
 
 int RTPSessionParams::SetUsePollThread(bool usethread)

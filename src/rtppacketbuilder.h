@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -54,8 +54,10 @@ class RTPSources;
 class RTPPacketBuilder : public RTPMemoryObject
 {
 public:
-	/** Constructs an instance, optionally installing a memory manager. */
-	RTPPacketBuilder(RTPMemoryManager *mgr = 0);
+	/** Constructs an instance which will use \c rtprand for generating random numbers
+	 *  (used to initialize the SSRC value and sequence number), optionally installing a memory manager. 
+	 **/
+	RTPPacketBuilder(RTPRandom &rtprand, RTPMemoryManager *mgr = 0);
 	~RTPPacketBuilder();
 
 	/** Initializes the builder to only allow packets with a size below \c maxpacksize. */
@@ -180,12 +182,18 @@ public:
 
 	/** Returns the RTP timestamp which corresponds to the time returned by the previous function. */
 	uint32_t GetPacketTimestamp() const				{ if (!init) return 0; return lastrtptimestamp; }
+
+	/** Sets a specific SSRC to be used.
+	 *  Sets a specific SSRC to be used. Does not create a new timestamp offset or sequence number
+	 *  offset. Does not reset the packet count or byte count. Think twice before using this!
+	 */
+	void AdjustSSRC(uint32_t s)					{ ssrc = s; }
 private:
 	int PrivateBuildPacket(const void *data,size_t len,
 	                  uint8_t pt,bool mark,uint32_t timestampinc,bool gotextension,
 	                  uint16_t hdrextID = 0,const void *hdrextdata = 0,size_t numhdrextwords = 0);
 
-	RTPRandom rtprnd;	
+	RTPRandom &rtprnd;	
 	size_t maxpacksize;
 	uint8_t *buffer;
 	size_t packetlength;

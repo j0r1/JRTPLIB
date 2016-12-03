@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -649,7 +649,10 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 #else 
 		unsigned char buf[1];
 
-		read(abortdesc[0],buf,1);
+		if (read(abortdesc[0],buf,1))
+		{
+			// To get rid of __wur related compiler warnings
+		}
 #endif // WIN32
 	}
 
@@ -1778,7 +1781,10 @@ void RTPUDPv4Transmitter::AbortWaitInternal()
 #if (defined(WIN32) || defined(_WIN32_WCE))
 	send(abortdesc[1],"*",1,0);
 #else
-	write(abortdesc[1],"*",1);
+	if (write(abortdesc[1],"*",1))
+	{
+		// To get rid of __wur related compiler warnings
+	}
 #endif // WIN32
 }
 

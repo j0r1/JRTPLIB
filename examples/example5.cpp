@@ -119,7 +119,7 @@ int main(void)
 #endif // WIN32
 	
 	MyMemoryManager mgr;
-	RTPSession sess(&mgr);
+	RTPSession sess(0, &mgr);
 	uint16_t portbase,destport;
 	uint32_t destip;
 	std::string ipstr;

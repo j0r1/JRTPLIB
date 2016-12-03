@@ -24,7 +24,7 @@
  *	\subsection idea Design idea
  *		
  *		The library provides several classes which can be helpful in
- *		creating RTP applications. Most users will probably need just the
+ *		creating RTP applications. Most users will probably only need the
  *		RTPSession class for building an application. This class
  *		provides the necessary functions for sending RTP data and handles
  *		the RTCP part internally.
@@ -90,9 +90,9 @@
  * \section starting Getting started with the RTPSession class
  * 	
  * 	To use RTP, you'll have to create an RTPSession object. The constructor
- * 	accepts one parameter, an instance of RTPMemoryManager. By default, no
- * 	memory manager will be used. For now, we'll keep it simple, so this is
- * 	our code so far:
+ * 	accepts two parameter, an instance of an RTPRandom object, and an instance 
+ * 	of an RTPMemoryManager object. For now, we'll keep it simple and use the
+ * 	default settings, so this is our code so far:
  *
  * 	\code
  * RTPSession session; 
@@ -315,7 +315,7 @@
  * 	
  * 	\code
  * MyMemoryManager mgr;
- * RTPSession session(&mgr);
+ * RTPSession session(0, &mgr);
  * 	\endcode
  *
  * 	Now, all memory allocation and deallocation will be done using the AllocateBuffer
@@ -340,8 +340,7 @@
  *	http://research.edm.uhasselt.be/jori/jrtplib/jrtplib.html
  *
  * 	There is also a mailing list for the library. To subscribe to the list, 
- * 	send an e-mail with the text \c subscribe \c jrtplib as the message body 
- * 	(not the subject) to \c majordomo(\c at)\c edm(\c dot)\c uhasselt(\c dot)\c be 
+ * 	send an e-mail to \c jrtplib-subscribe(\c at)\c edm(\c dot)\c uhasselt(\c dot)\c be 
  * 	and you'll receive further instructions.
  */
 

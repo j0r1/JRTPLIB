@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -36,8 +36,12 @@
 #include "rtcpsdespacket.h"
 #include "rtcpbyepacket.h"
 #include "rtcpapppacket.h"
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	#include "rtcpunknownpacket.h"
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
 	#include <netinet/in.h>
+	#include <string.h>
 #endif // WIN32
 
 #include "rtpdebug.h"
@@ -46,6 +50,9 @@ RTCPCompoundPacketBuilder::RTCPCompoundPacketBuilder(RTPMemoryManager *mgr) : RT
 {
 	byesize = 0;
 	appsize = 0;
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	unknownsize = 0;
+#endif // RTP_SUPPORT_RTCPUNKNOWN
 	maximumpacketsize = 0;
 	buffer = 0;
 	external = false;
@@ -75,11 +82,24 @@ void RTCPCompoundPacketBuilder::ClearBuildBuffers()
 		if ((*it).packetdata)
 			RTPDeleteByteArray((*it).packetdata,GetMemoryManager());
 	}
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	for (it = unknownpackets.begin() ; it != unknownpackets.end() ; it++)
+	{
+		if ((*it).packetdata)
+			RTPDeleteByteArray((*it).packetdata,GetMemoryManager());
+	}
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 
 	byepackets.clear();
 	apppackets.clear();
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	unknownpackets.clear();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	byesize = 0;
 	appsize = 0;
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	unknownsize = 0;
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 }
 
 int RTCPCompoundPacketBuilder::InitBuild(size_t maxpacketsize)
@@ -97,6 +117,9 @@ int RTCPCompoundPacketBuilder::InitBuild(size_t maxpacketsize)
 	external = false;
 	byesize = 0;
 	appsize = 0;
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	unknownsize = 0;
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	
 	arebuilding = true;
 	return 0;
@@ -117,6 +140,9 @@ int RTCPCompoundPacketBuilder::InitBuild(void *externalbuffer,size_t buffersize)
 	external = true;
 	byesize = 0;
 	appsize = 0;
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	unknownsize = 0;
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 
 	arebuilding = true;
 	return 0;
@@ -131,7 +157,11 @@ int RTCPCompoundPacketBuilder::StartSenderReport(uint32_t senderssrc,const RTPNT
 	if (report.headerlength != 0)
 		return ERR_RTP_RTCPCOMPPACKBUILDER_ALREADYGOTREPORT;
 
+#ifndef RTP_SUPPORT_RTCPUNKNOWN
 	size_t totalsize = byesize+appsize+sdes.NeededBytes();
+#else
+	size_t totalsize = byesize+appsize+unknownsize+sdes.NeededBytes();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	size_t sizeleft = maximumpacketsize-totalsize;
 	size_t neededsize = sizeof(RTCPCommonHeader)+sizeof(uint32_t)+sizeof(RTCPSenderReport);
 	
@@ -163,7 +193,11 @@ int RTCPCompoundPacketBuilder::StartReceiverReport(uint32_t senderssrc)
 	if (report.headerlength != 0)
 		return ERR_RTP_RTCPCOMPPACKBUILDER_ALREADYGOTREPORT;
 
+#ifndef RTP_SUPPORT_RTCPUNKNOWN
 	size_t totalsize = byesize+appsize+sdes.NeededBytes();
+#else
+	size_t totalsize = byesize+appsize+unknownsize+sdes.NeededBytes();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	size_t sizeleft = maximumpacketsize-totalsize;
 	size_t neededsize = sizeof(RTCPCommonHeader)+sizeof(uint32_t);
 	
@@ -189,7 +223,11 @@ int RTCPCompoundPacketBuilder::AddReportBlock(uint32_t ssrc,uint8_t fractionlost
 	if (report.headerlength == 0)
 		return ERR_RTP_RTCPCOMPPACKBUILDER_REPORTNOTSTARTED;
 
+#ifndef RTP_SUPPORT_RTCPUNKNOWN
 	size_t totalothersize = byesize+appsize+sdes.NeededBytes();
+#else
+	size_t totalothersize = byesize+appsize+unknownsize+sdes.NeededBytes();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	size_t reportsizewithextrablock = report.NeededBytesWithExtraReportBlock();
 	
 	if ((totalothersize+reportsizewithextrablock) > maximumpacketsize)
@@ -222,7 +260,11 @@ int RTCPCompoundPacketBuilder::AddSDESSource(uint32_t ssrc)
 	if (!arebuilding)
 		return ERR_RTP_RTCPCOMPPACKBUILDER_NOTBUILDING;
 
+#ifndef RTP_SUPPORT_RTCPUNKNOWN
 	size_t totalotherbytes = byesize+appsize+report.NeededBytes();
+#else
+	size_t totalotherbytes = byesize+appsize+unknownsize+report.NeededBytes();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	size_t sdessizewithextrasource = sdes.NeededBytesWithExtraSource();
 
 	if ((totalotherbytes + sdessizewithextrasource) > maximumpacketsize)
@@ -271,7 +313,11 @@ int RTCPCompoundPacketBuilder::AddSDESNormalItem(RTCPSDESPacket::ItemType t,cons
 		return ERR_RTP_RTCPCOMPPACKBUILDER_INVALIDITEMTYPE;
 	}
 
+#ifndef RTP_SUPPORT_RTCPUNKNOWN
 	size_t totalotherbytes = byesize+appsize+report.NeededBytes();
+#else
+	size_t totalotherbytes = byesize+appsize+unknownsize+report.NeededBytes();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	size_t sdessizewithextraitem = sdes.NeededBytesWithExtraItem(itemlength);
 
 	if ((sdessizewithextraitem+totalotherbytes) > maximumpacketsize)
@@ -309,7 +355,11 @@ int RTCPCompoundPacketBuilder::AddSDESPrivateItem(const void *prefixdata,uint8_t
 	if (itemlength > 255)
 		return ERR_RTP_RTCPCOMPPACKBUILDER_TOTALITEMLENGTHTOOBIG;
 	
+#ifndef RTP_SUPPORT_RTCPUNKNOWN
 	size_t totalotherbytes = byesize+appsize+report.NeededBytes();
+#else
+	size_t totalotherbytes = byesize+appsize+unknownsize+report.NeededBytes();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	size_t sdessizewithextraitem = sdes.NeededBytesWithExtraItem(itemlength);
 
 	if ((sdessizewithextraitem+totalotherbytes) > maximumpacketsize)
@@ -363,7 +413,11 @@ int RTCPCompoundPacketBuilder::AddBYEPacket(uint32_t *ssrcs,uint8_t numssrcs,con
 		}
 	}
 
+#ifndef RTP_SUPPORT_RTCPUNKNOWN
 	size_t totalotherbytes = appsize+byesize+sdes.NeededBytes()+report.NeededBytes();
+#else
+	size_t totalotherbytes = appsize+unknownsize+byesize+sdes.NeededBytes()+report.NeededBytes();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 
 	if ((totalotherbytes + packsize) > maximumpacketsize)
 		return ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT;
@@ -422,7 +476,11 @@ int RTCPCompoundPacketBuilder::AddAPPPacket(uint8_t subtype,uint32_t ssrc,const 
 		return ERR_RTP_RTCPCOMPPACKBUILDER_APPDATALENTOOBIG;
 	
 	size_t packsize = sizeof(RTCPCommonHeader)+sizeof(uint32_t)*2+appdatalen;
+#ifndef RTP_SUPPORT_RTCPUNKNOWN
 	size_t totalotherbytes = appsize+byesize+sdes.NeededBytes()+report.NeededBytes();
+#else
+	size_t totalotherbytes = appsize+unknownsize+byesize+sdes.NeededBytes()+report.NeededBytes();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 
 	if ((totalotherbytes + packsize) > maximumpacketsize)
 		return ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT;
@@ -459,6 +517,50 @@ int RTCPCompoundPacketBuilder::AddAPPPacket(uint8_t subtype,uint32_t ssrc,const 
 	return 0;
 }
 
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+
+int RTCPCompoundPacketBuilder::AddUnknownPacket(uint8_t payload_type, uint8_t subtype, uint32_t ssrc, const void *data, size_t len)
+{
+	if (!arebuilding)
+		return ERR_RTP_RTCPCOMPPACKBUILDER_NOTBUILDING;
+
+	size_t datawords = len/4;
+
+	if ((datawords+2) > 65535)
+		return ERR_RTP_RTCPCOMPPACKBUILDER_APPDATALENTOOBIG;
+	
+	size_t packsize = sizeof(RTCPCommonHeader)+sizeof(uint32_t)+len;
+	size_t totalotherbytes = appsize+unknownsize+byesize+sdes.NeededBytes()+report.NeededBytes();
+
+	if ((totalotherbytes + packsize) > maximumpacketsize)
+		return ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT;
+
+	uint8_t *buf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPUNKNOWNPACKET) uint8_t[packsize];
+	if (buf == 0)
+		return ERR_RTP_OUTOFMEM;
+
+	RTCPCommonHeader *hdr = (RTCPCommonHeader *)buf;
+
+	hdr->version = 2;
+	hdr->padding = 0;
+	hdr->count = subtype;
+	hdr->length = htons((uint16_t)(datawords+1));
+	hdr->packettype = payload_type;
+	
+	uint32_t *source = (uint32_t *)(buf+sizeof(RTCPCommonHeader));
+	*source = htonl(ssrc);
+
+	if (len > 0)
+		memcpy((buf+sizeof(RTCPCommonHeader)+sizeof(uint32_t)),data,len);
+
+	unknownpackets.push_back(Buffer(buf,packsize));
+	unknownsize += packsize;
+	
+	return 0;
+}
+
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
+
 int RTCPCompoundPacketBuilder::EndBuild()
 {
 	if (!arebuilding)
@@ -469,7 +571,11 @@ int RTCPCompoundPacketBuilder::EndBuild()
 	uint8_t *buf;
 	size_t len;
 	
+#ifndef RTP_SUPPORT_RTCPUNKNOWN
 	len = appsize+byesize+report.NeededBytes()+sdes.NeededBytes();
+#else
+	len = appsize+unknownsize+byesize+report.NeededBytes()+sdes.NeededBytes();
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	
 	if (!external)
 	{
@@ -642,7 +748,34 @@ int RTCPCompoundPacketBuilder::EndBuild()
 			curbuf += (*it).packetlength;
 		}
 	}
+
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+
+	// adding the unknown data
 	
+	{
+		std::list<Buffer>::const_iterator it;
+
+		for (it = unknownpackets.begin() ; it != unknownpackets.end() ; it++)
+		{
+			memcpy(curbuf,(*it).packetdata,(*it).packetlength);
+			
+			p = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPUNKNOWNPACKET) RTCPUnknownPacket(curbuf,(*it).packetlength);
+			if (p == 0)
+			{
+				if (!external)
+					RTPDeleteByteArray(buf,GetMemoryManager());
+				ClearPacketList();
+				return ERR_RTP_OUTOFMEM;
+			}
+			rtcppacklist.push_back(p);
+	
+			curbuf += (*it).packetlength;
+		}
+	}
+
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
+
 	// adding bye packets
 	
 	{

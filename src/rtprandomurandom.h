@@ -30,33 +30,34 @@
 
 */
 
-#ifndef RTPTYPES_H
+/**
+ * \file rtprandomurandom.h
+ */
 
-#define RTPTYPES_H
+#ifndef RTPRANDOMURANDOM_H
 
-#ifndef _WIN32_WCE
-	#include <winsock2.h>	
-	#include <ws2tcpip.h>
-	#include <sys/types.h>
-#else
-	#include <winsock2.h>	
-	#include <ws2tcpip.h>
-#endif // _WIN32_WCE
+#define RTPRANDOMURANDOM_H
 
-#ifndef INTTYPES_DEFINED
+#include "rtpconfig.h"
+#include "rtprandom.h"
+#include <stdio.h>
 
-#define INTTYPES_DEFINED
+/** A random number generator which uses bytes delivered by the /dev/urandom device. */
+class RTPRandomURandom : public RTPRandom
+{
+public:
+	RTPRandomURandom();
+	~RTPRandomURandom();
 
-typedef char int8_t;
-typedef unsigned char uint8_t;
-typedef short int16_t;
-typedef unsigned short uint16_t;
-typedef int int32_t;
-typedef unsigned int uint32_t;
-typedef __int64 int64_t;
-typedef unsigned __int64 uint64_t;
+	/** Initialize the random number generator. */
+	int Init();
 
-#endif // INTTYPES_DEFINED
+	uint8_t GetRandom8();
+	uint16_t GetRandom16();
+	uint32_t GetRandom32();
+	double GetRandomDouble();
+private:
+	FILE *device;
+};
 
-#endif // RTPTYPES_H
-
+#endif // RTPRANDOMURANDOM_H

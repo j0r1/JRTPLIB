@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -91,9 +91,13 @@ inline std::string RTPIPv6Destination::GetDestinationString() const
 {
 	uint16_t ip16[8];
 	char str[48];
-	uint16_t portbase = ntohs(rtpport_nbo);
+	uint16_t portbase = ntohs(rtpaddr.sin6_port);
 	int i,j;
-	for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((uint16_t)ip.s6_addr[i])<<8); ip16[j] |= ((uint16_t)ip.s6_addr[i+1]); }
+	for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	
+	{ 
+		ip16[j] = (((uint16_t)rtpaddr.sin6_addr.s6_addr[i])<<8); 
+		ip16[j] |= ((uint16_t)rtpaddr.sin6_addr.s6_addr[i+1]); 
+	}
 	RTP_SNPRINTF(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X/%d",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7],(int)portbase);
 	return std::string(str);
 }

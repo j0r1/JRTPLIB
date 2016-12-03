@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------------
-                                                                  May 23, 2007
+                                                            September 30, 2010
 
 
-                                   JRTPLIB (v3.7.1)
+                                   JRTPLIB (v3.8.0)
 
 
                       Developed at the The Expertise Centre for 
@@ -24,9 +24,8 @@ If you have questions about the library, you can mail me at:
 	jori.liesenborgs@gmail.com
 	
 There is also a mailing list for the library. To subscribe to the list, 
-send an e-mail with the text 'subscribe jrtplib' as the message body (not 
-the subject) to majordomo@edm.uhasselt.be and you'll receive further 
-instructions.
+just send an e-mail to jrtplib-subscribe@edm.uhasselt.be and you'll 
+receive further instructions.
 
 ACKNOWLEDGMENT
 ==============
@@ -64,17 +63,15 @@ INSTALLATION NOTES
 
 * To compile the library on an MS-Windows platfrom: Visual Studio
   workspace files are included. The project will search
-  for JThread files in ..\jthread-1.1.2
+  for JThread files in ..\jthread-1.2.1
   To compile the library without using JThread, comment the line
   with RTP_SUPPORT_THREAD in rtpconfig_win.h
   Note that for Visual Studio 6, you must have service pack 6 for 
   installed to be able to compile the library.
 
-* For a manual about the library, please refer to doc/ subdirectory.
-  Using 'make doc', a PDF version of the documentation will be built.
-  Note that you'll need to have the pdflatex LaTeX compiler installed.
-  Alternatively, you can download the documentation from the homepage:
-  http://research.edm.uhasselt.be/jori/jrtplib/jrtplib.pdf
+* The library documentation can be generated using Doxygen. An on-line
+  version can be found at
+  http://research.edm.uhasselt.be/jori/jrtplib/documentation/index.html
 
 * For systems with low memory or for applications which will involve only
   a few participants at a time:
@@ -95,7 +92,7 @@ INSTALLATION NOTES
 		If set, assume big-endian byte ordering.
 	- RTP_SOCKLENTYPE_UINT:
 		Indicates that getsockname used an unsigned int as its
-		third parameter.
+                third parameter.
 	- RTP_HAVE_SOCKADDR_LEN:
 		Indicates that struct sockaddr has an sa_len field.
 	- RTP_SUPPORT_IPV4MULTICAST:
@@ -106,12 +103,7 @@ INSTALLATION NOTES
 		Enables support for RTCP SDES private items.
 	- RTP_SUPPORT_PROBATION:
 		If set, a few consecutive RTP packets are needed to validate
-		a member.
-	- RTP_SUPPORT_GNUDRAND:
-		If set, the RTPRandom class will use drand48_r and srand48_r
-	- RTP_SUPPORT_RANDR:
-		If set and RTP_SUPPORT_GNUDRAND is not set, the RTPRandom
-		class will use rand_r.
+                a member.
 	- RTP_SUPPORT_GETLOGINR:
 		If set, the library will use getlogin_r instead of getlogin.
 	- RTP_SUPPORT_IPV6:
@@ -122,8 +114,11 @@ INSTALLATION NOTES
 		If set, sending of RTCP app packets is enabled.
 	- RTP_SUPPORT_MEMORYMANAGEMENT:
 		If set, the memory management system is enabled.
+	- RTP_SUPPORT_RTCPUNKNOWN:
+		If set, sending of unknown RTCP packets is enabled.
 	- RTPDEBUG:
-		Enables some memory tracking functions and some debug routines.
+		Enables some memory tracking functions and some debug 
+                routines.
 	
 ------------------------------------------------------------------------------
 

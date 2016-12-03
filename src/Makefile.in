@@ -67,6 +67,7 @@ am_libjrtp_la_OBJECTS = rtpdebug.lo rtpsession.lo rtperrors.lo \
 	rtcpcompoundpacketbuilder.lo rtprandom.lo rtcpscheduler.lo \
 	rtcppacketbuilder.lo rtpsessionsources.lo rtpcollisionlist.lo \
 	rtpipv6address.lo rtpudpv6transmitter.lo rtptimeutilities.lo \
+	rtprandomrand48.lo rtprandomurandom.lo rtprandomrands.lo \
 	rtpfaketransmitter.lo
 libjrtp_la_OBJECTS = $(am_libjrtp_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
@@ -153,7 +154,6 @@ RTP_LINKLIBS = @RTP_LINKLIBS@
 RTP_SOCKIO = @RTP_SOCKIO@
 RTP_SOCKLENTYPE_UINT = @RTP_SOCKLENTYPE_UINT@
 RTP_SUPPORT_GETLOGINR = @RTP_SUPPORT_GETLOGINR@
-RTP_SUPPORT_GNUDRAND = @RTP_SUPPORT_GNUDRAND@
 RTP_SUPPORT_IFADDRS = @RTP_SUPPORT_IFADDRS@
 RTP_SUPPORT_INLINETEMPLATEPARAM = @RTP_SUPPORT_INLINETEMPLATEPARAM@
 RTP_SUPPORT_IPV4MULTICAST = @RTP_SUPPORT_IPV4MULTICAST@
@@ -161,10 +161,11 @@ RTP_SUPPORT_IPV6 = @RTP_SUPPORT_IPV6@
 RTP_SUPPORT_IPV6MULTICAST = @RTP_SUPPORT_IPV6MULTICAST@
 RTP_SUPPORT_MEMORYMANAGEMENT = @RTP_SUPPORT_MEMORYMANAGEMENT@
 RTP_SUPPORT_PROBATION = @RTP_SUPPORT_PROBATION@
-RTP_SUPPORT_RANDR = @RTP_SUPPORT_RANDR@
+RTP_SUPPORT_RTCPUNKNOWN = @RTP_SUPPORT_RTCPUNKNOWN@
 RTP_SUPPORT_SDESPRIV = @RTP_SUPPORT_SDESPRIV@
 RTP_SUPPORT_SENDAPP = @RTP_SUPPORT_SENDAPP@
 RTP_SUPPORT_THREAD = @RTP_SUPPORT_THREAD@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -232,7 +233,9 @@ libjrtp_la_SOURCES = rtpdebug.cpp rtpsession.cpp rtpconfig_win.h \
 		     rtcppacketbuilder.cpp rtpsessionsources.cpp \
 		     rtpcollisionlist.cpp rtpipv6address.cpp \
 		     rtpudpv6transmitter.cpp rtptimeutilities.cpp \
-		     extratransmitters/rtpfaketransmitter.cpp
+		     rtprandomrand48.cpp rtprandomurandom.cpp \
+		     rtprandomrands.cpp \
+		     extratransmitters/rtpfaketransmitter.cpp 
 
 libjrtp_la_LDFLAGS = -release @VERSION@ @RTP_LINKLIBS@
 libjrtpinclude_HEADERS = rtcpapppacket.h rtcpbyepacket.h rtcpcompoundpacket.h \
@@ -249,6 +252,8 @@ libjrtpinclude_HEADERS = rtcpapppacket.h rtcpbyepacket.h rtcpcompoundpacket.h \
 			 rtpcollisionlist.h rtpipv6address.h rtpipv6destination.h \
 			 rtpudpv6transmitter.h rtptypes.h rtptypes_unix.h \
 			 rtpmemorymanager.h rtpmemoryobject.h \
+			 rtprandomrand48.h rtprandomurandom.h \
+			 rtprandomrands.h \
 			 extratransmitters/rtpfaketransmitter.h
 
 EXTRA_DIST = rtpconfig_unix.h.in
@@ -348,6 +353,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtppacketbuilder.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtppollthread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtprandom.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtprandomrand48.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtprandomrands.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtprandomurandom.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpsession.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpsessionparams.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpsessionsources.Plo@am__quote@

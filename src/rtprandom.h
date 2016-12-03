@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -42,30 +42,29 @@
 #include "rtptypes.h"
 #include <stdlib.h>
 
-/** The RTPRandom class can be used to generate random numbers. */
+#define RTPRANDOM_2POWMIN63										1.08420217248550443400745280086994171142578125e-19
+
+/** Interface for generating random numbers. */
 class RTPRandom
 {
 public:
-	RTPRandom();
-	~RTPRandom();
+	RTPRandom()											{ }
+	virtual ~RTPRandom()										{ }
 
 	/** Returns a random eight bit value. */
-	uint8_t GetRandom8();
+	virtual uint8_t GetRandom8() = 0;
 
 	/** Returns a random sixteen bit value. */
-	uint16_t GetRandom16();
+	virtual uint16_t GetRandom16() = 0;
 
 	/** Returns a random thirty-two bit value. */
-	uint32_t GetRandom32();
+	virtual uint32_t GetRandom32() = 0;
 
 	/** Returns a random number between $0.0$ and $1.0$. */
-	double GetRandomDouble();
-private:
-#if defined(RTP_SUPPORT_GNUDRAND)
-	struct drand48_data drandbuffer;
-#elif defined(RTP_SUPPORT_RANDR)
-	unsigned int state;
-#endif // RTP_SUPPORT_GNUDRAND
+	virtual double GetRandomDouble() = 0;
+
+	/** Can be used by subclasses to generate a seed for a random number generator. */
+	uint32_t PickSeed();
 };
 
 #endif // RTPRANDOM_H

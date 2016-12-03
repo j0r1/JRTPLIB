@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -126,6 +126,13 @@ public:
 	 *  can be used to access the RTCP packet data.
 	 */
 	int EndBuild();
+
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	/** Adds the RTCP packet specified by the arguments to the compound packet.
+	 *  Adds the RTCP packet specified by the arguments to the compound packet.
+	 */
+	int AddUnknownPacket(uint8_t payload_type, uint8_t subtype, uint32_t ssrc, const void *data, size_t len);
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 private:
 	class Buffer
 	{
@@ -375,6 +382,11 @@ private:
 	
 	std::list<Buffer> apppackets;
 	size_t appsize;
+
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+	std::list<Buffer> unknownpackets;
+	size_t unknownsize;
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 	
 	void ClearBuildBuffers();
 };

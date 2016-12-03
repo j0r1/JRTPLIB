@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -102,9 +102,10 @@ public:
 	 *  packets should be scheduled. 
 	 *  Creates an instance which will use the source table RTPSources to determine when RTCP compound 
 	 *  packets should be scheduled. Note that for correct operation the \c sources instance should have information
-	 *  about the own SSRC (added by RTPSources::CreateOwnSSRC).
+	 *  about the own SSRC (added by RTPSources::CreateOwnSSRC). You must also supply a random number
+	 *  generator \c rtprand which will be used for adding randomness to the RTCP intervals.
 	 */
-	RTCPScheduler(RTPSources &sources);
+	RTCPScheduler(RTPSources &sources, RTPRandom &rtprand);
 	~RTCPScheduler();
 
 	/** Resets the scheduler. */
@@ -176,7 +177,7 @@ private:
 	size_t avgbyepacketsize;
 	bool sendbyenow;
 
-	RTPRandom rtprand;
+	RTPRandom &rtprand;
 };
 
 #endif // RTCPSCHEDULER_H

@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -179,6 +179,7 @@ void RTPSourceStats::ProcessPacket(RTPPacket *pack,const RTPTime &receivetime,do
 
 		if (tsunit > 0)
 		{
+#if 0
 			RTPTime curtime = receivetime;
 			double diffts1,diffts2,diff;
 
@@ -192,6 +193,53 @@ void RTPSourceStats::ProcessPacket(RTPPacket *pack,const RTPTime &receivetime,do
 			diff /= 16.0;
 			djitter += diff;
 			jitter = (uint32_t)djitter;
+#else
+RTPTime curtime = receivetime;
+double diffts1,diffts2,diff;
+uint32_t curts = pack->GetTimestamp();
+
+curtime -= prevpacktime;
+diffts1 = curtime.GetDouble()/tsunit;	
+
+if (curts > prevtimestamp)
+{
+	uint32_t unsigneddiff = curts - prevtimestamp;
+
+	if (unsigneddiff < 0x10000000) // okay, curts realy is larger than prevtimestamp
+		diffts2 = (double)unsigneddiff;
+	else
+	{
+		// wraparound occurred and curts is actually smaller than prevtimestamp
+
+		unsigneddiff = -unsigneddiff; // to get the actual difference (in absolute value)
+		diffts2 = -((double)unsigneddiff);
+	}
+}
+else if (curts < prevtimestamp)
+{
+	uint32_t unsigneddiff = prevtimestamp - curts;
+
+	if (unsigneddiff < 0x10000000) // okay, curts really is smaller than prevtimestamp
+		diffts2 = -((double)unsigneddiff); // negative since we actually need curts-prevtimestamp
+	else
+	{
+		// wraparound occurred and curts is actually larger than prevtimestamp
+
+		unsigneddiff = -unsigneddiff; // to get the actual difference (in absolute value)
+		diffts2 = (double)unsigneddiff;
+	}
+}
+else
+	diffts2 = 0;
+
+diff = diffts1 - diffts2;
+if (diff < 0)
+	diff = -diff;
+diff -= djitter;
+diff /= 16.0;
+djitter += diff;
+jitter = (uint32_t)djitter;
+#endif
 		}
 		else
 		{
@@ -247,7 +295,7 @@ double RTPSourceData::INF_GetEstimatedTimestampUnit() const
 	    (t2.GetSeconds() == 0 && t2.GetMicroSeconds() == 0)) // one of the times couldn't be calculated
 		return -1.0;
 
-	if (t1 < t2)
+	if (t1 <= t2)
 		return -1.0;
 
 	t1 -= t2; // get the time difference

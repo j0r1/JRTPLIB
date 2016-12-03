@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -32,13 +32,14 @@
 
 #include "rtperrors.h"
 #include "rtpdefines.h"
+#include <stdio.h>
 
 #include "rtpdebug.h"
 
 struct RTPErrorInfo
 {
 	int code;
-	char *description;
+	const char *description;
 };
 
 static RTPErrorInfo ErrorDescriptions[]=
@@ -202,6 +203,9 @@ static RTPErrorInfo ErrorDescriptions[]=
 	{ ERR_RTP_FAKETRANS_SRCADDRNOTSET, "Got packet but src address information was not set, returning"},
 	{ ERR_RTP_FAKETRANS_NOTNETBUFFER, "Received buffer is not a GstNetBuffer"},
 	{ ERR_RTP_FAKETRANS_WAITNOTIMPLEMENTED, "The WaitForIncomingData is not implemented in the Gst transmitter"},
+	{ ERR_RTP_RTPRANDOMURANDOM_CANTOPEN, "Unable to open /dev/urandom for reading"},
+	{ ERR_RTP_RTPRANDOMURANDOM_ALREADYOPEN, "The device /dev/urandom was already opened"},
+	{ ERR_RTP_RTPRANDOMRANDS_NOTSUPPORTED, "The rand_s call is not supported on this platform"},
 	{ 0,0 }
 };
 

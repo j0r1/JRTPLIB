@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -41,6 +41,9 @@
 #include "rtppacket.h"
 #include "rtptimeutilities.h"
 #include "rtpmemorymanager.h"
+#include "rtprandomrand48.h"
+#include "rtprandomrands.h"
+#include "rtprandomurandom.h"
 #ifdef RTP_SUPPORT_SENDAPP
 	#include "rtcpcompoundpacket.h"
 #endif // RTP_SUPPORT_SENDAPP
@@ -77,19 +80,24 @@
 	#define PACKSENT_UNLOCK
 #endif // RTP_SUPPORT_THREAD
 
-RTPSession::RTPSession(RTPMemoryManager *mgr) 
-	: RTPMemoryObject(mgr),sources(*this,mgr),packetbuilder(mgr),rtcpsched(sources),rtcpbuilder(sources,packetbuilder,mgr),
-	  collisionlist(mgr)
+RTPSession::RTPSession(RTPRandom *r,RTPMemoryManager *mgr) 
+	: RTPMemoryObject(mgr),sources(*this,mgr),rtprnd(GetRandomNumberGenerator(r)),packetbuilder(*rtprnd,mgr),rtcpsched(sources,*rtprnd),
+	  rtcpbuilder(sources,packetbuilder,mgr),collisionlist(mgr)
 {
 	created = false;
 #if (defined(WIN32) || defined(_WIN32_WCE))
 	timeinit.Dummy();
 #endif // WIN32 || _WIN32_WCE
+
+	//std::cout << (void *)(rtprnd) << std::endl;
 }
 
 RTPSession::~RTPSession()
 {
 	Destroy();
+
+	if (deletertprnd)
+		delete rtprnd;
 }
 
 int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionParams *transparams /* = 0 */,
@@ -186,6 +194,9 @@ int RTPSession::InternalCreate(const RTPSessionParams &sessparams)
 		return status;
 	}
 
+	if (sessparams.GetUsePredefinedSSRC())
+		packetbuilder.AdjustSSRC(sessparams.GetPredefinedSSRC());
+
 #ifdef RTP_SUPPORT_PROBATION
 
 	// Set probation type
@@ -219,14 +230,24 @@ int RTPSession::InternalCreate(const RTPSessionParams &sessparams)
 	double timestampunit = sessparams.GetOwnTimestampUnit();
 	uint8_t buf[1024];
 	size_t buflen = 1024;
-	
-	if ((status = CreateCNAME(buf,&buflen,sessparams.GetResolveLocalHostname())) < 0)
+	std::string forcedcname = sessparams.GetCNAME(); 
+
+	if (forcedcname.length() == 0)
 	{
-		packetbuilder.Destroy();
-		sources.Clear();
-		if (deletetransmitter)
-			RTPDelete(rtptrans,GetMemoryManager());
-		return status;
+		if ((status = CreateCNAME(buf,&buflen,sessparams.GetResolveLocalHostname())) < 0)
+		{
+			packetbuilder.Destroy();
+			sources.Clear();
+			if (deletetransmitter)
+				RTPDelete(rtptrans,GetMemoryManager());
+			return status;
+		}
+	}
+	else
+	{
+		strncpy((char *)buf, forcedcname.c_str(), buflen);
+		buf[buflen-1] = 0;
+		buflen = strlen((char *)buf);
 	}
 	
 	if ((status = rtcpbuilder.Init(maxpacksize,timestampunit,buf,buflen)) < 0)
@@ -728,6 +749,124 @@ int RTPSession::SendRTCPAPPPacket(uint8_t subtype, const uint8_t name[4], const 
 }
 
 #endif // RTP_SUPPORT_SENDAPP
+
+#ifdef RTP_SUPPORT_RTCPUNKNOWN
+
+int RTPSession::SendUnknownPacket(bool sr, uint8_t payload_type, uint8_t subtype, const void *data, size_t len)
+{
+	int status;
+
+	if (!created)
+		return ERR_RTP_SESSION_NOTCREATED;
+
+	BUILDER_LOCK
+	uint32_t ssrc = packetbuilder.GetSSRC();
+	BUILDER_UNLOCK
+	
+	RTCPCompoundPacketBuilder* rtcpcomppack = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTCPCOMPOUNDPACKETBUILDER) RTCPCompoundPacketBuilder(GetMemoryManager());
+	if (rtcpcomppack == 0)
+	{
+		RTPDelete(rtcpcomppack,GetMemoryManager());
+		return ERR_RTP_OUTOFMEM;
+	}
+
+	status = rtcpcomppack->InitBuild(maxpacksize);	
+	if(status < 0)
+	{
+		RTPDelete(rtcpcomppack,GetMemoryManager());
+		return status;
+	}
+
+	if (sr)
+	{
+		// setup for the rtcp 
+		RTPTime rtppacktime = packetbuilder.GetPacketTime();
+		uint32_t rtppacktimestamp = packetbuilder.GetPacketTimestamp();
+		uint32_t packcount = packetbuilder.GetPacketCount();
+		uint32_t octetcount = packetbuilder.GetPayloadOctetCount();
+		RTPTime curtime = RTPTime::CurrentTime();
+		RTPTime diff = curtime;
+		diff -= rtppacktime;
+		diff += 1; // add transmission delay or RTPTime(0,0);
+
+		double timestampunit = 90000;
+
+		uint32_t tsdiff = (uint32_t)((diff.GetDouble()/timestampunit)+0.5);
+		uint32_t rtptimestamp = rtppacktimestamp+tsdiff;
+		RTPNTPTime ntptimestamp = curtime.GetNTPTime();
+
+		//first packet in an rtcp compound packet should always be SR or RR
+		if((status = rtcpcomppack->StartSenderReport(ssrc,ntptimestamp,rtptimestamp,packcount,octetcount)) < 0)
+		{
+			RTPDelete(rtcpcomppack,GetMemoryManager());
+			return status;
+		}
+	}
+	else
+	{
+		//first packet in an rtcp compound packet should always be SR or RR
+		if((status = rtcpcomppack->StartReceiverReport(ssrc)) < 0)
+		{
+			RTPDelete(rtcpcomppack,GetMemoryManager());
+			return status;
+		}
+
+	}
+
+	//add SDES packet with CNAME item
+	if ((status = rtcpcomppack->AddSDESSource(ssrc)) < 0)
+	{
+		RTPDelete(rtcpcomppack,GetMemoryManager());
+		return status;
+	}
+	
+	BUILDER_LOCK
+	size_t owncnamelen = 0;
+	uint8_t *owncname = rtcpbuilder.GetLocalCNAME(&owncnamelen);
+
+	if ((status = rtcpcomppack->AddSDESNormalItem(RTCPSDESPacket::CNAME,owncname,owncnamelen)) < 0)
+	{
+		BUILDER_UNLOCK
+		RTPDelete(rtcpcomppack,GetMemoryManager());
+		return status;
+	}
+	BUILDER_UNLOCK
+	
+	//add our packet
+	if((status = rtcpcomppack->AddUnknownPacket(payload_type, subtype, ssrc, data, len)) < 0)
+	{
+		RTPDelete(rtcpcomppack,GetMemoryManager());
+		return status;
+	}
+
+	if((status = rtcpcomppack->EndBuild()) < 0)
+	{
+		RTPDelete(rtcpcomppack,GetMemoryManager());
+		return status;
+	}
+
+	//send packet
+	status = rtptrans->SendRTCPData(rtcpcomppack->GetCompoundPacketData(),
+		rtcpcomppack->GetCompoundPacketLength());
+	if(status < 0)
+	{
+		RTPDelete(rtcpcomppack,GetMemoryManager());
+		return status;
+	}
+
+	PACKSENT_LOCK
+	sentpackets = true;
+	PACKSENT_UNLOCK
+
+	OnSendRTCPCompoundPacket(rtcpcomppack); // we'll place this after the actual send to avoid tampering
+
+	int retlen = rtcpcomppack->GetCompoundPacketLength();
+
+	RTPDelete(rtcpcomppack,GetMemoryManager());
+	return retlen;
+}
+
+#endif // RTP_SUPPORT_RTCPUNKNOWN 
 
 int RTPSession::SetDefaultPayloadType(uint8_t pt)
 {
@@ -1457,6 +1596,37 @@ int RTPSession::CreateCNAME(uint8_t *buffer,size_t *bufferlength,bool resolve)
 	if (*bufferlength > RTCP_SDES_MAXITEMLENGTH)
 		*bufferlength = RTCP_SDES_MAXITEMLENGTH;
 	return 0;
+}
+
+RTPRandom *RTPSession::GetRandomNumberGenerator(RTPRandom *r)
+{
+	RTPRandom *rnew = 0;
+
+	if (r == 0)
+	{
+#if defined(WIN32) || defined(_WIN32_WCE)
+		RTPRandomRandS *rnew2 = new RTPRandomRandS();
+#else
+		RTPRandomURandom *rnew2 = new RTPRandomURandom();
+#endif // WIN32 || _WIN32_WCE
+
+		if (rnew2->Init() < 0) // fall back to rand48
+		{
+			delete rnew2;
+			rnew = new RTPRandomRand48();
+		}
+		else
+			rnew = rnew2;
+
+		deletertprnd = true;
+	}
+	else
+	{
+		rnew = r;
+		deletertprnd = false;
+	}
+
+	return rnew;
 }
 
 #ifdef RTPDEBUG

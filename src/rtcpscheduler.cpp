@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -84,9 +84,11 @@ int RTCPSchedulerParams::SetMinimumTransmissionInterval(const RTPTime &t)
 	return 0;
 }
 
-RTCPScheduler::RTCPScheduler(RTPSources &s) : sources(s),nextrtcptime(0,0),prevrtcptime(0,0)
+RTCPScheduler::RTCPScheduler(RTPSources &s, RTPRandom &r) : rtprand(r),sources(s),nextrtcptime(0,0),prevrtcptime(0,0)
 {
 	Reset();
+
+	//std::cout << (void *)(&rtprand) << std::endl;
 }
 
 RTCPScheduler::~RTCPScheduler()

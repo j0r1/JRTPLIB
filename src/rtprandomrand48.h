@@ -30,33 +30,41 @@
 
 */
 
-#ifndef RTPTYPES_H
+/**
+ * \file rtprandomrand48.h
+ */
 
-#define RTPTYPES_H
+#ifndef RTPRANDOMRAND48_H
 
-#ifndef _WIN32_WCE
-	#include <winsock2.h>	
-	#include <ws2tcpip.h>
-	#include <sys/types.h>
-#else
-	#include <winsock2.h>	
-	#include <ws2tcpip.h>
-#endif // _WIN32_WCE
+#define RTPRANDOMRAND48_H
 
-#ifndef INTTYPES_DEFINED
+#include "rtpconfig.h"
+#include "rtprandom.h"
+#ifdef RTP_SUPPORT_THREAD
+	#include <jmutex.h>
+#endif // RTP_SUPPORT_THREAD
+#include <stdio.h>
 
-#define INTTYPES_DEFINED
+/** A random number generator using the algorithm of the rand48 set of functions. */
+class RTPRandomRand48 : public RTPRandom
+{
+public:
+	RTPRandomRand48();
+	RTPRandomRand48(uint32_t seed);
+	~RTPRandomRand48();
 
-typedef char int8_t;
-typedef unsigned char uint8_t;
-typedef short int16_t;
-typedef unsigned short uint16_t;
-typedef int int32_t;
-typedef unsigned int uint32_t;
-typedef __int64 int64_t;
-typedef unsigned __int64 uint64_t;
+	uint8_t GetRandom8();
+	uint16_t GetRandom16();
+	uint32_t GetRandom32();
+	double GetRandomDouble();
+private:
+	void SetSeed(uint32_t seed);
 
-#endif // INTTYPES_DEFINED
+#ifdef RTP_SUPPORT_THREAD
+	JMutex mutex;
+#endif // RTP_SUPPORT_THREAD
+	uint64_t state;
+};
 
-#endif // RTPTYPES_H
+#endif // RTPRANDOMRAND48_H
 

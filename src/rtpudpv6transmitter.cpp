@@ -1,11 +1,11 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2007 Jori Liesenborgs
+  Copyright (c) 1999-2010 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
-  This library was developed at the "Expertisecentrum Digitale Media"
+  This library was developed at the Expertise Centre for Digital Media
   (http://www.edm.uhasselt.be), a research center of the Hasselt University
   (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
@@ -663,7 +663,10 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 #else 
 		unsigned char buf[1];
 
-		read(abortdesc[0],buf,1);
+		if (read(abortdesc[0],buf,1))
+		{
+			// To get rid of __wur related compiler warnings
+		}
 #endif // WIN32
 	}
 	
@@ -1735,7 +1738,10 @@ void RTPUDPv6Transmitter::AbortWaitInternal()
 #if (defined(WIN32) || defined(_WIN32_WCE))
 	send(abortdesc[1],"*",1,0);
 #else
-	write(abortdesc[1],"*",1);
+	if (write(abortdesc[1],"*",1))
+	{
+		// To get rid of __wur related compiler warnings
+	}
 #endif // WIN32
 }
 
@@ -1781,7 +1787,7 @@ void RTPUDPv6Transmitter::Dump()
 			for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	{ ip16[j] = (((uint16_t)ip.s6_addr[i])<<8); ip16[j] |= ((uint16_t)ip.s6_addr[i+1]); }
 			RTP_SNPRINTF(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7]);
 			std::cout << "Bind IP address:                " << str << std::endl;
-			std::Cout << "Multicast interface index:      " << mcastifidx << std::endl;
+			std::cout << "Multicast interface index:      " << mcastifidx << std::endl;
 			std::cout << "Local IP addresses:" << std::endl;
 			for (it = localIPs.begin() ; it != localIPs.end() ; it++)
 			{
