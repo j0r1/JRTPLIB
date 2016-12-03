@@ -42,6 +42,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTPAddress *RTPIPv6Address::CreateCopy(RTPMemoryManager *mgr) const
 {
 	RTPIPv6Address *newaddr = RTPNew(mgr,RTPMEM_TYPE_CLASS_RTPADDRESS) RTPIPv6Address(ip,port);
@@ -103,6 +106,8 @@ std::string RTPIPv6Address::GetAddressString() const
 	return std::string(str);
 }
 #endif // RTPDEBUG
+
+} // end namespace
 
 #endif // RTP_SUPPORT_IPV6
 

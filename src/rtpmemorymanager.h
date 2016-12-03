@@ -140,6 +140,9 @@
 /** Buffer to store a HashElement instance for the source table. */
 #define RTPMEM_TYPE_CLASS_SOURCETABLEHASHELEMENT				32
 
+namespace jrtplib
+{
+
 /** A memory manager. */
 class RTPMemoryManager
 {
@@ -160,18 +163,20 @@ public:
 	virtual void FreeBuffer(void *buffer) = 0;
 };
 
+} // end namespace
+
 #ifdef RTP_SUPPORT_MEMORYMANAGEMENT	
 
 #include <new>
 
-inline void *operator new(size_t numbytes, RTPMemoryManager *mgr, int memtype)
+inline void *operator new(size_t numbytes, jrtplib::RTPMemoryManager *mgr, int memtype)
 {
 	if (mgr == 0)
 		return operator new(numbytes);
 	return mgr->AllocateBuffer(numbytes,memtype);
 }
 
-inline void operator delete(void *buffer, RTPMemoryManager *mgr, int memtype)
+inline void operator delete(void *buffer, jrtplib::RTPMemoryManager *mgr, int memtype)
 {
 	if (mgr == 0)
 		operator delete(buffer);
@@ -181,14 +186,14 @@ inline void operator delete(void *buffer, RTPMemoryManager *mgr, int memtype)
 
 #if defined(WIN32) || defined(_WIN32_WCE)
 #if _MSC_VER >= 1300
-inline void *operator new[](size_t numbytes, RTPMemoryManager *mgr, int memtype)
+inline void *operator new[](size_t numbytes, jrtplib::RTPMemoryManager *mgr, int memtype)
 {
 	if (mgr == 0)
 		return operator new[](numbytes);
 	return mgr->AllocateBuffer(numbytes,memtype);
 }
 
-inline void operator delete[](void *buffer, RTPMemoryManager *mgr, int memtype)
+inline void operator delete[](void *buffer, jrtplib::RTPMemoryManager *mgr, int memtype)
 {
 	if (mgr == 0)
 		operator delete[](buffer);
@@ -197,14 +202,14 @@ inline void operator delete[](void *buffer, RTPMemoryManager *mgr, int memtype)
 }
 #endif // _MSC_VER >= 1300
 #else
-inline void *operator new[](size_t numbytes, RTPMemoryManager *mgr, int memtype)
+inline void *operator new[](size_t numbytes, jrtplib::RTPMemoryManager *mgr, int memtype)
 {
 	if (mgr == 0)
 		return operator new[](numbytes);
 	return mgr->AllocateBuffer(numbytes,memtype);
 }
 
-inline void operator delete[](void *buffer, RTPMemoryManager *mgr, int memtype)
+inline void operator delete[](void *buffer, jrtplib::RTPMemoryManager *mgr, int memtype)
 {
 	if (mgr == 0)
 		operator delete[](buffer);
@@ -212,6 +217,9 @@ inline void operator delete[](void *buffer, RTPMemoryManager *mgr, int memtype)
 		mgr->FreeBuffer(buffer);
 }
 #endif // WIN32 || _WIN32_WCE
+
+namespace jrtplib
+{
 
 inline void RTPDeleteByteArray(uint8_t *buf, RTPMemoryManager *mgr)
 {
@@ -232,6 +240,8 @@ inline void RTPDelete(ClassName *obj, RTPMemoryManager *mgr)
 		mgr->FreeBuffer(obj);
 	}
 }
+
+} // end namespace
 
 #define RTPNew(a,b) 			new(a,b)
 

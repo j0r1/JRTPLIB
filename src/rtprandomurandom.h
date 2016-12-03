@@ -42,6 +42,9 @@
 #include "rtprandom.h"
 #include <stdio.h>
 
+namespace jrtplib
+{
+
 /** A random number generator which uses bytes delivered by the /dev/urandom device. */
 class RTPRandomURandom : public RTPRandom
 {
@@ -59,5 +62,7 @@ public:
 private:
 	FILE *device;
 };
+
+} // end namespace
 
 #endif // RTPRANDOMURANDOM_H

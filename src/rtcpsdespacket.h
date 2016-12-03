@@ -46,7 +46,10 @@
 	#include <netinet/in.h>
 #endif // WIN32
 
-class RTCPCompoundPacket;
+namespace jrtplib
+{
+
+	class RTCPCompoundPacket;
 
 /** Describes an RTCP source description packet. */
 class RTCPSDESPacket : public RTCPPacket
@@ -374,6 +377,8 @@ inline uint8_t *RTCPSDESPacket::GetPRIVValueData()
 		return 0;
 	return (currentchunk+itemoffset+sizeof(RTCPSDESHeader)+1+prefixlength);
 }
+
+} // end namespace
 
 #endif // RTP_SUPPORT_SDESPRIV
 

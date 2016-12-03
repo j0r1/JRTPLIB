@@ -49,6 +49,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 #ifndef RTP_SUPPORT_RANDS
 
 RTPRandomRandS::RTPRandomRandS()
@@ -101,7 +104,7 @@ int RTPRandomRandS::Init()
 	if (initialized) // doesn't matter then
 		return 0;
 
-	HMODULE hAdvApi32 = LoadLibrary("ADVAPI32.DLL");
+	HMODULE hAdvApi32 = LoadLibrary(TEXT("ADVAPI32.DLL"));
 	if(hAdvApi32 != NULL)
 	{
 		if(NULL != GetProcAddress( hAdvApi32, "SystemFunction036" )) // RtlGenRandom
@@ -192,4 +195,6 @@ double RTPRandomRandS::GetRandomDouble()
 }
 
 #endif // RTP_SUPPORT_RANDS
+
+} // end namespace
 

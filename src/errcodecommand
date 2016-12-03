@@ -1,0 +1,2 @@
+#!/bin/bash
+for i in `cat rtperrors.h | cut -f 2 -d " " | cut -f 1 |grep -e "^ERR"`; do echo $i ; BLA=`grep $i *.cpp *.h|cut -f 1 -d ":"|sort|uniq`; if [ "BLA$BLA" != BLA ] ; then for j in $BLA ; do if [ $j != "rtperrors.h" ] ; then echo -e "\t$j" ; fi ; done ; fi ;done

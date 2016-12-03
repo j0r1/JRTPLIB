@@ -40,6 +40,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTCPPacketBuilder::RTCPPacketBuilder(RTPSources &s,RTPPacketBuilder &pb,RTPMemoryManager *mgr)
 	: RTPMemoryObject(mgr),sources(s),rtppacketbuilder(pb),prevbuildtime(0,0),transmissiondelay(0,0),ownsdesinfo(mgr)
 {
@@ -733,4 +736,6 @@ int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reas
 	*pack = rtcpcomppack;
 	return 0;
 }
+
+} // end namespace
 

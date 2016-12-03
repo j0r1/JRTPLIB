@@ -45,6 +45,9 @@
 #include "rtptimeutilities.h"
 #include "rtpmemoryobject.h"
 
+namespace jrtplib
+{
+
 class RTPSources;
 class RTPPacketBuilder;
 class RTCPScheduler;
@@ -219,6 +222,8 @@ private:
 
 	int sdesbuildcount;
 };
+
+} // end namespace
 
 #endif // RTCPPACKETBUILDER_H
 

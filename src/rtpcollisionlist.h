@@ -44,6 +44,9 @@
 #include "rtpmemoryobject.h"
 #include <list>
 
+namespace jrtplib
+{
+
 class RTPAddress;
 
 /** This class represents a list of addresses from which SSRC collisions were detected. */
@@ -85,6 +88,8 @@ private:
 
 	std::list<AddressAndTime> addresslist;
 };
+
+} // end namespace
 
 #endif // RTPCOLLISIONLIST_H
 

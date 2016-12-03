@@ -35,6 +35,7 @@
 #include "rtppollthread.h"
 #include "rtpudpv4transmitter.h"
 #include "rtpudpv6transmitter.h"
+#include "rtpexternaltransmitter.h"
 #include "rtpsessionparams.h"
 #include "rtpdefines.h"
 #include "rtprawpacket.h"
@@ -79,6 +80,9 @@
 	#define PACKSENT_LOCK
 	#define PACKSENT_UNLOCK
 #endif // RTP_SUPPORT_THREAD
+
+namespace jrtplib
+{
 
 RTPSession::RTPSession(RTPRandom *r,RTPMemoryManager *mgr) 
 	: RTPMemoryObject(mgr),sources(*this,mgr),rtprnd(GetRandomNumberGenerator(r)),packetbuilder(*rtprnd,mgr),rtcpsched(sources,*rtprnd),
@@ -130,6 +134,9 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		rtptrans = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMITTER) RTPUDPv6Transmitter(GetMemoryManager());
 		break;
 #endif // RTP_SUPPORT_IPV6
+	case RTPTransmitter::ExternalProto:
+		rtptrans = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMITTER) RTPExternalTransmitter(GetMemoryManager());
+		break;
 	case RTPTransmitter::UserDefinedProto:
 		rtptrans = NewUserDefinedTransmitter();
 		if (rtptrans == 0)
@@ -955,7 +962,9 @@ RTPTransmissionInfo *RTPSession::GetTransmissionInfo()
 
 void RTPSession::DeleteTransmissionInfo(RTPTransmissionInfo *inf)
 {
-	RTPDelete(inf,GetMemoryManager());
+	if (!created)
+		return;
+	rtptrans->DeleteTransmissionInfo(inf);
 }
 
 int RTPSession::Poll()
@@ -1644,4 +1653,6 @@ void RTPSession::DumpTransmitter()
 		rtptrans->Dump();
 }
 #endif // RTPDEBUG
+
+} // end namespace
 

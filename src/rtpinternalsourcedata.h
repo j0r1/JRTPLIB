@@ -44,6 +44,9 @@
 #include "rtptimeutilities.h"
 #include "rtpsources.h"
 
+namespace jrtplib
+{
+
 class RTPInternalSourceData : public RTPSourceData
 {
 public:
@@ -126,5 +129,7 @@ inline int RTPInternalSourceData::SetRTCPDataAddress(const RTPAddress *a)
 	return 0;
 }
 	
+} // end namespace
+
 #endif // RTPINTERNALSOURCEDATA_H
 

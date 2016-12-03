@@ -41,6 +41,9 @@
 #include "rtpconfig.h"
 #include "rtpmemorymanager.h"
 
+namespace jrtplib
+{
+
 class RTPMemoryObject
 {
 protected:	
@@ -64,6 +67,8 @@ private:
 	RTPMemoryManager *mgr;
 #endif // RTP_SUPPORT_MEMORYMANAGEMENT
 };
+
+} // end namespace
 
 #endif // RTPMEMORYOBJECT_H
 

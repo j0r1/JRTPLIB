@@ -1,11 +1,6 @@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@/jrtplib3
-
 Name: Jrtplib 
-Description: An full featured RTP library
+Description: A full featured RTP library
 Requires:
-Version: @VERSION@
-Libs: -L${libdir} -ljrtp
-Cflags: -I${includedir}
+Version: ${VERSION}
+Libs: ${JRTPLIB_LIBS_PKGCONFIG}
+Cflags: ${JRTPLIB_INCDIRS_PKGCONFIG}

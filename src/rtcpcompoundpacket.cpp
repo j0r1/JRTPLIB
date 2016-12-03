@@ -47,6 +47,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTCPCompoundPacket::RTCPCompoundPacket(RTPRawPacket &rawpack, RTPMemoryManager *mgr) : RTPMemoryObject(mgr)
 {
 	compoundpacket = 0;
@@ -223,3 +226,6 @@ void RTCPCompoundPacket::Dump()
 	}
 }
 #endif // RTPDEBUG
+
+} // end namespace
+

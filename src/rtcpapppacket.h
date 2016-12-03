@@ -45,6 +45,9 @@
 	#include <netinet/in.h>
 #endif // WIN32 
 
+namespace jrtplib
+{
+
 class RTCPCompoundPacket;
 
 /** Describes an RTCP APP packet. */
@@ -122,6 +125,8 @@ inline size_t RTCPAPPPacket::GetAPPDataLength() const
 		return 0;
 	return appdatalen;
 }
+
+} // end namespace
 
 #endif // RTCPAPPPACKET_H
 

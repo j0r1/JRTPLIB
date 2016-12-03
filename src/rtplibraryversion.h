@@ -41,6 +41,9 @@
 #include <string>
 #include <stdio.h>
 
+namespace jrtplib
+{
+
 /** 
  * Used to provide information about the version of the library. 
  */
@@ -66,6 +69,8 @@ public:
 private:
 	int debugnr,minornr,majornr;
 };
+
+} // end namespace
 
 #endif // RTPLIBRARYVERSION_H
 

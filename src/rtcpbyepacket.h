@@ -45,6 +45,9 @@
 	#include <netinet/in.h>
 #endif // WIN32
 
+namespace jrtplib
+{
+
 class RTCPCompoundPacket;
 
 /** Describes an RTCP BYE packet. */
@@ -130,6 +133,8 @@ inline uint8_t *RTCPBYEPacket::GetReasonData()
 		return 0;
 	return (data+reasonoffset+1);	
 }
+
+} // end namespace
 
 #endif // RTCPBYEPACKET_H
 

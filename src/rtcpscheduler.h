@@ -42,6 +42,9 @@
 #include "rtptimeutilities.h"
 #include "rtprandom.h"
 
+namespace jrtplib
+{
+
 class RTCPCompoundPacket;
 class RTPPacket;
 class RTPSources;
@@ -179,6 +182,8 @@ private:
 
 	RTPRandom &rtprand;
 };
+
+} // end namespace
 
 #endif // RTCPSCHEDULER_H
 

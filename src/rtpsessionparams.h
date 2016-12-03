@@ -44,6 +44,9 @@
 #include "rtptimeutilities.h"
 #include "rtpsources.h"
 
+namespace jrtplib
+{
+
 /** Describes the parameters for to be used by an RTPSession instance. 
  *  Describes the parameters for to be used by an RTPSession instance. Note that the own timestamp 
  *  unit must be set to a valid number, otherwise the session can't be created.
@@ -238,6 +241,8 @@ private:
 
 	std::string cname;
 };
+
+} // end namespace
 
 #endif // RTPSESSIONPARAMS_H
 

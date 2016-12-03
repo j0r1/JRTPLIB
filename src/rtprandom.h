@@ -44,6 +44,9 @@
 
 #define RTPRANDOM_2POWMIN63										1.08420217248550443400745280086994171142578125e-19
 
+namespace jrtplib
+{
+
 /** Interface for generating random numbers. */
 class RTPRandom
 {
@@ -66,6 +69,8 @@ public:
 	/** Can be used by subclasses to generate a seed for a random number generator. */
 	uint32_t PickSeed();
 };
+
+} // end namespace
 
 #endif // RTPRANDOM_H
 

@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <iostream>
 
+using namespace jrtplib;
+
 int main(void)
 {
 #ifdef WIN32

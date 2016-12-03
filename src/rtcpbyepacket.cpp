@@ -38,6 +38,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTCPBYEPacket::RTCPBYEPacket(uint8_t *data,size_t datalength)
 	: RTCPPacket(BYE,data,datalength)
 {
@@ -96,4 +99,6 @@ void RTCPBYEPacket::Dump()
 	}
 }
 #endif // RTPDEBUG
+
+} // end namespace
 

@@ -42,6 +42,9 @@
 #include "rtpaddress.h"
 #include "rtptypes.h"
 
+namespace jrtplib
+{
+
 class RTPMemoryManager;
 
 /** Represents an IPv4 IP address and port.
@@ -85,6 +88,8 @@ private:
 	uint32_t ip;
 	uint16_t port;
 };
+
+} // end namespace
 
 #endif // RTPIPV4ADDRESS_H
 

@@ -47,6 +47,9 @@
 #include "rtpmemoryobject.h"
 #include <list>
 
+namespace jrtplib
+{
+
 class RTPAddress;
 
 class RTCPSenderReportInfo
@@ -470,5 +473,8 @@ inline void RTPSourceData::FlushPackets()
 		RTPDelete(*it,GetMemoryManager());
 	packetlist.clear();
 }
+
+} // end namespace
+
 #endif // RTPSOURCEDATA_H
 

@@ -52,8 +52,11 @@
 #include <list>
 
 #ifdef RTP_SUPPORT_THREAD
-	#include <jmutex.h>	
+	#include <jthread/jmutex.h>	
 #endif // RTP_SUPPORT_THREAD
+
+namespace jrtplib
+{
 
 class RTPTransmitter;
 class RTPSessionParams;
@@ -563,13 +566,15 @@ private:
 	
 #ifdef RTP_SUPPORT_THREAD
 	RTPPollThread *pollthread;
-	JMutex sourcesmutex,buildermutex,schedmutex,packsentmutex;
+	jthread::JMutex sourcesmutex,buildermutex,schedmutex,packsentmutex;
 
 	friend class RTPPollThread;
 #endif // RTP_SUPPORT_THREAD
 	friend class RTPSessionSources;
 	friend class RTCPSessionPacketBuilder;
 };
+
+} // end namespace
 
 #endif // RTPSESSION_H
 

@@ -34,6 +34,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 void RTCPSDESInfo::Clear()
 {
 #ifdef RTP_SUPPORT_SDESPRIV
@@ -174,4 +177,6 @@ bool RTCPSDESInfo::GetPrivateValue(const uint8_t *prefix,size_t prefixlen,uint8_
 	return found;
 }
 #endif // RTP_SUPPORT_SDESPRIV
+
+} // end namespace
 

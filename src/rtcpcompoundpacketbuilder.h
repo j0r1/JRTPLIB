@@ -45,6 +45,9 @@
 #include "rtperrors.h"
 #include <list>
 
+namespace jrtplib
+{
+
 class RTPMemoryManager;
 
 /** This class can be used to construct an RTCP compound packet.
@@ -390,6 +393,8 @@ private:
 	
 	void ClearBuildBuffers();
 };
+
+} // end namespace
 
 #endif // RTCPCOMPOUNDPACKETBUILDER_H
 

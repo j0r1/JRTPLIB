@@ -39,6 +39,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 bool RTPIPv4Address::IsSameAddress(const RTPAddress *addr) const
 {
 	if (addr == 0)
@@ -81,3 +84,6 @@ std::string RTPIPv4Address::GetAddressString() const
 	return std::string(str);
 }
 #endif // RTPDEBUG
+
+} // end namespace
+

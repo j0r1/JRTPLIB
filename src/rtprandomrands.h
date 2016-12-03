@@ -41,6 +41,9 @@
 #include "rtpconfig.h"
 #include "rtprandom.h"
 
+namespace jrtplib
+{
+
 /** A random number generator which tries to use the \c rand_s function on the
  *  Win32 platform. 
  */
@@ -60,6 +63,8 @@ public:
 private:
 	bool initialized;
 };
+
+} // end namespace
 
 #endif // RTPRANDOMRANDS_H
 

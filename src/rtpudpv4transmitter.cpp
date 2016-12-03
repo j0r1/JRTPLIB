@@ -104,7 +104,13 @@
 	#define WAITMUTEX_UNLOCK
 #endif // RTP_SUPPORT_THREAD
 
-RTPUDPv4Transmitter::RTPUDPv4Transmitter(RTPMemoryManager *mgr) : RTPTransmitter(mgr),destinations(mgr,RTPMEM_TYPE_CLASS_DESTINATIONLISTHASHELEMENT),multicastgroups(mgr,RTPMEM_TYPE_CLASS_MULTICASTHASHELEMENT),
+namespace jrtplib
+{
+
+RTPUDPv4Transmitter::RTPUDPv4Transmitter(RTPMemoryManager *mgr) : RTPTransmitter(mgr),destinations(mgr,RTPMEM_TYPE_CLASS_DESTINATIONLISTHASHELEMENT),
+#ifdef RTP_SUPPORT_IPV4MULTICAST
+								  multicastgroups(mgr,RTPMEM_TYPE_CLASS_MULTICASTHASHELEMENT),
+#endif // RTP_SUPPORT_IPV4MULTICAST
 								  acceptignoreinfo(mgr,RTPMEM_TYPE_CLASS_ACCEPTIGNOREHASHELEMENT)
 {
 	created = false;
@@ -385,6 +391,14 @@ RTPTransmissionInfo *RTPUDPv4Transmitter::GetTransmissionInfo()
 	RTPTransmissionInfo *tinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMISSIONINFO) RTPUDPv4TransmissionInfo(localIPs,rtpsock,rtcpsock);
 	MAINMUTEX_UNLOCK
 	return tinf;
+}
+
+void RTPUDPv4Transmitter::DeleteTransmissionInfo(RTPTransmissionInfo *i)
+{
+	if (!init)
+		return;
+
+	RTPDelete(i, GetMemoryManager());
 }
 
 int RTPUDPv4Transmitter::GetLocalHostName(uint8_t *buffer,size_t *bufferlength)
@@ -1928,4 +1942,6 @@ void RTPUDPv4Transmitter::Dump()
 	}
 }
 #endif // RTPDEBUG
+
+} // end namespace
 

@@ -37,6 +37,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTCPSRPacket::RTCPSRPacket(uint8_t *data,size_t datalength)
 	: RTCPPacket(SR,data,datalength)
 {
@@ -98,4 +101,6 @@ void RTCPSRPacket::Dump()
 	}	
 }
 #endif // RTPDEBUG
+
+} // end namespace
 

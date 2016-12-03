@@ -39,6 +39,9 @@
 
 #ifdef RTPDEBUG
 
+namespace jrtplib
+{
+
 void RTCPPacket::Dump()
 {
 	switch(packettype)
@@ -67,5 +70,7 @@ void RTCPPacket::Dump()
 	std::cout << "Length: " << datalen;
 	std::cout << std::endl;
 }
+
+} // end namespace
 
 #endif // RTPDEBUG

@@ -44,6 +44,9 @@
 #include "rtptypes.h"
 #include "rtpmemoryobject.h"
 
+namespace jrtplib
+{
+
 /** This class is used by the transmission component to store the incoming RTP and RTCP data in. */
 class RTPRawPacket : public RTPMemoryObject
 {
@@ -104,6 +107,8 @@ inline RTPRawPacket::~RTPRawPacket()
 	if (senderaddress)
 		RTPDelete(senderaddress,GetMemoryManager());
 }
+
+} // end namespace
 
 #endif // RTPRAWPACKET_H
 

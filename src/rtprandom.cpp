@@ -50,6 +50,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 uint32_t RTPRandom::PickSeed()
 {
 	uint32_t x;
@@ -78,4 +81,6 @@ uint32_t RTPRandom::PickSeed()
 #endif
 	return x;
 }
+
+} // end namespace
 

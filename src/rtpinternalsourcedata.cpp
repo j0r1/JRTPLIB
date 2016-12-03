@@ -38,6 +38,9 @@
 
 #define RTPINTERNALSOURCEDATA_MAXPROBATIONPACKETS		32
 
+namespace jrtplib
+{
+
 RTPInternalSourceData::RTPInternalSourceData(uint32_t ssrc,RTPSources::ProbationType probtype,RTPMemoryManager *mgr):RTPSourceData(ssrc,mgr)
 {
 #ifdef RTP_SUPPORT_PROBATION
@@ -279,4 +282,6 @@ int RTPInternalSourceData::ProcessBYEPacket(const uint8_t *reason,size_t reasonl
 	stats.SetLastMessageTime(receivetime);
 	return 0;
 }
+
+} // end namespace
 

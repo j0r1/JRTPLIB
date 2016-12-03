@@ -1,9 +1,18 @@
-							     February 2, 2011
+							        July 25, 2011
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.9.0 (July 2011)
+	* Switched to CMake build system.
+	* Added the RTPByteAddress class, which can be used to describe
+	  a host/port combination in a very general way.
+	* Added the RTPExternalTransmitter class which can be used if
+	  one would like to use a transmission mechanism other than
+	  the UDP based transmitters.
+	* Placed everything in namespace 'jrtplib'.
 
  3.8.2 (February 2011)
  	* Fixed bug in RTPRandomRand48. The uint16_t version used a

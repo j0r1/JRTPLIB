@@ -41,6 +41,9 @@
 #include "rtpconfig.h"
 #include "rtptypes.h"
 
+namespace jrtplib
+{
+
 struct RTPHeader
 {
 #ifdef RTP_BIG_ENDIAN
@@ -118,6 +121,8 @@ struct RTCPSDESHeader
 	uint8_t sdesid;
 	uint8_t length;
 };
+
+} // end namespace
 
 #endif // RTPSTRUCTS
 

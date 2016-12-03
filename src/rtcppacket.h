@@ -41,6 +41,9 @@
 #include "rtpconfig.h"
 #include "rtptypes.h"
 
+namespace jrtplib
+{
+
 class RTCPCompoundPacket;
 
 /** Base class for specific types of RTCP packets. */
@@ -84,6 +87,8 @@ protected:
 private:
 	const PacketType packettype;
 };
+
+} // end namespace
 
 #endif // RTCPPACKET_H
 

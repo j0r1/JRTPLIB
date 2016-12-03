@@ -38,6 +38,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTCPSDESPacket::RTCPSDESPacket(uint8_t *data,size_t datalength)
 	: RTCPPacket(SDES,data,datalength)
 {
@@ -228,4 +231,6 @@ void RTCPSDESPacket::Dump()
 	} while (GotoNextChunk());
 }
 #endif // RTPDEBUG
+
+} // end namespace
 

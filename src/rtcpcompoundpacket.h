@@ -43,6 +43,9 @@
 #include "rtpmemoryobject.h"
 #include <list>
 
+namespace jrtplib
+{
+
 class RTPRawPacket;
 class RTCPPacket;
 
@@ -101,6 +104,8 @@ protected:
 	std::list<RTCPPacket *> rtcppacklist;
 	std::list<RTCPPacket *>::const_iterator rtcppackit;
 };
+
+} // end namespace
 
 #endif // RTCPCOMPOUNDPACKET_H
 

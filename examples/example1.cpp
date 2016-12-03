@@ -19,6 +19,8 @@
 #include <iostream>
 #include <string>
 
+using namespace jrtplib;
+
 //
 // This function checks if there was a RTP error. If so, it displays an error
 // message and exists.

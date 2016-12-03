@@ -110,6 +110,9 @@ inline bool operator==(const in6_addr &ip1,const in6_addr &ip2)
 	return false;
 }
 
+namespace jrtplib
+{
+
 RTPUDPv6Transmitter::RTPUDPv6Transmitter(RTPMemoryManager *mgr) : RTPTransmitter(mgr),
 								  destinations(GetMemoryManager(),RTPMEM_TYPE_CLASS_DESTINATIONLISTHASHELEMENT),
 								  multicastgroups(GetMemoryManager(),RTPMEM_TYPE_CLASS_MULTICASTHASHELEMENT),
@@ -394,6 +397,14 @@ RTPTransmissionInfo *RTPUDPv6Transmitter::GetTransmissionInfo()
 	RTPTransmissionInfo *tinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMISSIONINFO) RTPUDPv6TransmissionInfo(localIPs,rtpsock,rtcpsock);
 	MAINMUTEX_UNLOCK
 	return tinf;
+}
+
+void RTPUDPv6Transmitter::DeleteTransmissionInfo(RTPTransmissionInfo *i)
+{
+	if (!init)
+		return;
+
+	RTPDelete(i, GetMemoryManager());
 }
 
 int RTPUDPv6Transmitter::GetLocalHostName(uint8_t *buffer,size_t *bufferlength)
@@ -1890,6 +1901,8 @@ void RTPUDPv6Transmitter::Dump()
 
 }
 #endif // RTPDEBUG
+
+} // end namespace
 
 #endif // RTP_SUPPORT_IPV6
 

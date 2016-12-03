@@ -44,14 +44,17 @@
 
 #include "rtptransmitter.h"
 
-#include <jthread.h>
-#include <jmutex.h>
+#include <jthread/jthread.h>
+#include <jthread/jmutex.h>
 #include <list>
+
+namespace jrtplib
+{
 
 class RTPSession;
 class RTCPScheduler;
 
-class RTPPollThread : private JThread
+class RTPPollThread : private jthread::JThread
 {
 public:
 	RTPPollThread(RTPSession &session,RTCPScheduler &rtcpsched);
@@ -62,12 +65,14 @@ private:
 	void *Thread();
 	
 	bool stop;
-	JMutex stopmutex;
+	jthread::JMutex stopmutex;
 	RTPTransmitter *transmitter;
 	
 	RTPSession &rtpsession;
 	RTCPScheduler &rtcpsched;
 };
+
+} // end namespace
 
 #endif // RTP_SUPPORT_THREAD
 

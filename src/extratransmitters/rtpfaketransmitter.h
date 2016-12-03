@@ -55,11 +55,14 @@
 #include <list>
 
 #ifdef RTP_SUPPORT_THREAD
-	#include <jmutex.h>
+	#include <jthread/jmutex.h>
 #endif // RTP_SUPPORT_THREAD
 
 #define RTPFAKETRANS_HASHSIZE									8317
 #define RTPFAKETRANS_DEFAULTPORTBASE								5000
+
+namespace jrtplib
+{
 
 // Definition of a callback that is called when a packet is ready for sending
 // params (*data, data_len, dest_addr, dest_port, rtp [1 if rtp, 0 if rtcp])
@@ -146,6 +149,7 @@ public:
 	int Create(size_t maxpacksize,const RTPTransmissionParams *transparams);
 	void Destroy();
 	RTPTransmissionInfo *GetTransmissionInfo();
+	void DeleteTransmissionInfo(RTPTransmissionInfo *inf);
 
 	int GetLocalHostName(uint8_t *buffer,size_t *bufferlength);
 	bool ComesFromThisTransmitter(const RTPAddress *addr);
@@ -232,10 +236,12 @@ private:
 	void DestroyAbortDescriptors();
 	void AbortWaitInternal();
 #ifdef RTP_SUPPORT_THREAD
-	JMutex mainmutex,waitmutex;
+	jthread::JMutex mainmutex,waitmutex;
 	int threadsafe;
 #endif // RTP_SUPPORT_THREAD
 };
 
-#endif // RTPFakeTRANSMITTER_H
+} // end namespace
+
+#endif // RTPFAKETRANSMITTER_H
 

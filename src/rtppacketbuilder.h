@@ -46,6 +46,9 @@
 #include "rtptypes.h"
 #include "rtpmemoryobject.h"
 
+namespace jrtplib
+{
+
 class RTPSources;
 
 /** This class can be used to build RTP packets and is a bit more high-level than the RTPPacket 
@@ -264,6 +267,8 @@ inline int RTPPacketBuilder::IncrementTimestampDefault()
 	timestamp += defaulttimestampinc;
 	return 0;
 }
+
+} // end namespace
 
 #endif // RTPPACKETBUILDER_H
 

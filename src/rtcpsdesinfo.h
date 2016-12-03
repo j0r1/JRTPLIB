@@ -46,6 +46,9 @@
 #include <string.h>
 #include <list>
 
+namespace jrtplib
+{
+
 /** The class RTCPSDESInfo is a container for RTCP SDES information. */
 class RTCPSDESInfo : public RTPMemoryObject
 {
@@ -210,6 +213,8 @@ private:
 	std::list<SDESPrivateItem *>::const_iterator curitem;
 #endif // RTP_SUPPORT_SDESPRIV
 };
+
+} // end namespace
 
 #endif // RTCPSDESINFO_H
 

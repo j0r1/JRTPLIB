@@ -30,18 +30,9 @@
 
 */
 
-#ifndef RTPTYPES_H
+#ifndef RTPTYPES_WIN_H
 
-#define RTPTYPES_H
-
-#ifndef _WIN32_WCE
-	#include <winsock2.h>	
-	#include <ws2tcpip.h>
-	#include <sys/types.h>
-#else
-	#include <winsock2.h>	
-	#include <ws2tcpip.h>
-#endif // _WIN32_WCE
+#define RTPTYPES_WIN_H
 
 #ifndef INTTYPES_DEFINED
 
@@ -58,5 +49,5 @@ typedef unsigned __int64 uint64_t;
 
 #endif // INTTYPES_DEFINED
 
-#endif // RTPTYPES_H
+#endif // RTPTYPES_WIN_H
 

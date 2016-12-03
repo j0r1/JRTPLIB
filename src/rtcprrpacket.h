@@ -45,6 +45,9 @@
 	#include <netinet/in.h>
 #endif // WIN32
 
+namespace jrtplib
+{
+
 class RTCPCompoundPacket;
 
 /** Describes an RTCP receiver report packet. */
@@ -196,6 +199,8 @@ inline uint32_t RTCPRRPacket::GetDLSR(int index) const
 	RTCPReceiverReport *r = GotoReport(index);
 	return ntohl(r->dlsr);
 }
+
+} // end namespace
 
 #endif // RTCPRRPACKET_H
 

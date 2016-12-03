@@ -21,6 +21,8 @@
 #include <iostream>
 #include <string>
 
+using namespace jrtplib;
+
 //
 // This function checks if there was a RTP error. If so, it displays an error
 // message and exists.
@@ -40,6 +42,8 @@ void checkerror(int rtperr)
 //
 
 #ifdef RTP_SUPPORT_THREAD
+
+using namespace jthread;
 
 class MyMemoryManager : public RTPMemoryManager
 {

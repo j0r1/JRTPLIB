@@ -32,6 +32,9 @@
 
 #include "rtprandomrand48.h"
 
+namespace jrtplib
+{
+
 RTPRandomRand48::RTPRandomRand48()
 {
 	SetSeed(PickSeed());
@@ -117,4 +120,6 @@ double RTPRandomRand48::GetRandomDouble()
 	double y = 3.552713678800500929355621337890625e-15 * (double)x;
 	return y;
 }
+
+} // end namespace
 

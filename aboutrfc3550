@@ -1,0 +1,177 @@
+ * p 9 (bottom):
+		In the unicast case, a participant may
+ 	    receive from all other participants in the session using the same
+  	    pair of ports, or may use a distinct pair of ports for each.
+
+	COMMENT:
+		By default, a RTPSession instance will use only one pair
+		of ports.
+
+ * p 14 (top):
+		A profile MAY define additional
+ 	     marker bits or specify that there is no marker bit by changing the
+ 	     number of bits in the payload type field (see Section 5.3).
+
+	COMMENT:
+		At the moment, no support for additional marker bits is present
+ 
+ * About payload data and payload types:
+	The library doesn't inspect payload data or payload types. It is
+	left to the application using the library to decide if a packet should
+	be ignored or accepted
+
+ * p 18 (middle):
+	   o  If a particular class of applications needs additional
+	      functionality independent of payload format, the profile under
+	      which those applications operate SHOULD define additional fixed
+	      fields to follow immediately after the SSRC field of the existing
+	      fixed header.  Those applications will be able to quickly and
+	      directly access the additional fields while profile-independent
+	      monitors or recorders can still process the RTP packets by
+	      interpreting only the first twelve octets.
+	
+	COMMENT:
+		No direct support for such extensions are provided
+
+ * p 20 (bottom):
+	   4. A fourth, OPTIONAL function is to convey minimal session control
+	      information, for example participant identification to be
+	      displayed in the user interface.  
+
+	COMMENT: SDES info is supported by the library
+
+ * p 21 (top):
+		The
+	      recommendations here accommodate SSM only through Section 6.2's
+	      option of turning off receivers' RTCP entirely.
+
+	COMMENT: 
+		For now, the RTCP (sending) will only be disabled entirely
+		if no destinations are present.
+
+ * p 25 (middle):
+		The profile MAY further specify that the control traffic bandwidth
+	   may be divided into two separate session parameters for those
+	   participants which are active data senders and those which are not;
+ 
+	COMMENT: this will not be implemented
+
+ * p 26 (top):
+		This delay MAY be set to half the
+	   minimum interval to allow quicker notification that the new
+	   participant is present.
+
+	COMMENT: is supplied as an option which is enabled by default
+
+ * p 26 (middle):
+	   	An implementation MAY scale the minimum RTCP interval to a smaller
+	   value inversely proportional to the session bandwidth parameter with
+	   the following limitations:
+
+	COMMENT: not supported
+
+ * p 28 (middle):
+	SSRC sampling -> not supported
+
+ * p 28 (bottom):
+		An implementation which is constrained to two-party
+	   unicast operation SHOULD still use randomization of the RTCP
+	   transmission interval to avoid unintended synchronization of multiple
+	   instances operating in the same environment, but MAY omit the "timer
+	   reconsideration" and "reverse reconsideration" algorithms in Sections
+	   6.3.3, 6.3.6 and 6.3.7.
+
+	COMMENT: randomization and reconsideration will always be used. omitting
+                 them is not implemented.
+
+ * p 28 (top):
+		New entries MAY be considered
+	   not valid until multiple packets carrying the new SSRC have been
+	   received (see Appendix A.1), or until an SDES RTCP packet containing
+	   a CNAME for that SSRC has been received.  	
+
+	COMMENT: Currently, probation is optional. A source is considered
+                 valid when either a number (depending on probation) of RTP
+                 packets are received or when a CNAME has been received
+
+ * p 42 (bottom):
+   		6.4.3 Extending the Sender and Receiver Reports
+
+	COMMENT: Extensions of SR and RR are not supported
+
+ * p 68 (middle):
+	   RTP relies on the underlying protocol(s) to provide demultiplexing of
+	   RTP data and RTCP control streams.  For UDP and similar protocols,
+	   RTP SHOULD use an even destination port number and the corresponding
+	   RTCP stream SHOULD use the next higher (odd) destination port number.
+	   For applications that take a single port number as a parameter and
+	   derive the RTP and RTCP port pair from that number, if an odd number
+	   is supplied then the application SHOULD replace that number with the
+	   next lower (even) number to use as the base of the port pair.  For
+	   applications in which the RTP and RTCP destination port numbers are
+	   specified via explicit, separate parameters (using a signaling
+	   protocol or other means), the application MAY disregard the
+	   restrictions that the port numbers be even/odd and consecutive
+	   although the use of an even/odd port pair is still encouraged.  The
+	   RTP and RTCP port numbers MUST NOT be the same since RTP relies on
+	   the port numbers to demultiplex the RTP data and RTCP control
+	   streams.
+
+	COMMENT: Currently, the transporter only accepts an even portbase.
+
+ * p 68-69:
+	   It is RECOMMENDED that layered encoding applications (see Section
+	   2.4) use a set of contiguous port numbers. 
+
+	COMMENT: No direct support for this using RTPSession, but it can be
+	         constructed in principle using several RTPTransmitter
+	         instances.
+
+ * p 69:
+	   A profile MAY specify a framing method to be used even when RTP is
+	   carried in protocols that do provide framing in order to allow
+	   carrying several RTP packets in one lower-layer protocol data unit,
+	   such as a UDP packet.  
+	
+	COMMENT: For UDP, such a framing mechanism will not be implemented
+
+
+
+
+QUESTIONS:
+ * p 28: after BYE packet, ssrc should be removed after an appropriate delay.
+         what delay is considered appropriate?
+ * p 57: why do CNAMEs have to be forwarded to allow SSRC identifier collisions
+         to work?
+	-> If the CSRC sources are not senders, their identifiers wont be 
+           seen in the CSRC list of an RTP packet. By forwarding SDES CNAMEs,
+           their identifiers will be present in the SDES chunk and collisions
+           can be detected.
+ * p 64: Section 8.3
+ * What MTU should be used? Should it be the same for all session members?
+   Is it the MTU of the protocol just below RTP or of the link layer?
+ * p 33 (BYE scheduling): Should members be increased for each BYE packet or
+                          for each SSRC in a BYE packet?
+
+ * p 35: 
+   RTP receivers provide reception quality feedback using RTCP report
+   packets which may take one of two forms depending upon whether or not
+   the receiver is also a sender.  The only difference between the
+   sender report (SR) and receiver report (RR) forms, besides the packet
+   type code, is that the sender report includes a 20-byte sender
+   information section for use by active senders.  The SR is issued if a
+   site has sent any data packets during the interval since issuing the
+   last report or the previous one, otherwise the RR is issued.
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     -> Is this also true when the sender timeout multiplier differs
+        from 2 ??
+
+ * About report blocks: should an entry be made for each SSRC_n in the
+   list of report blocks if the RR or SR originates from a valid SSRC?
+	-> probably not, since then we don't have the right transport
+	   address of the SSRC_n
+	-> Indeed: see p 61 at bottom
+
+ * Is it a valid tactic to use a timestamp unit estimation (from
+   two SRs) for jitter calculation if no exact info is available?
+

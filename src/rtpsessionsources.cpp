@@ -36,6 +36,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 void RTPSessionSources::OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime,const RTPAddress *senderaddress)
 {
 	rtpsession.OnRTPPacket(pack,receivetime,senderaddress);
@@ -106,4 +109,6 @@ void RTPSessionSources::OnNoteTimeout(RTPSourceData *srcdat)
 {
 	rtpsession.OnNoteTimeout(srcdat);
 }
+
+} // end namespace
 

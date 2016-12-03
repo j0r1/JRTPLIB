@@ -41,6 +41,9 @@
 #include "rtpconfig.h"
 #include "rtpsources.h"
 
+namespace jrtplib
+{
+
 class RTPSession;
 
 class RTPSessionSources : public RTPSources
@@ -75,5 +78,7 @@ private:
 	RTPSession &rtpsession;
 	bool owncollision;
 };
+
+} // end namespace
 
 #endif // RTPSESSIONSOURCES_H

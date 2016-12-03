@@ -93,6 +93,9 @@
 	#define WAITMUTEX_UNLOCK
 #endif // RTP_SUPPORT_THREAD
 
+namespace jrtplib
+{
+
 RTPFakeTransmitter::RTPFakeTransmitter(RTPMemoryManager *mgr ) : RTPTransmitter(mgr), destinations(mgr,RTPMEM_TYPE_CLASS_DESTINATIONLISTHASHELEMENT),acceptignoreinfo(mgr,RTPMEM_TYPE_CLASS_ACCEPTIGNOREHASHELEMENT)
 {
 	created = false;
@@ -266,6 +269,13 @@ RTPTransmissionInfo *RTPFakeTransmitter::GetTransmissionInfo()
 	RTPTransmissionInfo *tinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMISSIONINFO) RTPFakeTransmissionInfo(localIPs, params);
 	MAINMUTEX_UNLOCK
 	return tinf;
+}
+
+void RTPFakeTransmitter::DeleteTransmissionInfo(RTPTransmissionInfo *inf)
+{
+	if (!init)
+		return;
+	RTPDelete(inf,GetMemoryManager());
 }
 
 int RTPFakeTransmitter::GetLocalHostName(uint8_t *buffer,size_t *bufferlength)
@@ -1711,3 +1721,6 @@ void RTPFakeTransmitter::Dump()
 	}
 }
 #endif // RTPDEBUG
+
+} // end namespace
+

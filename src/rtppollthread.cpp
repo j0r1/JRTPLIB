@@ -46,6 +46,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTPPollThread::RTPPollThread(RTPSession &session,RTCPScheduler &sched):rtpsession(session),rtcpsched(sched)
 {
 	stop = false;
@@ -135,7 +138,7 @@ void *RTPPollThread::Thread()
 		
 		rtpsession.sourcesmutex.Unlock();
 		rtpsession.schedmutex.Unlock();
-		
+
 		if ((status = transmitter->WaitForIncomingData(rtcpdelay)) < 0)
 		{
 			stopthread = true;
@@ -170,6 +173,8 @@ void *RTPPollThread::Thread()
 
 	return 0;
 }
+
+} // end namespace
 
 #endif // RTP_SUPPORT_THREAD
 

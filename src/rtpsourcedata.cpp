@@ -72,6 +72,9 @@
 		if (!ownpacket) /* for own packet, this value is set on an outgoing packet */	\
 			lastrtptime = prevpacktime;
 
+namespace jrtplib
+{
+
 void RTPSourceStats::ProcessPacket(RTPPacket *pack,const RTPTime &receivetime,double tsunit,
                                    bool ownpacket,bool *accept,bool applyprobation,bool *onprobation)
 {
@@ -491,4 +494,7 @@ void RTPSourceData::Dump()
 }
 
 #endif // RTPDEBUG
+
+} // end namespace
+
 

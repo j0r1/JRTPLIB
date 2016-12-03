@@ -46,6 +46,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTCPCompoundPacketBuilder::RTCPCompoundPacketBuilder(RTPMemoryManager *mgr) : RTCPCompoundPacket(mgr), report(mgr), sdes(mgr)
 {
 	byesize = 0;
@@ -805,4 +808,6 @@ int RTCPCompoundPacketBuilder::EndBuild()
 	ClearBuildBuffers();
 	return 0;
 }
+
+} // end namespace
 

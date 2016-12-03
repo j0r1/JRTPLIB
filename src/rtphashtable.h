@@ -45,6 +45,9 @@
 #include <iostream>
 #endif // RTPDEBUG
 
+namespace jrtplib
+{
+
 //template<class Element,int GetIndex(const Element &k),int hashsize>
 template<class Element,class GetIndex,int hashsize>
 class RTPHashTable : public RTPMemoryObject
@@ -332,6 +335,8 @@ inline void RTPHashTable<Element,GetIndex,hashsize>::Dump()
 	}
 }
 #endif // RTPDEBUG
+
+} // end namespace
 
 #endif // RTPHASHTABLE_H
 

@@ -46,7 +46,7 @@
 #include <list>
 
 #ifdef RTP_SUPPORT_THREAD
-	#include <jmutex.h>
+	#include <jthread/jmutex.h>
 #endif // RTP_SUPPORT_THREAD
 
 #define RTPUDPV4TRANS_HASHSIZE									8317
@@ -56,6 +56,9 @@
 #define RTPUDPV4TRANS_RTCPRECEIVEBUFFER							32768
 #define RTPUDPV4TRANS_RTPTRANSMITBUFFER							32768
 #define RTPUDPV4TRANS_RTCPTRANSMITBUFFER						32768
+
+namespace jrtplib
+{
 
 /** Parameters for the UDP over IPv4 transmitter. */
 class RTPUDPv4TransmissionParams : public RTPTransmissionParams
@@ -196,6 +199,7 @@ public:
 	int Create(size_t maxpacksize,const RTPTransmissionParams *transparams);
 	void Destroy();
 	RTPTransmissionInfo *GetTransmissionInfo();
+	void DeleteTransmissionInfo(RTPTransmissionInfo *inf);
 
 	int GetLocalHostName(uint8_t *buffer,size_t *bufferlength);
 	bool ComesFromThisTransmitter(const RTPAddress *addr);
@@ -293,10 +297,12 @@ private:
 	void DestroyAbortDescriptors();
 	void AbortWaitInternal();
 #ifdef RTP_SUPPORT_THREAD
-	JMutex mainmutex,waitmutex;
+	jthread::JMutex mainmutex,waitmutex;
 	int threadsafe;
 #endif // RTP_SUPPORT_THREAD
 };
+
+} // end namespace
 
 #endif // RTPUDPV4TRANSMITTER_H
 

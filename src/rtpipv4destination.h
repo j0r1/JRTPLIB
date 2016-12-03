@@ -51,6 +51,9 @@
 #endif // RTPDEBUG
 #include <string.h>
 
+namespace jrtplib
+{
+
 class RTPIPv4Destination
 {
 public:
@@ -103,6 +106,8 @@ inline std::string RTPIPv4Destination::GetDestinationString() const
 	return std::string(str);
 }
 #endif // RTPDEBUG
+
+} // end namespace
 
 #endif // RTPIPV4DESTINATION_H
 

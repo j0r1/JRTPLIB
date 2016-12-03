@@ -37,6 +37,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTPSessionParams::RTPSessionParams() : mininterval(0,0)
 {
 #ifdef RTP_SUPPORT_THREAD
@@ -80,4 +83,6 @@ int RTPSessionParams::SetUsePollThread(bool usethread)
 	return 0;
 #endif // RTP_SUPPORT_THREAD
 }
+
+} // end namespace
 

@@ -55,6 +55,9 @@
 	#include <string>
 #endif // RTPDEBUG
 
+namespace jrtplib
+{
+
 class RTPIPv6Destination
 {
 public:
@@ -102,6 +105,8 @@ inline std::string RTPIPv6Destination::GetDestinationString() const
 	return std::string(str);
 }
 #endif // RTPDEBUG
+
+} // end namespace
 
 #endif // RTP_SUPPORT_IPV6
 

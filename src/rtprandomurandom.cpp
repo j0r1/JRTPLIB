@@ -35,6 +35,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTPRandomURandom::RTPRandomURandom()
 {
 	device = 0;
@@ -115,3 +118,6 @@ double RTPRandomURandom::GetRandomDouble()
 	return x;
 
 }
+
+} // end namespace
+

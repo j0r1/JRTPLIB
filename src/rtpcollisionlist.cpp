@@ -39,6 +39,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTPCollisionList::RTPCollisionList(RTPMemoryManager *mgr) : RTPMemoryObject(mgr)
 {
 #if (defined(WIN32) || defined(_WIN32_WCE))
@@ -122,4 +125,6 @@ void RTPCollisionList::Dump()
 		std::cout << "Address: " << ((*it).addr)->GetAddressString() << "\tTime: " << (*it).recvtime.GetSeconds() << std::endl;
 }
 #endif // RTPDEBUG
+
+} // end namespace
 

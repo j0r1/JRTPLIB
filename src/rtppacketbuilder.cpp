@@ -42,6 +42,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTPPacketBuilder::RTPPacketBuilder(RTPRandom &r,RTPMemoryManager *mgr) : RTPMemoryObject(mgr),rtprnd(r),lastwallclocktime(0,0)
 {
 	init = false;
@@ -267,4 +270,5 @@ int RTPPacketBuilder::PrivateBuildPacket(const void *data,size_t len,
 	return 0;
 }
 
+} // end namespace
 

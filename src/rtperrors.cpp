@@ -36,6 +36,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 struct RTPErrorInfo
 {
 	int code;
@@ -206,6 +209,25 @@ static RTPErrorInfo ErrorDescriptions[]=
 	{ ERR_RTP_RTPRANDOMURANDOM_CANTOPEN, "Unable to open /dev/urandom for reading"},
 	{ ERR_RTP_RTPRANDOMURANDOM_ALREADYOPEN, "The device /dev/urandom was already opened"},
 	{ ERR_RTP_RTPRANDOMRANDS_NOTSUPPORTED, "The rand_s call is not supported on this platform"},
+	{ ERR_RTP_EXTERNALTRANS_ALREADYCREATED, "The external transmission component was already created"},
+	{ ERR_RTP_EXTERNALTRANS_ALREADYINIT, "The external transmission component was already initialized"},
+	{ ERR_RTP_EXTERNALTRANS_ALREADYWAITING, "The external transmission component is already waiting for incoming data"},
+	{ ERR_RTP_EXTERNALTRANS_BADRECEIVEMODE, "The external transmission component only supports accepting all incoming packets"},
+	{ ERR_RTP_EXTERNALTRANS_CANTCREATEABORTDESCRIPTORS, "The external transmitter was unable to create it's internal abort descriptors"},
+	{ ERR_RTP_EXTERNALTRANS_CANTCREATEPIPE, "The external transmitter was unable to create a pipe"},
+	{ ERR_RTP_EXTERNALTRANS_CANTINITMUTEX, "The external transmitter was unable to initialize a required mutex"},
+	{ ERR_RTP_EXTERNALTRANS_ERRORINSELECT, "An error in the external transmitter's 'select' call occurred"},
+	{ ERR_RTP_EXTERNALTRANS_ILLEGALPARAMETERS, "Only parameters of type RTPExternalTransmissionParams can be passed to the external transmission component"},
+	{ ERR_RTP_EXTERNALTRANS_NOACCEPTLIST, "The external transmitter does not have an accept list"},
+	{ ERR_RTP_EXTERNALTRANS_NODESTINATIONSSUPPORTED, "The external transmitter does not have a destination list"},
+	{ ERR_RTP_EXTERNALTRANS_NOIGNORELIST, "The external transmitter does not have an ignore list"},
+	{ ERR_RTP_EXTERNALTRANS_NOMULTICASTSUPPORT, "The external transmitter does not support the multicast functions"},
+	{ ERR_RTP_EXTERNALTRANS_NOSENDER, "No sender has been set for this external transmitter"},
+	{ ERR_RTP_EXTERNALTRANS_NOTCREATED, "The external transmitter has not been created yet"},
+	{ ERR_RTP_EXTERNALTRANS_NOTINIT, "The external transmitter has not been initialized yet"},
+	{ ERR_RTP_EXTERNALTRANS_NOTWAITING, "The external transmitter is not currently waiting for incoming data"},
+	{ ERR_RTP_EXTERNALTRANS_SENDERROR, "The external transmitter was unable to actually send the data"},
+	{ ERR_RTP_EXTERNALTRANS_SPECIFIEDSIZETOOBIG, "The specified data size exceeds the maximum amount that has been set"},
 	{ 0,0 }
 };
 
@@ -230,4 +252,6 @@ std::string RTPGetErrorString(int errcode)
 	
 	return std::string("Unknown error code") + std::string(str);
 }
+
+} // end namespace
 

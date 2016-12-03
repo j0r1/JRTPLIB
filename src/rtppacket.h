@@ -43,6 +43,9 @@
 #include "rtptimeutilities.h"
 #include "rtpmemoryobject.h"
 
+namespace jrtplib
+{
+
 class RTPRawPacket;
 
 /** Represents an RTP Packet.
@@ -173,6 +176,8 @@ private:
 
 	RTPTime receivetime;
 };
+
+} // end namespace
 
 #endif // RTPPACKET_H
 

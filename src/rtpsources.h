@@ -46,6 +46,9 @@
 
 #define RTPSOURCES_HASHSIZE							8317
 
+namespace jrtplib
+{
+
 class RTPSources_GetHashIndex
 {
 public:
@@ -355,6 +358,8 @@ private:
 
 	RTPInternalSourceData *owndata;
 };
+
+} // end namespace
 
 #endif // RTPSOURCES_H
 

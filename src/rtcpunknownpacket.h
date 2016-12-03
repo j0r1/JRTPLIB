@@ -41,6 +41,9 @@
 #include "rtpconfig.h"
 #include "rtcppacket.h"
 
+namespace jrtplib
+{
+
 class RTCPCompoundPacket;
 
 /** Describes an RTCP packet of unknown type.
@@ -63,6 +66,8 @@ public:
 	}
 	~RTCPUnknownPacket()                                                                    { }
 };
+
+} // end namespace
 
 #endif // RTCPUNKNOWNPACKET_H
 

@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------------
-                                                              February 2, 2011
+                                                                 July 25, 2011
 
 
-                                   JRTPLIB (v3.8.2)
+                                   JRTPLIB (v3.9.0)
 
 
                       Developed at the The Expertise Centre for 
@@ -57,17 +57,10 @@ IN THE SOFTWARE.
 INSTALLATION NOTES
 ==================
 
-* To compile the library on a unix-like platform, just start the configure
-  script. This should generate a makefile which you can use to start
-  building the library using 'make'.
-
-* To compile the library on an MS-Windows platfrom: Visual Studio
-  workspace files are included. The project will search
-  for JThread files in ..\jthread-1.2.1
-  To compile the library without using JThread, comment the line
-  with RTP_SUPPORT_THREAD in rtpconfig_win.h
-  Note that for Visual Studio 6, you must have service pack 6 for 
-  installed to be able to compile the library.
+* Use the CMake build system to compile the library. In case extra
+  include directories or libraries are needed, you can use the 'ADDITIONAL_'
+  CMake variables to specify these. They will be stored in both the resulting
+  JRTPLIB CMake configuration file and the pkg-config file.
 
 * The library documentation can be generated using Doxygen. An on-line
   version can be found at

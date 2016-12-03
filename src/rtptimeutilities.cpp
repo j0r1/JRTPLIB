@@ -37,6 +37,9 @@
 	#include <iostream>
 #endif // RTPDEBUG
 
+namespace jrtplib
+{
+
 RTPTimeInitializer::RTPTimeInitializer()
 {
 #ifdef RTPDEBUG
@@ -47,6 +50,8 @@ RTPTimeInitializer::RTPTimeInitializer()
 }
 
 RTPTimeInitializer timeinit;
+
+} // end namespace
 
 #endif // WIN32 || _WIN32_WCE
 

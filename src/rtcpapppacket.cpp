@@ -32,11 +32,15 @@
 
 #include "rtcpapppacket.h"
 #ifdef RTPDEBUG
+	#include <string.h>
 	#include <iostream>
 	#include <string>
 #endif // RTPDEBUG
 
 #include "rtpdebug.h"
+
+namespace jrtplib
+{
 
 RTCPAPPPacket::RTCPAPPPacket(uint8_t *data,size_t datalength)
 	: RTCPPacket(APP,data,datalength)
@@ -84,4 +88,6 @@ void RTCPAPPPacket::Dump()
 	}
 }
 #endif // RTPDEBUG
+
+} // end namespace
 

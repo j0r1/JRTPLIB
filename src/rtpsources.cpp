@@ -51,6 +51,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 RTPSources::RTPSources(ProbationType probtype,RTPMemoryManager *mgr) : RTPMemoryObject(mgr),sourcelist(mgr,RTPMEM_TYPE_CLASS_SOURCETABLEHASHELEMENT)
 {
 	totalcount = 0;
@@ -1410,3 +1413,6 @@ bool RTPSources::CheckCollision(RTPInternalSourceData *srcdat,const RTPAddress *
 	
 	return false;
 }
+
+} // end namespace
+

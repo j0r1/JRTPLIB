@@ -41,6 +41,9 @@
 #include "rtpconfig.h"
 #include <string>
 
+namespace jrtplib
+{
+
 class RTPMemoryManager;
 
 /** This class is an abstract class which is used to specify destinations, multicast groups etc. */
@@ -52,6 +55,7 @@ public:
 	{ 
 		IPv4Address, /**< Used by the UDP over IPv4 transmitter. */
 		IPv6Address, /**< Used by the UDP over IPv6 transmitter. */
+		ByteAddress, /**< A very general type of address, consisting of a port number and a number of bytes representing the host address. */
 		UserDefinedAddress  /**< Can be useful for a user-defined transmitter. */
 	}; 
 	
@@ -88,6 +92,8 @@ protected:
 private:
 	const AddressType addresstype;
 };
+
+} // end namespace
 
 #endif // RTPADDRESS_H
 

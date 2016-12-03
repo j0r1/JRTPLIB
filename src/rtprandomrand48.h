@@ -41,9 +41,12 @@
 #include "rtpconfig.h"
 #include "rtprandom.h"
 #ifdef RTP_SUPPORT_THREAD
-	#include <jmutex.h>
+	#include <jthread/jmutex.h>
 #endif // RTP_SUPPORT_THREAD
 #include <stdio.h>
+
+namespace jrtplib
+{
 
 /** A random number generator using the algorithm of the rand48 set of functions. */
 class RTPRandomRand48 : public RTPRandom
@@ -61,10 +64,12 @@ private:
 	void SetSeed(uint32_t seed);
 
 #ifdef RTP_SUPPORT_THREAD
-	JMutex mutex;
+	jthread::JMutex mutex;
 #endif // RTP_SUPPORT_THREAD
 	uint64_t state;
 };
+
+} // end namespace
 
 #endif // RTPRANDOMRAND48_H
 

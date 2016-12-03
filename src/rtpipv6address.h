@@ -48,6 +48,9 @@
 	#include <netinet/in.h>
 #endif // WIN32
 
+namespace jrtplib
+{
+
 /** Represents an IPv6 IP address and port.
  *  This class is used by the UDP over IPv4 transmission component.
  *  When an RTPIPv6Address is used in one of the multicast functions of the 
@@ -98,6 +101,8 @@ private:
 	in6_addr ip;
 	uint16_t port;
 };
+
+} // end namespace
 
 #endif // RTP_SUPPORT_IPV6
 

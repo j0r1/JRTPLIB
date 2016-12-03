@@ -42,6 +42,9 @@
 #include "rtptypes.h"
 #include "rtpmemoryobject.h"
 
+namespace jrtplib
+{
+
 class RTPRawPacket;
 class RTPAddress;
 class RTPTransmissionParams;
@@ -51,8 +54,9 @@ class RTPTransmissionInfo;
 /** Abstract class from which actual transmission components should be derived.
  *  Abstract class from which actual transmission components should be derived.
  *  The abstract class RTPTransmitter specifies the interface for
- *  actual transmission components. Currently, two implementations exist:
- *  an UDP over IPv4 transmitter and an UDP over IPv6 transmitter. 
+ *  actual transmission components. Currently, three implementations exist:
+ *  an UDP over IPv4 transmitter, an UDP over IPv6 transmitter and a transmitter
+ *  which can be used to use an external transmission mechanism.
  */
 class RTPTransmitter : public RTPMemoryObject
 {
@@ -66,6 +70,7 @@ public:
 	{ 
 		IPv4UDPProto, /**< Specifies the internal UDP over IPv4 transmitter. */
 		IPv6UDPProto, /**< Specifies the internal UDP over IPv6 transmitter. */
+		ExternalProto, /**< Specifies the transmitter which can send packets using an external mechanism, and which can have received packets injected into it - see RTPExternalTransmitter for additional information. */
 		UserDefinedProto  /**< Specifies a user defined, external transmitter. */
 	};
 
@@ -108,9 +113,14 @@ public:
 	 *  some additional information about the transmitter (a list of local IP addresses for example). 
 	 *  Currently, either an instance of RTPUDPv4TransmissionInfo or RTPUDPv6TransmissionInfo is 
 	 *  returned, depending on the type of the transmitter. The user has to deallocate the returned 
-	 *  instance when it is no longer needed.
+	 *  instance when it is no longer needed, which can be done using RTPTransmitter::DeleteTransmissionInfo.
 	 */
 	virtual RTPTransmissionInfo *GetTransmissionInfo() = 0;
+
+	/** Deallocates the information returned by RTPTransmitter::GetTransmissionInfo .
+	 *  Deallocates the information returned by RTPTransmitter::GetTransmissionInfo . 
+	 */
+	virtual void DeleteTransmissionInfo(RTPTransmissionInfo *inf) = 0;
 
 	/** Looks up the local host name.
 	 *  Looks up the local host name based upon internal information about the local host's 
@@ -244,6 +254,8 @@ public:
 private:
 	RTPTransmitter::TransmissionProtocol protocol;
 };
+
+} // end namespace
 
 #endif // RTPTRANSMITTER_H
 

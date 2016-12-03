@@ -46,6 +46,9 @@
 
 #include "rtpdebug.h"
 
+namespace jrtplib
+{
+
 void RTPPacket::Clear()
 {
 	hasextension = false;
@@ -342,4 +345,6 @@ void RTPPacket::Dump()
 	}
 }
 #endif // RTPDEBUG
+
+} // end namespace
 

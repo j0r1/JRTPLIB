@@ -42,6 +42,9 @@
 
 #define RTCPSCHED_MININTERVAL						1.0
 
+namespace jrtplib
+{
+
 RTCPSchedulerParams::RTCPSchedulerParams() : mininterval(RTCP_DEFAULTMININTERVAL)
 {
 	bandwidth = 1000; // TODO What is a good value here? 
@@ -415,4 +418,6 @@ RTPTime RTCPScheduler::CalculateBYETransmissionInterval()
 	
 	return RTPTime(T);
 }
+
+} // end namespace
 

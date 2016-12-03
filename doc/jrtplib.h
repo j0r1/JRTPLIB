@@ -89,6 +89,11 @@
  *
  * \section starting Getting started with the RTPSession class
  * 	
+ * 	All classes and functions are part of the \c jrtplib namespace, so to
+ * 	simplify the code a bit, we'll declare that we're using this namespace:
+ * 	\code
+ * using namespace jrtplib;
+ * 	\endcode
  * 	To use RTP, you'll have to create an RTPSession object. The constructor
  * 	accepts two parameter, an instance of an RTPRandom object, and an instance 
  * 	of an RTPMemoryManager object. For now, we'll keep it simple and use the

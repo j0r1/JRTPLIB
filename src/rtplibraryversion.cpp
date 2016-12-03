@@ -34,9 +34,12 @@
 #include "rtpdefines.h"
 #include <stdio.h>
 
+namespace jrtplib
+{
+
 RTPLibraryVersion RTPLibraryVersion::GetVersion()
 {
-	return RTPLibraryVersion(3,8,2);
+	return RTPLibraryVersion(3,9,0);
 }
 
 std::string RTPLibraryVersion::GetVersionString() const
@@ -48,4 +51,5 @@ std::string RTPLibraryVersion::GetVersionString() const
 	return std::string(str);
 }
 
+} // end namespace
 

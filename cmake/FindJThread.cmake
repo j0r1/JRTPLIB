@@ -1,0 +1,37 @@
+
+find_package(JThread QUIET NO_MODULE)
+
+if (NOT JTHREAD_FOUND) # Config file could not be found
+	find_path(JTHREAD_INCLUDE_DIR jthread/jthread.h)
+	
+	set(JTHREAD_INCLUDE_DIRS ${JTHREAD_INCLUDE_DIR})
+
+	if (UNIX)
+		find_library(JTHREAD_LIBRARY jthread)
+		if (JTHREAD_LIBRARY)
+			set(JTHREAD_LIBRARIES ${JTHREAD_LIBRARY})
+			find_library(JTHREAD_PTHREAD_LIB pthread)
+			if (JTHREAD_PTHREAD_LIB)
+				set(JTHREAD_LIBRARIES ${JTHREAD_LIBRARY} ${JTHREAD_PTHREAD_LIB})
+			endif(JTHREAD_PTHREAD_LIB)
+		endif (JTHREAD_LIBRARY)
+	else (UNIX)
+		find_library(JTHREAD_LIB_RELEASE jthread)
+		find_library(JTHREAD_LIB_DEBUG jthread_d)
+
+		if (JTHREAD_LIB_RELEASE OR JTHREAD_LIB_DEBUG)
+			set(JTHREAD_LIBRARIES "")
+			if (JTHREAD_LIB_RELEASE)
+				set(JTHREAD_LIBRARIES ${JTHREAD_LIBRARIES} optimized ${JTHREAD_LIB_RELEASE})
+			endif (JTHREAD_LIB_RELEASE)
+			if (JTHREAD_LIB_DEBUG)
+				set(JTHREAD_LIBRARIES ${JTHREAD_LIBRARIES} debug ${JTHREAD_LIB_DEBUG})
+			endif (JTHREAD_LIB_DEBUG)
+		endif (JTHREAD_LIB_RELEASE OR JTHREAD_LIB_DEBUG)
+	endif(UNIX)
+endif (NOT JTHREAD_FOUND)
+
+include(FindPackageHandleStandardArgs)
+
+find_package_handle_standard_args(JThread DEFAULT_MSG JTHREAD_INCLUDE_DIRS JTHREAD_LIBRARIES)
+

@@ -22,6 +22,8 @@
 #include <iostream>
 #include <string>
 
+using namespace jrtplib;
+
 #ifdef RTP_SUPPORT_THREAD
 
 //

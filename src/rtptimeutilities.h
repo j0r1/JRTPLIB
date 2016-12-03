@@ -51,6 +51,9 @@
 
 #define RTP_NTPTIMEOFFSET									2208988800UL
 
+namespace jrtplib
+{
+
 /**
  * This is a simple wrapper for the most significant word (MSW) and least 
  * significant word (LSW) of an NTP timestamp.
@@ -315,5 +318,8 @@ inline bool RTPTime::operator>=(const RTPTime &t) const
 		return true;
 	return false;
 }
+
+} // end namespace
+
 #endif // RTPTIMEUTILITIES_H
 
