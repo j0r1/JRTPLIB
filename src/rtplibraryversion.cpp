@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2010 Jori Liesenborgs
+  Copyright (c) 1999-2011 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -36,7 +36,7 @@
 
 RTPLibraryVersion RTPLibraryVersion::GetVersion()
 {
-	return RTPLibraryVersion(3,8,1);
+	return RTPLibraryVersion(3,8,2);
 }
 
 std::string RTPLibraryVersion::GetVersionString() const

@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2010 Jori Liesenborgs
+  Copyright (c) 1999-2011 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -68,7 +68,7 @@ uint8_t RTPRandomRand48::GetRandom8()
 
 uint16_t RTPRandomRand48::GetRandom16()
 {
-	uint32_t x =  ((GetRandom32() >> 16)&0xff);
+	uint32_t x =  ((GetRandom32() >> 16)&0xffff);
 
 	return (uint16_t)x;
 }

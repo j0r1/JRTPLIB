@@ -1,9 +1,14 @@
-							      October 8, 2010
+							     February 2, 2011
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.8.2 (February 2011)
+ 	* Fixed bug in RTPRandomRand48. The uint16_t version used a
+	  & 0xff instead of & 0xffff. Thanks to Alexey Kumkov
+	  (crazykum@ukr.net) for bringing this to my attention.
 
  3.8.1 (October 2010)
  	* Initialization of the RTPRandomRandS class didn't work as
