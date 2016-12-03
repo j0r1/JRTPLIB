@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -71,7 +71,7 @@ private:
 class RTPUDPv4TransmissionInfo : public RTPTransmissionInfo
 {
 public:
-#ifndef WIN32
+#if ! (defined(WIN32) || defined(_WIN32_WCE))
 	RTPUDPv4TransmissionInfo(std::list<u_int32_t> iplist,int rtpsock,int rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
 #else
 	RTPUDPv4TransmissionInfo(std::list<u_int32_t> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
@@ -80,7 +80,7 @@ public:
 
 	~RTPUDPv4TransmissionInfo()								{ }
 	std::list<u_int32_t> GetLocalIPList() const						{ return localIPlist; }
-#ifndef WIN32
+#if ! (defined(WIN32) || defined(_WIN32_WCE))
 	int GetRTPSocket() const								{ return rtpsocket; }
 	int GetRTCPSocket() const								{ return rtcpsocket; }
 #else
@@ -89,7 +89,7 @@ public:
 #endif // WIN32
 private:
 	std::list<u_int32_t> localIPlist;
-#ifndef WIN32
+#if ! (defined(WIN32) || defined(_WIN32_WCE))
 	int rtpsocket,rtcpsocket;
 #else
 	SOCKET rtpsocket,rtcpsocket;
@@ -122,7 +122,7 @@ public:
 	size_t GetHeaderOverhead()							{ return RTPUDPV4TRANS_HEADERSIZE; }
 	
 	int Poll();
-	int WaitForIncomingData(const RTPTime &delay);
+	int WaitForIncomingData(const RTPTime &delay,bool *dataavailable = 0);
 	int AbortWait();
 	
 	int SendRTPData(const void *data,size_t len);	
@@ -173,7 +173,7 @@ private:
 	bool init;
 	bool created;
 	bool waitingfordata;
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	SOCKET rtpsock,rtcpsock;
 #else // not using winsock
 	int rtpsock,rtcpsock;
@@ -208,7 +208,7 @@ private:
 	RTPKeyHashTable<const u_int32_t,PortInfo*,RTPUDPv4Trans_GetHashIndex_u_int32_t,RTPUDPV4TRANS_HASHSIZE> acceptignoreinfo;
 
 	// notification descriptors for AbortWait (0 is for reading, 1 for writing)
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	SOCKET abortdesc[2];
 #else
 	int abortdesc[2];

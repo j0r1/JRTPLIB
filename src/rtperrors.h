@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -163,6 +163,7 @@ std::string RTPGetErrorString(int errcode);
 #define ERR_RTP_UDPV6TRANS_NOTWAITING				-123
 #define ERR_RTP_UDPV6TRANS_PORTBASENOTEVEN			-124
 #define ERR_RTP_UDPV6TRANS_SPECIFIEDSIZETOOBIG			-125
+#define ERR_RTP_INTERNALSOURCEDATA_INVALIDPROBATIONTYPE		-126
 
 #endif // RTPERRORS_H
 

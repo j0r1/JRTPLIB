@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -43,6 +43,9 @@ RTCPPacketBuilder::RTCPPacketBuilder(RTPSources &s,RTPPacketBuilder &pb)
 	: sources(s),rtppacketbuilder(pb),prevbuildtime(0,0)
 {
 	init = false;
+#if (defined(WIN32) || defined(_WIN32_WCE))
+	timeinit.Dummy();
+#endif // WIN32 || _WIN32_WCE
 }
 
 RTCPPacketBuilder::~RTCPPacketBuilder()
@@ -616,7 +619,7 @@ void RTCPPacketBuilder::ClearAllSDESFlags()
 	ownsdesinfo.ClearFlags();
 }
 	
-int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reason,size_t reasonlength)
+int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reason,size_t reasonlength,bool useSRifpossible)
 {
 	if (!init)
 		return ERR_RTP_RTCPPACKETBUILDER_NOTINIT;
@@ -640,13 +643,50 @@ int RTCPPacketBuilder::BuildBYEPacket(RTCPCompoundPacket **pack,const void *reas
 	}
 	
 	u_int32_t ssrc = rtppacketbuilder.GetSSRC();
-
-	if ((status = rtcpcomppack->StartReceiverReport(ssrc)) < 0)
+	bool useSR = false;
+	
+	if (useSRifpossible)
 	{
-		delete rtcpcomppack;
-		if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
-			return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
-		return status;
+		RTPSourceData *srcdat;
+		
+		if ((srcdat = sources.GetOwnSourceInfo()) != 0)
+		{
+			if (srcdat->IsSender())
+				useSR = true;
+		}
+	}
+			
+	if (useSR)
+	{
+		RTPTime curtime = RTPTime::CurrentTime();
+		RTPTime rtppacktime = rtppacketbuilder.GetPacketTime();
+		u_int32_t rtppacktimestamp = rtppacketbuilder.GetPacketTimestamp();
+		u_int32_t packcount = rtppacketbuilder.GetPacketCount();
+		u_int32_t octetcount = rtppacketbuilder.GetPayloadOctetCount();
+		RTPTime diff = curtime;
+		diff -= rtppacktime;
+		
+		u_int32_t tsdiff = (u_int32_t)((diff.GetDouble()/timestampunit)+0.5);
+		u_int32_t rtptimestamp = rtppacktimestamp+tsdiff;
+		RTPNTPTime ntptimestamp = curtime.GetNTPTime();
+
+		if ((status = rtcpcomppack->StartSenderReport(ssrc,ntptimestamp,rtptimestamp,packcount,octetcount)) < 0)
+		{
+			delete rtcpcomppack;
+			if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
+				return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
+			return status;
+		}
+	}
+	else
+	{
+		if ((status = rtcpcomppack->StartReceiverReport(ssrc)) < 0)
+		{
+			delete rtcpcomppack;
+			if (status == ERR_RTP_RTCPCOMPPACKBUILDER_NOTENOUGHBYTESLEFT)
+				return ERR_RTP_RTCPPACKETBUILDER_PACKETFILLEDTOOSOON;
+			return status;
+		}
 	}
 
 	u_int8_t *owncname;

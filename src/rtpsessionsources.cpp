@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,6 +32,7 @@
 
 #include "rtpsessionsources.h"
 #include "rtpsession.h"
+#include "rtpsourcedata.h"
 
 #include "rtpdebug.h"
 
@@ -83,6 +84,7 @@ void RTPSessionSources::OnBYETimeout(RTPSourceData *srcdat)
 void RTPSessionSources::OnBYEPacket(RTPSourceData *srcdat)
 {
 	rtpsession.rtcpsched.ActiveMemberDecrease();
+	rtpsession.OnBYEPacket(srcdat);
 }
 
 void RTPSessionSources::OnAPPPacket(RTCPAPPPacket *apppacket,const RTPTime &receivetime,const RTPAddress *senderaddress)

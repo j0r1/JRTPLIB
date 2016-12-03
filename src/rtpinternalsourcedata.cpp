@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -36,8 +36,13 @@
 
 #include "rtpdebug.h"
 
-RTPInternalSourceData::RTPInternalSourceData(u_int32_t ssrc):RTPSourceData(ssrc)
+#define RTPINTERNALSOURCEDATA_MAXPROBATIONPACKETS		32
+
+RTPInternalSourceData::RTPInternalSourceData(u_int32_t ssrc,RTPSources::ProbationType probtype):RTPSourceData(ssrc)
 {
+#ifdef RTP_SUPPORT_PROBATION
+	probationtype = probtype;
+#endif // RTP_SUPPORT_PROBATION
 }
 
 RTPInternalSourceData::~RTPInternalSourceData()
@@ -47,7 +52,7 @@ RTPInternalSourceData::~RTPInternalSourceData()
 // The following function should delete rtppack if necessary
 int RTPInternalSourceData::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,bool *stored)
 {
-	bool accept;
+	bool accept,onprobation,applyprobation;
 	double tsunit;
 	
 	*stored = false;
@@ -56,15 +61,48 @@ int RTPInternalSourceData::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &re
 		tsunit = INF_GetEstimatedTimestampUnit();
 	else
 		tsunit = timestampunit;
-	stats.ProcessPacket(rtppack,receivetime,tsunit,ownssrc,&accept);
+
+#ifdef RTP_SUPPORT_PROBATION
+	if (validated) 				// If the source is our own process, we can already be validated. No 
+		applyprobation = false;		// probation should be applied in that case.
+	else
+	{
+		if (probationtype == RTPSources::NoProbation)
+			applyprobation = false;
+		else
+			applyprobation = true;
+	}
+#else
+	applyprobation = false;
+#endif // RTP_SUPPORT_PROBATION
+
+	stats.ProcessPacket(rtppack,receivetime,tsunit,ownssrc,&accept,applyprobation,&onprobation);
+
+#ifdef RTP_SUPPORT_PROBATION
+	switch (probationtype)
+	{
+		case RTPSources::ProbationStore:
+			if (!(onprobation || accept))
+				return 0;
+			if (accept)
+				validated = true;
+			break;
+		case RTPSources::ProbationDiscard:
+		case RTPSources::NoProbation:
+			if (!accept)
+				return 0;
+			validated = true;
+			break;
+		default:
+			return ERR_RTP_INTERNALSOURCEDATA_INVALIDPROBATIONTYPE;
+	}
+#else
 	if (!accept)
 		return 0;
-
-	// Ok, packet accepted
-
 	validated = true;
+#endif // RTP_SUPPORT_PROBATION;
 	
-	if (!ownssrc) // for own ssrc these variables depend on the outgoing packets, not on the incoming
+	if (validated && !ownssrc) // for own ssrc these variables depend on the outgoing packets, not on the incoming
 		issender = true;
 	
 	// Now, we can place the packet in the queue
@@ -74,6 +112,19 @@ int RTPInternalSourceData::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &re
 		*stored = true;
 		packetlist.push_back(rtppack);
 		return 0;
+	}
+	
+	if (!validated) // still on probation
+	{
+		// Make sure that we don't buffer too much packets to avoid wasting memory
+		// on a bad source. Delete the packet in the queue with the lowest sequence
+		// number.
+		if (packetlist.size() == RTPINTERNALSOURCEDATA_MAXPROBATIONPACKETS)
+		{
+			RTPPacket *p = *(packetlist.begin());
+			packetlist.pop_front();
+			delete p;
+		}
 	}
 
 	// find the right position to insert the packet
@@ -116,7 +167,7 @@ int RTPInternalSourceData::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &re
 			done = true;
 		}
 	}
-	
+
 	return 0;
 }
 

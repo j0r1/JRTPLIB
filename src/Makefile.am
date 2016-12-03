@@ -13,8 +13,8 @@ libjrtp_la_SOURCES = rtpdebug.cpp rtpsession.cpp rtpconfig_win.h \
 		     rtprandom.cpp rtcpscheduler.cpp \
 		     rtcppacketbuilder.cpp rtpsessionsources.cpp \
 		     rtpcollisionlist.cpp rtpipv6address.cpp \
-		     rtpudpv6transmitter.cpp
-libjrtp_la_LDFLAGS = -release 3.1.0
+		     rtpudpv6transmitter.cpp rtptimeutilities.cpp
+libjrtp_la_LDFLAGS = -release 3.2.0
 libjrtpinclude_HEADERS = rtcpapppacket.h rtcpbyepacket.h rtcpcompoundpacket.h \
 			 rtcpcompoundpacketbuilder.h rtcppacket.h rtcppacketbuilder.h \
 			 rtcprrpacket.h rtcpscheduler.h rtcpsdesinfo.h rtcpsdespacket.h \

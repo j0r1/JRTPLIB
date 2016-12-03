@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -75,7 +75,9 @@ public:
 	virtual size_t GetHeaderOverhead() = 0;
 	
 	virtual int Poll() = 0;
-	virtual int WaitForIncomingData(const RTPTime &delay) = 0;
+	// If dataavailable is not NULL, it should be set to true if true if data was read
+	// and to false otherwise
+	virtual int WaitForIncomingData(const RTPTime &delay,bool *dataavailable = 0) = 0;
 	virtual int AbortWait() = 0;
 	
 	virtual int SendRTPData(const void *data,size_t len) = 0;	

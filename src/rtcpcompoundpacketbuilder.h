@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -83,7 +83,7 @@ private:
 	class Report
 	{
 	public:
-		Report() { isSR = false; headerlength = 0; }
+		Report() { headerdata = (u_int8_t *)headerdata32; isSR = false; headerlength = 0; }
 		~Report() { Clear(); }
 
 		void Clear()
@@ -138,7 +138,8 @@ private:
 		
 		bool isSR;
 
-		u_int8_t headerdata[sizeof(u_int32_t)+sizeof(RTCPSenderReport)]; // either for ssrc and sender info or just ssrc
+		u_int8_t *headerdata;
+		u_int32_t headerdata32[(sizeof(u_int32_t)+sizeof(RTCPSenderReport))/sizeof(u_int32_t)]; // either for ssrc and sender info or just ssrc
 		size_t headerlength;
 		std::list<Buffer> reportblocks;
 	};

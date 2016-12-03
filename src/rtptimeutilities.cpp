@@ -30,10 +30,22 @@
 
 */
 
-#include "rtplibraryversion.h"
+#if (defined(WIN32) || defined(_WIN32_WCE))
 
-RTPLibraryVersion RTPLibraryVersion::GetVersion()
+#include "rtptimeutilities.h"
+#ifdef RTPDEBUG
+	#include <iostream>
+#endif // RTPDEBUG
+
+RTPTimeInitializer::RTPTimeInitializer()
 {
-	return RTPLibraryVersion(3,2,0);
+#ifdef RTPDEBUG
+	std::cout << "RTPTimeInitializer: Initializing RTPTime::CurrentTime()" << std::endl;
+#endif // RTPDEBUG
+	RTPTime curtime = RTPTime::CurrentTime();
 }
+
+RTPTimeInitializer timeinit;
+
+#endif // WIN32 || _WIN32_WCE
 

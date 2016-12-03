@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -38,6 +38,7 @@
 #include "rtptypes.h"
 #include "rtptransmitter.h"
 #include "rtptimeutilities.h"
+#include "rtpsources.h"
 
 class RTPSessionParams
 {
@@ -56,6 +57,10 @@ public:
 	double GetOwnTimestampUnit() const					{ return owntsunit; }
 	void SetResolveLocalHostname(bool v)					{ resolvehostname = v; }
 	bool GetResolveLocalHostname() const					{ return resolvehostname; }
+#ifdef RTP_SUPPORT_PROBATION
+	void SetProbationType(RTPSources::ProbationType probtype)		{ probationtype = probtype; }
+	RTPSources::ProbationType GetProbationType() const			{ return probationtype; }
+#endif // RTP_SUPPORT_PROBATION
 
 	void SetSessionBandwidth(double sessbw)					{ sessionbandwidth = sessbw; }
 	double GetSessionBandwidth() const					{ return sessionbandwidth; }
@@ -69,6 +74,8 @@ public:
 	bool GetUseHalfRTCPIntervalAtStartup() const				{ return usehalfatstartup; }
 	void SetRequestImmediateBYE(bool v) 					{ immediatebye = v; }
 	bool GetRequestImmediateBYE() const					{ return immediatebye; }
+	void SetSenderReportForBYE(bool v)					{ SR_BYE = v; }
+	bool GetSenderReportForBYE() const					{ return SR_BYE; }
 
 	void SetSenderTimeoutMultiplier(double m)				{ sendermultiplier = m; }
 	double GetSenderTimeoutMultiplier() const				{ return sendermultiplier; }
@@ -87,6 +94,9 @@ private:
 	double owntsunit;
 	RTPTransmitter::ReceiveMode receivemode;
 	bool resolvehostname;
+#ifdef RTP_SUPPORT_PROBATION
+	RTPSources::ProbationType probationtype;
+#endif // RTP_SUPPORT_PROBATION
 	
 	double sessionbandwidth;
 	double controlfrac;
@@ -94,6 +104,7 @@ private:
 	RTPTime mininterval;
 	bool usehalfatstartup;
 	bool immediatebye;
+	bool SR_BYE;
 
 	double sendermultiplier;
 	double generaltimeoutmultiplier;

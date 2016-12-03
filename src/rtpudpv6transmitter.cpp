@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -38,10 +38,7 @@
 #include "rtpipv6address.h"
 #include "rtptimeutilities.h"
 #include <stdio.h>
-#ifdef WIN32
-	#include <winsock2.h>
-	#include <ws2tcpip.h>
-
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	#define RTPSOCKERR								INVALID_SOCKET
 	#define RTPCLOSE(x)								closesocket(x)
 	#define RTPSOCKLENTYPE								int
@@ -62,6 +59,10 @@
 	#ifdef RTP_HAVE_SYS_SOCKIO
 		#include <sys/sockio.h>
 	#endif // RTP_HAVE_SYS_SOCKIO
+	#ifdef RTP_SUPPORT_IFADDRS
+		#include <ifaddrs.h>
+	#endif // RTP_SUPPORT_IFADDRS
+
 
 	#define RTPSOCKERR								-1
 	#define RTPCLOSE(x)								close(x)
@@ -77,12 +78,21 @@
 
 #include "rtpdebug.h"
 
-#define RTPUDPV6TRANS_RTPRECEIVEBUFFER							32768
-#define RTPUDPV6TRANS_RTCPRECEIVEBUFFER							32768
-#define RTPUDPV6TRANS_RTPTRANSMITBUFFER							32768
-#define RTPUDPV6TRANS_RTCPTRANSMITBUFFER						32768
-#define RTPUDPV6TRANS_MAXPACKSIZE							65535
-#define RTPUDPV6TRANS_IFREQBUFSIZE							8192
+#ifndef _WIN32_WCE
+	#define RTPUDPV6TRANS_RTPRECEIVEBUFFER							32768
+	#define RTPUDPV6TRANS_RTCPRECEIVEBUFFER							32768
+	#define RTPUDPV6TRANS_RTPTRANSMITBUFFER							32768
+	#define RTPUDPV6TRANS_RTCPTRANSMITBUFFER						32768
+	#define RTPUDPV6TRANS_MAXPACKSIZE							65535
+	#define RTPUDPV6TRANS_IFREQBUFSIZE							8192
+#else
+	#define RTPUDPV6TRANS_RTPRECEIVEBUFFER							2048
+	#define RTPUDPV6TRANS_RTCPRECEIVEBUFFER							2048
+	#define RTPUDPV6TRANS_RTPTRANSMITBUFFER							2048
+	#define RTPUDPV6TRANS_RTCPTRANSMITBUFFER						2048
+	#define RTPUDPV6TRANS_MAXPACKSIZE							2048
+	#define RTPUDPV6TRANS_IFREQBUFSIZE							2048
+#endif // _WIN32_WCE
 
 #define RTPUDPV6TRANS_IS_MCASTADDR(x)							(x.s6_addr[0] == 0xFF)
 
@@ -121,6 +131,9 @@ RTPUDPv6Transmitter::RTPUDPv6Transmitter()
 {
 	created = false;
 	init = false;
+#if (defined(WIN32) || defined(_WIN32_WCE))
+	timeinit.Dummy();
+#endif // WIN32 || _WIN32_WCE
 }
 
 RTPUDPv6Transmitter::~RTPUDPv6Transmitter()
@@ -180,7 +193,10 @@ int RTPUDPv6Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	else
 	{
 		if (transparams->GetTransmissionProtocol() != RTPTransmitter::IPv6UDPProto)
+		{
+			MAINMUTEX_UNLOCK
 			return ERR_RTP_UDPV6TRANS_ILLEGALPARAMETERS;
+		}
 		params = (const RTPUDPv6TransmissionParams *)transparams;
 	}
 
@@ -570,7 +586,7 @@ int RTPUDPv6Transmitter::Poll()
 	return status;
 }
 
-int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay)
+int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavailable)
 {
 	if (!init)
 		return ERR_RTP_UDPV6TRANS_NOTINIT;
@@ -624,7 +640,7 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay)
 	// if aborted, read from abort buffer
 	if (FD_ISSET(abortdesc[0],&fdset))
 	{
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 		char buf[1];
 		
 		recv(abortdesc[0],buf,1,0);
@@ -635,6 +651,14 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay)
 #endif // WIN32
 	}
 	
+	if (dataavailable != 0)
+	{
+		if (FD_ISSET(rtpsock,&fdset) || FD_ISSET(rtcpsock,&fdset))
+			*dataavailable = true;
+		else
+			*dataavailable = false;
+	}	
+
 	MAINMUTEX_UNLOCK
 	WAITMUTEX_UNLOCK
 	return 0;
@@ -1280,7 +1304,7 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 	RTPSOCKLENTYPE fromlen;
 	int recvlen;
 	char packetbuffer[RTPUDPV6TRANS_MAXPACKSIZE];
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	SOCKET sock;
 	unsigned long len;
 #else 
@@ -1299,10 +1323,9 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 	if (len <= 0)
 		return 0;
 
-	RTPTime curtime = RTPTime::CurrentTime();
-
 	while (len > 0)
 	{
+		RTPTime curtime = RTPTime::CurrentTime();
 		fromlen = sizeof(struct sockaddr_in6);
 		recvlen = recvfrom(sock,packetbuffer,(int)len,0,(struct sockaddr *)&srcaddr,&fromlen);
 		if (recvlen > 0)
@@ -1536,47 +1559,46 @@ bool RTPUDPv6Transmitter::ShouldAcceptData(in6_addr srcip,u_int16_t srcport)
 	return true;
 }
 
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 
-// TODO: port these to IPv6 stuff
 int RTPUDPv6Transmitter::CreateAbortDescriptors()
 {
 	SOCKET listensock;
 	int size;
-	struct sockaddr_in addr;
+	struct sockaddr_in6 addr;
 
-	listensock = socket(PF_INET,SOCK_STREAM,0);
+	listensock = socket(PF_INET6,SOCK_STREAM,0);
 	if (listensock == RTPSOCKERR)
 		return ERR_RTP_UDPV6TRANS_CANTCREATEABORTDESCRIPTORS;
 	
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	if (bind(listensock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
+	memset(&addr,0,sizeof(struct sockaddr_in6));
+	addr.sin6_family = AF_INET6;
+	if (bind(listensock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in6)) != 0)
 	{
 		RTPCLOSE(listensock);
 		return ERR_RTP_UDPV6TRANS_CANTCREATEABORTDESCRIPTORS;
 	}
 
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	size = sizeof(struct sockaddr_in);
+	memset(&addr,0,sizeof(struct sockaddr_in6));
+	size = sizeof(struct sockaddr_in6);
 	if (getsockname(listensock,(struct sockaddr*)&addr,&size) != 0)
 	{
 		RTPCLOSE(listensock);
 		return ERR_RTP_UDPV6TRANS_CANTCREATEABORTDESCRIPTORS;
 	}
 
-	unsigned short connectport = ntohs(addr.sin_port);
+	unsigned short connectport = ntohs(addr.sin6_port);
 
-	abortdesc[0] = socket(PF_INET,SOCK_STREAM,0);
+	abortdesc[0] = socket(PF_INET6,SOCK_STREAM,0);
 	if (abortdesc[0] == RTPSOCKERR)
 	{
 		RTPCLOSE(listensock);
 		return ERR_RTP_UDPV6TRANS_CANTCREATEABORTDESCRIPTORS;
 	}
 
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	if (bind(abortdesc[0],(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
+	memset(&addr,0,sizeof(struct sockaddr_in6));
+	addr.sin6_family = AF_INET6;
+	if (bind(abortdesc[0],(struct sockaddr *)&addr,sizeof(struct sockaddr_in6)) != 0)
 	{
 		RTPCLOSE(listensock);
 		RTPCLOSE(abortdesc[0]);
@@ -1590,20 +1612,20 @@ int RTPUDPv6Transmitter::CreateAbortDescriptors()
 		return ERR_RTP_UDPV6TRANS_CANTCREATEABORTDESCRIPTORS;
 	}
 
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	addr.sin_port = htons(connectport);
+	memset(&addr,0,sizeof(struct sockaddr_in6));
+	addr.sin6_family = AF_INET6;
+	addr.sin6_addr = in6addr_loopback;
+	addr.sin6_port = htons(connectport);
 	
-	if (connect(abortdesc[0],(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
+	if (connect(abortdesc[0],(struct sockaddr *)&addr,sizeof(struct sockaddr_in6)) != 0)
 	{
 		RTPCLOSE(listensock);
 		RTPCLOSE(abortdesc[0]);
 		return ERR_RTP_UDPV6TRANS_CANTCREATEABORTDESCRIPTORS;
 	}
 
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	size = sizeof(struct sockaddr_in);
+	memset(&addr,0,sizeof(struct sockaddr_in6));
+	size = sizeof(struct sockaddr_in6);
 	abortdesc[1] = accept(listensock,(struct sockaddr *)&addr,&size);
 	if (abortdesc[1] == RTPSOCKERR)
 	{
@@ -1654,85 +1676,72 @@ int RTPUDPv6Transmitter::CreateLocalIPList()
 	return 0;
 }
 
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 
 bool RTPUDPv6Transmitter::GetLocalIPList_Interfaces()
 {
-	// REMINDER: got to find out how to do this
-	return false;
+	unsigned char buffer[RTPUDPV6TRANS_IFREQBUFSIZE];
+	DWORD outputsize;
+	DWORD numaddresses,i;
+	SOCKET_ADDRESS_LIST *addrlist;
+
+	if (WSAIoctl(rtpsock,SIO_ADDRESS_LIST_QUERY,NULL,0,&buffer,RTPUDPV6TRANS_IFREQBUFSIZE,&outputsize,NULL,NULL))
+		return false;
+	
+	addrlist = (SOCKET_ADDRESS_LIST *)buffer;
+	numaddresses = addrlist->iAddressCount;
+	for (i = 0 ; i < numaddresses ; i++)
+	{
+		SOCKET_ADDRESS *sockaddr = &(addrlist->Address[i]);
+		if (sockaddr->iSockaddrLength == sizeof(struct sockaddr_in6)) // IPv6 address
+		{
+			struct sockaddr_in6 *addr = (struct sockaddr_in6 *)sockaddr->lpSockaddr;
+
+			localIPs.push_back(addr->sin6_addr);
+		}
+	}
+
+	if (localIPs.empty())
+		return false;
+	return true;
+}
+
+#else
+
+#ifdef RTP_SUPPORT_IFADDRS
+
+bool RTPUDPv6Transmitter::GetLocalIPList_Interfaces()
+{
+	struct ifaddrs *addrs,*tmp;
+	
+	getifaddrs(&addrs);
+	tmp = addrs;
+	
+	while (tmp != 0)
+	{
+		if (tmp->ifa_addr->sa_family == AF_INET6)
+		{
+			struct sockaddr_in6 *inaddr = (struct sockaddr_in6 *)tmp->ifa_addr;
+			localIPs.push_back(inaddr->sin6_addr);
+		}
+		tmp = tmp->ifa_next;
+	}
+	
+	freeifaddrs(addrs);
+	
+	if (localIPs.empty())
+		return false;
+	return true;
 }
 
 #else
 
 bool RTPUDPv6Transmitter::GetLocalIPList_Interfaces()
 {
-	// TODO:
-	// This is linux specific, is there a more general way?
-	FILE *f = fopen("/proc/net/if_inet6","r");
-	if (f == 0)
-		return false;
-
-	bool done = false;
-	while (!done)
-	{
-		char str[1024];
-
-		if (fgets(str,1024,f) == 0)
-			done = true;
-		else
-		{
-			str[1023] = 0;
-			bool valid = false;
-			in6_addr ip;
-			
-			int len = strlen(str);
-			if (len > 32)
-			{
-				int i;
-
-				valid = true;
-				for (i = 0 ; valid && i < 32 ; i++)
-				{
-					u_int8_t val;
-					switch(str[i])
-					{
-					case '0': val = 0; break;
-					case '1': val = 1; break;
-					case '2': val = 2; break;
-					case '3': val = 3; break;
-					case '4': val = 4; break;
-					case '5': val = 5; break;
-					case '6': val = 6; break;
-					case '7': val = 7; break;
-					case '8': val = 8; break;
-					case '9': val = 9; break;
-					case 'a': val = 10; break;
-					case 'b': val = 11; break;
-					case 'c': val = 12; break;
-					case 'd': val = 13; break;
-					case 'e': val = 14; break;
-					case 'f': val = 15; break;
-					default:
-						valid = false;
-					}
-
-					if ((i%2) == 0)
-						ip.s6_addr[i/2] = (val<<4);
-					else
-						ip.s6_addr[i/2] |= val;
-				}
-			}
-
-			if (valid)
-				localIPs.push_back(ip);
-		}
-	}
-
-	fclose(f);
-	if (localIPs.empty())
-		return false;
-	return true;
+	return false;
 }
+
+#endif // RTP_SUPPORT_IFADDRS
 
 #endif // WIN32
 
@@ -1769,14 +1778,16 @@ void RTPUDPv6Transmitter::GetLocalIPList_DNS()
 	freeaddrinfo(res);	
 }
 
+
 void RTPUDPv6Transmitter::AbortWaitInternal()
 {
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	send(abortdesc[1],"*",1,0);
 #else
 	write(abortdesc[1],"*",1);
 #endif // WIN32
 }
+
 
 void RTPUDPv6Transmitter::AddLoopbackAddress()
 {

@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -40,9 +40,9 @@
 	#include <sys/time.h>
 	#include <time.h>
 #else
-	#include <winsock2.h>
-	#include <windows.h>
-	#include <sys/timeb.h>
+		#ifndef _WIN32_WCE
+        	#include <sys/timeb.h>
+        #endif // _WIN32_WINCE
 #endif // WIN32
 
 #define RTP_NTPTIMEOFFSET									2208988800UL
@@ -107,13 +107,37 @@ inline RTPTime::RTPTime(RTPNTPTime ntptime)
 	}
 }
 
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
+
 inline RTPTime RTPTime::CurrentTime()
 {
-	struct _timeb tv;
+	static int inited = 0;
+	static unsigned __int64 microseconds, initmicroseconds;
+	static LARGE_INTEGER performancefrequency;
 
-	_ftime(&tv);
-	return RTPTime((u_int32_t)tv.time,((u_int32_t)tv.millitm)*1000);
+	unsigned __int64 emulate_microseconds, microdiff;
+	SYSTEMTIME systemtime;
+	FILETIME filetime;
+
+	LARGE_INTEGER performancecount;
+
+	QueryPerformanceCounter(&performancecount);
+    
+	if(!inited){
+		inited = 1;
+		QueryPerformanceFrequency(&performancefrequency);
+		GetSystemTime(&systemtime);
+		SystemTimeToFileTime(&systemtime,&filetime);
+		microseconds = ( ((unsigned __int64)(filetime.dwHighDateTime) << 32) + (unsigned __int64)(filetime.dwLowDateTime) ) / 10ui64;
+		microseconds-= 11644473600000000ui64; // EPOCH
+		initmicroseconds = ( ( performancecount.QuadPart * 1000000ui64 ) / performancefrequency.QuadPart );
+	}
+    
+	emulate_microseconds = ( ( performancecount.QuadPart * 1000000ui64 ) / performancefrequency.QuadPart );
+
+	microdiff = emulate_microseconds - initmicroseconds;
+
+	return RTPTime((u_int32_t)((microseconds + microdiff) / 1000000ui64),((u_int32_t)((microseconds + microdiff) % 1000000ui64)));
 }
 
 inline void RTPTime::Wait(const RTPTime &delay)
@@ -124,7 +148,17 @@ inline void RTPTime::Wait(const RTPTime &delay)
 	Sleep(t);
 }
 
+class RTPTimeInitializer
+{
+public:
+	RTPTimeInitializer();
+	void Dummy() { }
+};
+
+extern RTPTimeInitializer timeinit;
+
 #else // unix style
+
 inline RTPTime RTPTime::CurrentTime()
 {
 	struct timeval tv;

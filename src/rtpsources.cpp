@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -55,12 +55,15 @@
 	int RTPSources_GetHashIndex(const u_int32_t &ssrc)       { return ssrc%RTPSOURCES_HASHSIZE; }
 #endif // !RTP_SUPPORT_INLINETEMPLATEPARAM
 	
-RTPSources::RTPSources()
+RTPSources::RTPSources(ProbationType probtype)
 {
 	totalcount = 0;
 	sendercount = 0;
 	activecount = 0;
 	owndata = 0;
+#ifdef RTP_SUPPORT_PROBATION
+	probationtype = probtype;
+#endif // RTP_SUPPORT_PROBATION
 }
 
 RTPSources::~RTPSources()
@@ -798,7 +801,7 @@ int RTPSources::ObtainSourceDataInstance(u_int32_t ssrc,RTPInternalSourceData **
 	
 	if (sourcelist.GotoElement(ssrc) < 0) // No entry for this source
 	{
-		srcdat2 = new RTPInternalSourceData(ssrc);
+		srcdat2 = new RTPInternalSourceData(ssrc,probationtype);
 		if (srcdat2 == 0)
 			return ERR_RTP_OUTOFMEM;
 		if ((status = sourcelist.AddElement(ssrc,srcdat2)) < 0)

@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -39,6 +39,7 @@
 #include "rtppacket.h"
 #include "rtcpsdesinfo.h"
 #include "rtptypes.h"
+#include "rtpsources.h"
 #include <list>
 
 class RTPAddress;
@@ -95,7 +96,7 @@ class RTPSourceStats
 {
 public:
 	RTPSourceStats();
-	void ProcessPacket(RTPPacket *pack,const RTPTime &receivetime,double tsunit,bool ownpacket,bool *accept);
+	void ProcessPacket(RTPPacket *pack,const RTPTime &receivetime,double tsunit,bool ownpacket,bool *accept,bool applyprobation,bool *onprobation);
 
 	bool HasSentData() const						{ return sentdata; }
 	u_int32_t GetNumPacketsReceived() const					{ return packetsreceived; }
@@ -131,6 +132,7 @@ private:
 #ifdef RTP_SUPPORT_PROBATION
 	u_int16_t prevseqnr;
 	int probation;
+	RTPSources::ProbationType probationtype;
 #endif // RTP_SUPPORT_PROBATION
 };
 	
@@ -161,7 +163,7 @@ protected:
 public:
 	RTPPacket *GetNextPacket();
 	void FlushPackets();
-	bool HasData() const							{ return packetlist.empty()?false:true; }
+	bool HasData() const							{ if (!validated) return false; return packetlist.empty()?false:true; }
 	u_int32_t GetSSRC() const						{ return ssrc; }
 	bool IsOwnSSRC() const							{ return ownssrc; }
 	bool IsCSRC() const							{ return iscsrc; }
@@ -279,6 +281,9 @@ protected:
 
 inline RTPPacket *RTPSourceData::GetNextPacket()
 {
+	if (!validated)
+		return 0;
+
 	RTPPacket *p;
 
 	if (packetlist.empty())

@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -35,10 +35,7 @@
 #include "rtpipv4address.h"
 #include "rtptimeutilities.h"
 #include <stdio.h>
-#ifdef WIN32
-	#include <winsock2.h>
-	#include <ws2tcpip.h>
-
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	#define RTPSOCKERR								INVALID_SOCKET
 	#define RTPCLOSE(x)								closesocket(x)
 	#define RTPSOCKLENTYPE								int
@@ -59,6 +56,9 @@
 	#ifdef RTP_HAVE_SYS_SOCKIO
 		#include <sys/sockio.h>
 	#endif // RTP_HAVE_SYS_SOCKIO
+	#ifdef RTP_SUPPORT_IFADDRS
+		#include <ifaddrs.h>
+	#endif // RTP_SUPPORT_IFADDRS
 
 	#define RTPSOCKERR								-1
 	#define RTPCLOSE(x)								close(x)
@@ -77,12 +77,21 @@
 
 #include "rtpdebug.h"
 
-#define RTPUDPV4TRANS_RTPRECEIVEBUFFER							32768
-#define RTPUDPV4TRANS_RTCPRECEIVEBUFFER							32768
-#define RTPUDPV4TRANS_RTPTRANSMITBUFFER							32768
-#define RTPUDPV4TRANS_RTCPTRANSMITBUFFER						32768
-#define RTPUDPV4TRANS_MAXPACKSIZE							65535
-#define RTPUDPV4TRANS_IFREQBUFSIZE							8192
+#ifndef _WIN32_WCE
+	#define RTPUDPV4TRANS_RTPRECEIVEBUFFER							32768
+	#define RTPUDPV4TRANS_RTCPRECEIVEBUFFER							32768
+	#define RTPUDPV4TRANS_RTPTRANSMITBUFFER							32768
+	#define RTPUDPV4TRANS_RTCPTRANSMITBUFFER						32768
+	#define RTPUDPV4TRANS_MAXPACKSIZE							65535
+	#define RTPUDPV4TRANS_IFREQBUFSIZE							8192
+#else
+	#define RTPUDPV4TRANS_RTPRECEIVEBUFFER							2048
+	#define RTPUDPV4TRANS_RTCPRECEIVEBUFFER							2048
+	#define RTPUDPV4TRANS_RTPTRANSMITBUFFER							2048
+	#define RTPUDPV4TRANS_RTCPTRANSMITBUFFER						2048
+	#define RTPUDPV4TRANS_MAXPACKSIZE							2048
+	#define RTPUDPV4TRANS_IFREQBUFSIZE							2048
+#endif // _WIN32_WCE
 
 #define RTPUDPV4TRANS_IS_MCASTADDR(x)							(((x)&0xF0000000) == 0xE0000000)
 
@@ -114,6 +123,9 @@ RTPUDPv4Transmitter::RTPUDPv4Transmitter()
 {
 	created = false;
 	init = false;
+#if (defined(WIN32) || defined(_WIN32_WCE))
+	timeinit.Dummy();
+#endif // WIN32 || _WIN32_WCE
 }
 
 RTPUDPv4Transmitter::~RTPUDPv4Transmitter()
@@ -173,7 +185,10 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	else
 	{
 		if (transparams->GetTransmissionProtocol() != RTPTransmitter::IPv4UDPProto)
+		{
+			MAINMUTEX_UNLOCK
 			return ERR_RTP_UDPV4TRANS_ILLEGALPARAMETERS;
+		}
 		params = (const RTPUDPv4TransmissionParams *)transparams;
 	}
 
@@ -557,7 +572,7 @@ int RTPUDPv4Transmitter::Poll()
 	return status;
 }
 
-int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay)
+int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavailable)
 {
 	if (!init)
 		return ERR_RTP_UDPV4TRANS_NOTINIT;
@@ -611,7 +626,7 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay)
 	// if aborted, read from abort buffer
 	if (FD_ISSET(abortdesc[0],&fdset))
 	{
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 		char buf[1];
 		
 		recv(abortdesc[0],buf,1,0);
@@ -621,6 +636,14 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay)
 		read(abortdesc[0],buf,1);
 #endif // WIN32
 	}
+
+	if (dataavailable != 0)
+	{
+		if (FD_ISSET(rtpsock,&fdset) || FD_ISSET(rtcpsock,&fdset))
+			*dataavailable = true;
+		else
+			*dataavailable = false;
+	}	
 	
 	MAINMUTEX_UNLOCK
 	WAITMUTEX_UNLOCK
@@ -1265,7 +1288,7 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 	RTPSOCKLENTYPE fromlen;
 	int recvlen;
 	char packetbuffer[RTPUDPV4TRANS_MAXPACKSIZE];
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	SOCKET sock;
 	unsigned long len;
 #else 
@@ -1284,10 +1307,9 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 	if (len <= 0)
 		return 0;
 
-	RTPTime curtime = RTPTime::CurrentTime();
-
 	while (len > 0)
 	{
+		RTPTime curtime = RTPTime::CurrentTime();
 		fromlen = sizeof(struct sockaddr_in);
 		recvlen = recvfrom(sock,packetbuffer,(int)len,0,(struct sockaddr *)&srcaddr,&fromlen);
 		if (recvlen > 0)
@@ -1523,7 +1545,7 @@ bool RTPUDPv4Transmitter::ShouldAcceptData(u_int32_t srcip,u_int16_t srcport)
 	return true;
 }
 
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 
 int RTPUDPv4Transmitter::CreateAbortDescriptors()
 {
@@ -1640,15 +1662,66 @@ int RTPUDPv4Transmitter::CreateLocalIPList()
 	return 0;
 }
 
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 
 bool RTPUDPv4Transmitter::GetLocalIPList_Interfaces()
 {
-	// REMINDER: got to find out how to do this
-	return false;
+	unsigned char buffer[RTPUDPV4TRANS_IFREQBUFSIZE];
+	DWORD outputsize;
+	DWORD numaddresses,i;
+	SOCKET_ADDRESS_LIST *addrlist;
+
+	if (WSAIoctl(rtpsock,SIO_ADDRESS_LIST_QUERY,NULL,0,&buffer,RTPUDPV4TRANS_IFREQBUFSIZE,&outputsize,NULL,NULL))
+		return false;
+	
+	addrlist = (SOCKET_ADDRESS_LIST *)buffer;
+	numaddresses = addrlist->iAddressCount;
+	for (i = 0 ; i < numaddresses ; i++)
+	{
+		SOCKET_ADDRESS *sockaddr = &(addrlist->Address[i]);
+		if (sockaddr->iSockaddrLength == sizeof(struct sockaddr_in)) // IPv4 address
+		{
+			struct sockaddr_in *addr = (struct sockaddr_in *)sockaddr->lpSockaddr;
+
+			localIPs.push_back(ntohl(addr->sin_addr.s_addr));
+		}
+	}
+
+	if (localIPs.empty())
+		return false;
+
+	return true;
 }
 
-#else // use ioctl
+#else // use either getifaddrs or ioctl
+
+#ifdef RTP_SUPPORT_IFADDRS
+
+bool RTPUDPv4Transmitter::GetLocalIPList_Interfaces()
+{
+	struct ifaddrs *addrs,*tmp;
+	
+	getifaddrs(&addrs);
+	tmp = addrs;
+	
+	while (tmp != 0)
+	{
+		if (tmp->ifa_addr->sa_family == AF_INET)
+		{
+			struct sockaddr_in *inaddr = (struct sockaddr_in *)tmp->ifa_addr;
+			localIPs.push_back(ntohl(inaddr->sin_addr.s_addr));
+		}
+		tmp = tmp->ifa_next;
+	}
+	
+	freeifaddrs(addrs);
+	
+	if (localIPs.empty())
+		return false;
+	return true;
+}
+
+#else // user ioctl
 
 bool RTPUDPv4Transmitter::GetLocalIPList_Interfaces()
 {
@@ -1714,6 +1787,8 @@ bool RTPUDPv4Transmitter::GetLocalIPList_Interfaces()
 	return true;
 }
 
+#endif // RTP_SUPPORT_IFADDRS
+
 #endif // WIN32
 
 void RTPUDPv4Transmitter::GetLocalIPList_DNS()
@@ -1750,7 +1825,7 @@ void RTPUDPv4Transmitter::GetLocalIPList_DNS()
 
 void RTPUDPv4Transmitter::AbortWaitInternal()
 {
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	send(abortdesc[1],"*",1,0);
 #else
 	write(abortdesc[1],"*",1);

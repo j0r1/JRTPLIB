@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -43,6 +43,7 @@
 #include "rtcpcompoundpacket.h"
 #ifndef WIN32
 	#include <unistd.h>
+	#include <stdlib.h>
 #else
 	#include <winbase.h>
 #endif // WIN32
@@ -73,6 +74,9 @@ RTPSession::RTPSession(RTPTransmitter::TransmissionProtocol proto /* = RTPTransm
 	: protocol(proto),sources(*this),rtcpsched(sources),rtcpbuilder(sources,packetbuilder)
 {
 	created = false;
+#if (defined(WIN32) || defined(_WIN32_WCE))
+	timeinit.Dummy();
+#endif // WIN32 || _WIN32_WCE
 }
 
 RTPSession::~RTPSession()
@@ -88,6 +92,7 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		return ERR_RTP_SESSION_ALREADYCREATED;
 
 	usingpollthread = sessparams.IsUsingPollThread();
+	useSR_BYEifpossible = sessparams.GetSenderReportForBYE();
 	
 	// Check max packet size
 	
@@ -131,6 +136,13 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		delete rtptrans;
 		return status;
 	}
+
+#ifdef RTP_SUPPORT_PROBATION
+
+	// Set probation type
+	sources.SetProbationType(sessparams.GetProbationType());
+
+#endif // RTP_SUPPORT_PROBATION
 
 	// Add our own ssrc to the source table
 	
@@ -336,7 +348,7 @@ void RTPSession::BYEDestroy(const RTPTime &maxwaittime,const void *reason,size_t
 		int status;
 		
 		reasonlength = (reasonlength>RTCP_BYE_MAXREASONLENGTH)?RTCP_BYE_MAXREASONLENGTH:reasonlength;
-	       	status = rtcpbuilder.BuildBYEPacket(&pack,reason,reasonlength);
+	       	status = rtcpbuilder.BuildBYEPacket(&pack,reason,reasonlength,useSR_BYEifpossible);
 		if (status >= 0)
 		{
 			byepackets.push_back(pack);
@@ -651,13 +663,13 @@ int RTPSession::Poll()
 	return ProcessPolledData();
 }
 
-int RTPSession::WaitForIncomingData(const RTPTime &delay)
+int RTPSession::WaitForIncomingData(const RTPTime &delay,bool *dataavailable)
 {
 	if (!created)
 		return ERR_RTP_SESSION_NOTCREATED;
 	if (usingpollthread)
 		return ERR_RTP_SESSION_USINGPOLLTHREAD;
-	return rtptrans->WaitForIncomingData(delay);
+	return rtptrans->WaitForIncomingData(delay,dataavailable);
 }
 
 int RTPSession::AbortWait()
@@ -1046,7 +1058,7 @@ int RTPSession::ProcessPolledData()
 					RTCPCompoundPacket *rtcpcomppack;
 
 					BUILDER_LOCK
-					if ((status = rtcpbuilder.BuildBYEPacket(&rtcpcomppack,0,0)) < 0)
+					if ((status = rtcpbuilder.BuildBYEPacket(&rtcpcomppack,0,0,useSR_BYEifpossible)) < 0)
 					{
 						BUILDER_UNLOCK
 						SOURCES_UNLOCK
@@ -1169,21 +1181,49 @@ int RTPSession::ProcessPolledData()
 int RTPSession::CreateCNAME(u_int8_t *buffer,size_t *bufferlength,bool resolve)
 {
 #ifndef WIN32
-
+	bool gotlogin = true;
 #ifdef RTP_SUPPORT_GETLOGINR
-	if (getlogin_r((char *)buffer,*bufferlength) < 0)
-		return ERR_RTP_SESSION_CANTGETLOGINNAME;
+	buffer[0] = 0;
+	if (getlogin_r((char *)buffer,*bufferlength) != 0)
+		gotlogin = false;
+	else
+	{
+		if (buffer[0] == 0)
+			gotlogin = false;
+	}
+	
+	if (!gotlogin) // try regular getlogin
+	{
+		char *loginname = getlogin();
+		if (loginname == 0)
+			gotlogin = false;
+		else
+			strncpy((char *)buffer,loginname,*bufferlength);
+	}
 #else
 	char *loginname = getlogin();
 	if (loginname == 0)
-		return ERR_RTP_SESSION_CANTGETLOGINNAME;
-	strncpy((char *)buffer,loginname,*bufferlength);
+		gotlogin = false;
+	else
+		strncpy((char *)buffer,loginname,*bufferlength);
 #endif // RTP_SUPPORT_GETLOGINR
-	
-#else 
+	if (!gotlogin)
+	{
+		char *logname = getenv("LOGNAME");
+		if (logname == 0)
+			return ERR_RTP_SESSION_CANTGETLOGINNAME;
+		strncpy((char *)buffer,logname,*bufferlength);
+	}
+#else // Win32 version
+
+#ifndef _WIN32_WCE
 	DWORD len = *bufferlength;
 	if (!GetUserName((LPTSTR)buffer,&len))
-		return ERR_RTP_SESSION_CANTGETLOGINNAME;
+		strcpy((char *)buffer,"unknown");
+#else 
+	strcpy((char *)buffer,"unknown");
+#endif // _WIN32_WCE
+	
 #endif // WIN32
 	buffer[*bufferlength-1] = 0;
 

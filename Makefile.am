@@ -1,5 +1,5 @@
 SUBDIRS = src tools doc examples
-EXTRA_DIST = LICENSE.MIT ChangeLog README.TXT jrtplib.dsw jrtplib.dsp
+EXTRA_DIST = LICENSE.MIT ChangeLog README.TXT jrtplib.dsw jrtplib.dsp jrtplib.vcproj jrtplib.sln jrtplib_wce.vcproj jrtplib_wce.sln
 
 dist-hook: distclean
 	rm -f $(distdir)/src/rtpconfig_unix.h
@@ -10,4 +10,7 @@ dist-hook: distclean
 	todos < $(distdir)/jrtplib.dsp.tmp > $(distdir)/jrtplib.dsp
 	rm $(distdir)/jrtplib.dsw.tmp
 	rm $(distdir)/jrtplib.dsp.tmp
-
+	chmod a-x $(distdir)/jrtplib.vcproj
+	chmod a-x $(distdir)/jrtplib.sln
+	chmod a-x $(distdir)/jrtplib_wce.vcproj
+	chmod a-x $(distdir)/jrtplib_wce.sln

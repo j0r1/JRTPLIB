@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -38,11 +38,12 @@
 #include "rtpsourcedata.h"
 #include "rtpaddress.h"
 #include "rtptimeutilities.h"
+#include "rtpsources.h"
 
 class RTPInternalSourceData : public RTPSourceData
 {
 public:
-	RTPInternalSourceData(u_int32_t ssrc);
+	RTPInternalSourceData(u_int32_t ssrc, RTPSources::ProbationType probtype);
 	~RTPInternalSourceData();
 
 	int ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,bool *stored);
@@ -66,6 +67,11 @@ public:
 	void SetOwnSSRC()										{ ownssrc = true; validated = true; }
 	void SetCSRC()											{ validated = true; iscsrc = true; }
 	void ClearNote()										{ SDESinf.SetNote(0,0); }
+	
+#ifdef RTP_SUPPORT_PROBATION
+private:
+	RTPSources::ProbationType probationtype;
+#endif // RTP_SUPPORT_PROBATION
 };
 
 inline int RTPInternalSourceData::SetRTPDataAddress(const RTPAddress *a)

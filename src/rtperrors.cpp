@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -167,6 +167,7 @@ static RTPErrorInfo ErrorDescriptions[]=
 	{ ERR_RTP_UDPV6TRANS_SPECIFIEDSIZETOOBIG, "The maximum packet size is too big for this transmitter"},
 	{ ERR_RTP_TRANS_BUFFERLENGTHTOOSMALL,"The hostname is larger than the specified buffer size"},
 	{ ERR_RTP_SDES_MAXPRIVITEMS,"The maximum number of SDES private item prefixes was reached"},
+	{ ERR_RTP_INTERNALSOURCEDATA_INVALIDPROBATIONTYPE,"An invalid probation type was specified"},
 	{ 0,0 }
 };
 

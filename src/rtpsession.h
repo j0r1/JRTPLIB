@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -99,7 +99,7 @@ public:
 	
 	RTPTransmissionInfo *GetTransmissionInfo();
 	int Poll();
-	int WaitForIncomingData(const RTPTime &delay);
+	int WaitForIncomingData(const RTPTime &delay,bool *dataavailable = 0);
 	int AbortWait();
 	RTPTime GetRTCPDelay();
 
@@ -167,6 +167,7 @@ protected:
 	virtual void OnUnknownPacketFormat(RTCPPacket *rtcppack,const RTPTime &receivetime,
 	                                   const RTPAddress *senderaddress)				{ }
 	virtual void OnNoteTimeout(RTPSourceData *srcdat)						{ }
+	virtual void OnBYEPacket(RTPSourceData *srcdat)							{ }
 #ifdef RTP_SUPPORT_THREAD
 	virtual void OnPollThreadError(int errcode)							{ }
 	virtual void OnPollThreadStep()									{ }
@@ -181,6 +182,7 @@ private:
 	bool created;
 	bool usingpollthread;
 	bool acceptownpackets;
+	bool useSR_BYEifpossible;
 	size_t maxpacksize;
 	double sessionbandwidth;
 	double controlfragment;

@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -33,10 +33,8 @@
 #include "rtpsourcedata.h"
 #include "rtpdefines.h"
 #include "rtpaddress.h"
-#ifndef WIN32
+#if ! (defined(WIN32) || defined(_WIN32_WCE))
 	#include <netinet/in.h>
-#else
-	#include <winsock2.h>
 #endif // WIN32
 
 #ifdef RTPDEBUG
@@ -46,79 +44,97 @@
 
 #include "rtpdebug.h"
 
+#define ACCEPTPACKETCODE									\
+		*accept = true;									\
+												\
+		sentdata = true;								\
+		packetsreceived++;								\
+		numnewpackets++;								\
+												\
+		if (pack->GetExtendedSequenceNumber() == 0)					\
+		{										\
+			baseseqnr = 0x0000FFFF;							\
+			numcycles = 0x00010000;							\
+		}										\
+		else										\
+			baseseqnr = pack->GetExtendedSequenceNumber() - 1;			\
+												\
+		exthighseqnr = baseseqnr + 1;							\
+		prevpacktime = receivetime;							\
+		prevexthighseqnr = baseseqnr;							\
+		savedextseqnr = baseseqnr;							\
+												\
+		pack->SetExtendedSequenceNumber(exthighseqnr);					\
+												\
+		prevtimestamp = pack->GetTimestamp();						\
+		lastmsgtime = prevpacktime;							\
+		if (!ownpacket) /* for own packet, this value is set on an outgoing packet */	\
+			lastrtptime = prevpacktime;
+
 void RTPSourceStats::ProcessPacket(RTPPacket *pack,const RTPTime &receivetime,double tsunit,
-                                   bool ownpacket,bool *accept)
+                                   bool ownpacket,bool *accept,bool applyprobation,bool *onprobation)
 {
 	// Note that the sequence number in the RTP packet is still just the
 	// 16 bit number contained in the RTP header
 
+	*onprobation = false;
+	
 	if (!sentdata) // no valid packets received yet
 	{
 #ifdef RTP_SUPPORT_PROBATION
-		bool acceptpack = false;
+		if (applyprobation)
+		{
+			bool acceptpack = false;
 
-		if (probation)  
-		{	
-			u_int16_t pseq;
-			u_int32_t pseq2;
-
-			pseq = prevseqnr;
-			pseq++;
-			pseq2 = (u_int32_t)pseq;
-			if (pseq2 == pack->GetExtendedSequenceNumber()) // ok, its the next expected packet
-			{
-				prevseqnr = (u_int16_t)pack->GetExtendedSequenceNumber();
-				probation--;	
-				if (probation == 0) // probation over
-					acceptpack = true;
+			if (probation)  
+			{	
+				u_int16_t pseq;
+				u_int32_t pseq2;
+	
+				pseq = prevseqnr;
+				pseq++;
+				pseq2 = (u_int32_t)pseq;
+				if (pseq2 == pack->GetExtendedSequenceNumber()) // ok, its the next expected packet
+				{
+					prevseqnr = (u_int16_t)pack->GetExtendedSequenceNumber();
+					probation--;	
+					if (probation == 0) // probation over
+						acceptpack = true;
+					else
+						*onprobation = true;
+				}
+				else // not next packet
+				{
+					probation = RTP_PROBATIONCOUNT;
+					prevseqnr = (u_int16_t)pack->GetExtendedSequenceNumber();
+					*onprobation = true;
+				}
 			}
-			else // not next packet
+			else // first packet received with this SSRC ID, start probation
 			{
 				probation = RTP_PROBATIONCOUNT;
-				prevseqnr = (u_int16_t)pack->GetExtendedSequenceNumber();
+				prevseqnr = (u_int16_t)pack->GetExtendedSequenceNumber();	
+				*onprobation = true;
 			}
-		}
-		else // first packet received with this SSRC ID, start probation
-		{
-			probation = RTP_PROBATIONCOUNT;
-			prevseqnr = (u_int16_t)pack->GetExtendedSequenceNumber();	
-		}
-
-		if (acceptpack)
-		{
-#endif // RTP_SUPPORT_PROBATION
-			*accept = true;
-
-			sentdata = true;
-			packetsreceived++;
-			numnewpackets++;
-
-			if (pack->GetExtendedSequenceNumber() == 0)
+	
+			if (acceptpack)
 			{
-				baseseqnr = 0x0000FFFF;
-				numcycles = 0x00010000;
+				ACCEPTPACKETCODE
 			}
 			else
-				baseseqnr = pack->GetExtendedSequenceNumber() - 1;
-
-			exthighseqnr = baseseqnr + 1;
-			prevpacktime = receivetime;
-			prevexthighseqnr = baseseqnr;
-			savedextseqnr = baseseqnr;
-
-			pack->SetExtendedSequenceNumber(exthighseqnr);
-
-			prevtimestamp = pack->GetTimestamp();
-			lastmsgtime = prevpacktime;
-			if (!ownpacket) // for own packet, this value is set on an outgoing packet
-				lastrtptime = prevpacktime;
-#ifdef RTP_SUPPORT_PROBATION
+			{
+				*accept = false;
+				lastmsgtime = receivetime;
+			}
 		}
-		else
+		else // No probation
 		{
-			*accept = false;
-			lastmsgtime = receivetime;
+			ACCEPTPACKETCODE
 		}
+#else // No compiled-in probation support
+
+		ACCEPTPACKETCODE
+
 #endif // RTP_SUPPORT_PROBATION
 	}
 	else // already got packets

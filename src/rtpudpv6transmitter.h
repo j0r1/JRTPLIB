@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -42,10 +42,8 @@
 #include "rtpipv6destination.h"
 #include "rtphashtable.h"
 #include "rtpkeyhashtable.h"
-#ifndef WIN32	
+#if ! (defined(WIN32) || defined(_WIN32_WCE))
 	#include <netinet/in.h>
-#else
-	#include <winsock2.h>
 #endif // WIN32
 #include <string.h>
 #include <list>
@@ -80,7 +78,7 @@ private:
 class RTPUDPv6TransmissionInfo : public RTPTransmissionInfo
 {
 public:
-#ifndef WIN32
+#if ! (defined(WIN32) || defined(_WIN32_WCE))
 	RTPUDPv6TransmissionInfo(std::list<in6_addr> iplist,int rtpsock,int rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv6UDPProto) 
 #else
 	RTPUDPv6TransmissionInfo(std::list<in6_addr> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv6UDPProto) 
@@ -89,7 +87,7 @@ public:
 
 	~RTPUDPv6TransmissionInfo()								{ }
 	std::list<in6_addr> GetLocalIPList() const						{ return localIPlist; }
-#ifndef WIN32
+#if ! (defined(WIN32) || defined(_WIN32_WCE))
 	int GetRTPSocket() const								{ return rtpsocket; }
 	int GetRTCPSocket() const								{ return rtcpsocket; }
 #else
@@ -98,7 +96,7 @@ public:
 #endif // WIN32
 private:
 	std::list<in6_addr> localIPlist;
-#ifndef WIN32
+#if ! (defined(WIN32) || defined(_WIN32_WCE))
 	int rtpsocket,rtcpsocket;
 #else
 	SOCKET rtpsocket,rtcpsocket;
@@ -131,7 +129,7 @@ public:
 	size_t GetHeaderOverhead()								{ return RTPUDPV6TRANS_HEADERSIZE; }
 	
 	int Poll();
-	int WaitForIncomingData(const RTPTime &delay);
+	int WaitForIncomingData(const RTPTime &delay,bool *dataavailable = 0);
 	int AbortWait();
 	
 	int SendRTPData(const void *data,size_t len);	
@@ -182,7 +180,7 @@ private:
 	bool init;
 	bool created;
 	bool waitingfordata;
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	SOCKET rtpsock,rtcpsock;
 #else // not using winsock
 	int rtpsock,rtcpsock;
@@ -217,7 +215,7 @@ private:
 	RTPKeyHashTable<const in6_addr,PortInfo*,RTPUDPv6Trans_GetHashIndex_in6_addr,RTPUDPV6TRANS_HASHSIZE> acceptignoreinfo;
 
 	// notification descriptors for AbortWait (0 is for reading, 1 for writing)
-#ifdef WIN32
+#if (defined(WIN32) || defined(_WIN32_WCE))
 	SOCKET abortdesc[2];
 #else
 	int abortdesc[2];

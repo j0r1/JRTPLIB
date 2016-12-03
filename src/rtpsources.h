@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -35,7 +35,6 @@
 #define RTPSOURCES_H
 
 #include "rtpconfig.h"
-#include "rtpinternalsourcedata.h"
 #include "rtpkeyhashtable.h"
 #include "rtcpsdespacket.h"
 #include "rtptypes.h"
@@ -51,13 +50,24 @@
 class RTPNTPTime;
 class RTPTransmitter;
 class RTCPAPPPacket;
+class RTPInternalSourceData;
+class RTPRawPacket;
+class RTPPacket;
+class RTPTime;
+class RTPAddress;
+class RTPSourceData;
 
 class RTPSources
 {
 public:
-	RTPSources();
+	enum ProbationType { NoProbation, ProbationDiscard, ProbationStore };
+	
+	RTPSources(ProbationType = ProbationStore);
 	virtual ~RTPSources();
 	void Clear();
+#ifdef RTP_SUPPORT_PROBATION
+	void SetProbationType(ProbationType probtype)							{ probationtype = probtype; }
+#endif // RTP_SUPPORT_PROBATION
 
 	int CreateOwnSSRC(u_int32_t ssrc);
 	int DeleteOwnSSRC();
@@ -102,7 +112,7 @@ public:
 	RTPSourceData *GetSourceInfo(u_int32_t ssrc);
 	RTPPacket *GetNextPacket();
 	bool GotEntry(u_int32_t ssrc);
-	RTPSourceData *GetOwnSourceInfo()								{ return owndata; }
+	RTPSourceData *GetOwnSourceInfo()								{ return (RTPSourceData *)owndata; }
 
 	void Timeout(const RTPTime &curtime,const RTPTime &timeoutdelay);
 	void SenderTimeout(const RTPTime &curtime,const RTPTime &timeoutdelay);
@@ -152,6 +162,10 @@ private:
 	int sendercount;
 	int totalcount;
 	int activecount;
+
+#ifdef RTP_SUPPORT_PROBATION
+	ProbationType probationtype;
+#endif // RTP_SUPPORT_PROBATION
 
 	RTPInternalSourceData *owndata;
 };

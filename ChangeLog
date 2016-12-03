@@ -1,9 +1,45 @@
-                                                             October 1, 2004
+                                                           September 19, 2005
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+
+ 3.2.0 (September 2005)
+ 	* Modified the routine in the RTPSession class which creates the
+	  CNAME. Aparently on some systems, the 'getlogin' call returns
+	  null. As an alternative, the library uses getenv("LOGNAME").
+	  Thanks to Mark Schiffmann (schima@neumann-elektronik.com) for
+	  mentioning this to me.
+	* Added a OnBYEPacket method to the RTPSession class. Thanks to
+	  Sigrid Thijs (sthijs@androme.be) for suggesting this.
+	* When probation support is enabled, a probation type can be selected
+	  when the session is created. Supported types are "No probation",
+	  "Use probation, but store packets" and "Use probation and discard
+	  packets received in probation mode". Thanks to Chris Flerackers
+	  (cflerackers@androme.be) for suggesting this feature.
+	* Added a parameter to WaitForIncomingData which indicates if
+	  data is available when the function returns. Based on a suggestion
+	  by Uwe Andersen (uandersen@mayah.com).
+	* Now using getifaddrs (if possible) to obtain our own IP addresses
+	  (both in IPv4 version and IPv6 version).
+	* IPv6 code in Win32 version now works, but Visual Studio 2005 beta
+	  has to be used. Thanks to Yi-Huan Chan (yhchan@csie.nctu.edu.tw)
+	  for contributing some code.
+	* Added Win32 code for GetLocalIPList_Interfaces (both IPv4 and IPv6).
+	  Thanks to Ivan Makushkin (camry@pisem.net) for pointing out how
+	  this could be done.
+	* Added an option to use a SR packet when sending a BYE message.
+	  Previously, a RR packet was always used, even if a session is
+	  actually an active sender of data. Thanks to Uwe Andersen
+	  (uandersen@mayah.com) for bringing this to my attention.
+	* Fixed bug in CNAME creation.
+	* Added WinCE support. Thanks to Maarten Daniels 
+	  (maarten.daniels@uhasselt.be) for supplying patches.
+	* Changed the CurrentTime implementation for the MS-Windows version.
+	  Thanks to Maarten Daniels (maarten.daniels@uhasselt.be) and Chris
+	  Flerackers (cflerackers@androme.be).
 
  3.1.0 (October 2004)
  	* Added a callback OnPollThreadStep which is called at the end of 

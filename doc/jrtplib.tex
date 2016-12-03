@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 
-\newcommand{\jversion}{3.1.0}
+\newcommand{\jversion}{3.2.0}
 \newcommand{\headerfile}[1]{\marginpar{\scriptsize Header:\\{\tt #1}}}
 \newcommand{\inherits}[1]{\marginpar{\scriptsize Inherits:\\{\tt #1}}}
 \newcommand{\Paragraph}[1]{\paragraph{#1}\ \\\addcontentsline{toc}{subsection}{\ \hspace{3cm}\ {#1}}}
@@ -21,12 +21,12 @@
 
 \begin{document}
 	\title{\ \vspace{3.5cm}\ \\{\bf JRTPLIB \jversion}}
-	\author{Jori Liesenborgs\\{\tt jori@lumumba.luc.ac.be}}
-	\date{October 1, 2004\\\vspace{0.5cm}\ \\
+	\author{Jori Liesenborgs\\{\tt jori@lumumba.uhasselt.be}}
+	\date{September 19, 2005\\\vspace{0.5cm}\ \\
 	      {\small{\em Developed at the The Expertise Centre for \\Digital Media (EDM),
-	      a research institute of\\ the Limburgs Universitair Centrum (LUC)}\\\ \\
-		  {\tt http://www.edm.luc.ac.be/}\\
-		  {\tt http://www.luc.ac.be/}}}
+	      a research institute\\of the Hasselt University}\\\ \\
+		  {\tt http://www.edm.uhasselt.be/}\\
+		  {\tt http://www.uhasselt.be/}}}
 	\maketitle
 	
 	\newpage
@@ -1396,8 +1396,25 @@ session.BYEDestroy(delay,"Time's up",9);
 				functions which can be used to catch certain events (new SSRC,
 				SSRC collision, \ldots).
 				
-				The class interface is the following:
+				When probation support is enabled, you can select one of
+				three probation types:
+				\begin{verbatim}
+					enum ProbationType { NoProbation, ProbationDiscard, ProbationStore };
+				\end{verbatim}
+				When {\tt NoProbation} is selected, the probation algorithm will
+				not be used to validate new sources. When {\tt ProbationDiscard}
+				is used, the probation algorithm is activated but received packets
+				will be discarded until the source is validated. To activate the
+				probation routine and store the packets which are received before
+				the source is validated, the mode {\tt ProbationStore} can be
+				selected.
+
+				The RTPSources class interface is the following:
 				\begin{itemize}
+					\item {\tt RTPSources(ProbationType probationtype = ProbationStore)}\\
+						In the constructor you can select the probation type you'd like
+						to use. This only makes a difference when probation support was
+						enabled at compilation time.
 					\item {\tt void Clear()}\\
 						Clears the source table.
 					\item {\tt int CreateOwnSSRC(u\_int32\_t ssrc)}\\
@@ -1966,10 +1983,12 @@ session.BYEDestroy(delay,"Time's up",9);
 					\item {\tt int BuildNextPacket(RTCPCompoundPacket **pack)}\\
 						Builds the next RTCP compound packet which should be
 						sent and stores it in {\tt pack}.
-					\item {\tt int BuildBYEPacket(RTCPCompoundPacket **pack, const void *reason, size\_t reasonlength)}\\
+					\item {\tt int BuildBYEPacket(RTCPCompoundPacket **pack, const void *reason, size\_t reasonlength,bool useSRifpossible = true)}\\
 						Builds a BYE packet with reason for leaving
 						specified by {\tt reason} and length
-						{\tt reasonlength}.
+						{\tt reasonlength}. If {\tt useSRifpossible} is set to {\tt true},
+						the RTCP compound packet will start with a sender report if
+						allowed. Otherwise, a receiver report is used.
 					\item {\tt void SetNameInterval(int count)}\\
 						After all possible sources in the source table have been
 						processed, the class will check if other SDES items
@@ -2191,6 +2210,11 @@ session.BYEDestroy(delay,"Time's up",9);
 					\item {\tt bool GetResolveLocalHostname() const}\\
 						Returns whether the local hostname should be determined
 						from the transmitter's list of local IP addresses or not.
+					\item {\tt void SetProbationType(RTPSources::ProbationType probtype)}\\
+						If probation support is enabled, this function sets the
+						probation type to be used.
+					\item {\tt RTPSources::ProbationType GetProbationType() const}\\
+						Returns the probation type which will be used.
 					\item {\tt void SetSessionBandwidth(double sessbw)}\\
 						Sets the session bandwidth in bytes per second.
 					\item {\tt double GetSessionBandwidth() const}\\
@@ -2225,6 +2249,15 @@ session.BYEDestroy(delay,"Time's up",9);
 					\item {\tt bool GetRequestImmediateBYE() const}\\
 						Returns whether the session should send a BYE packet immediately
 						(if allowed) or not.
+					\item {\tt void SetSenderReportForBYE(bool v)}\\
+						When sending a BYE packet, this indicates whether it will be part
+						of an RTCP compound packet that begins with a sender report or a
+						receiver report. Of course, a sender report will only be used if
+						allowed.
+					\item {\tt bool GetSenderReportForBYE() const}\\
+						Returns {\tt true} if a BYE packet will be sent in an RTCP compound
+						packet which starts with a sender report. If a receiver report will
+						be used, the function returns {\tt false}.
 					\item {\tt void SetSenderTimeoutMultiplier(double m)}\\
 						Sets the multiplier to be used when timing out senders.
 					\item {\tt double GetSenderTimeoutMultiplier() const}\\
@@ -2260,12 +2293,14 @@ session.BYEDestroy(delay,"Time's up",9);
 					\item Accept own packets: no
 					\item Receive mode: accept all packets
 					\item Resolve local hostname: no
+					\item Probation type: {\tt ProbationStore}
 					\item Session bandwidth: 10000 bytes per second
 					\item Control traffic fraction: 5\%
 					\item Sender's fraction of control traffic: 25\%
 					\item Minimum RTCP interval: 5 seconds
 					\item Use half minimum interval at startup: yes
 					\item Send BYE packet immediately if allowed: yes
+					\item Use sender report for BYE packet: yes
 					\item Sender timeout multiplier: 2
 					\item Member timeout multiplier: 5
 					\item Timeout multiplier after BYE packet: 1
@@ -2369,6 +2404,11 @@ session.BYEDestroy(delay,"Time's up",9);
 						timestamp with the appropriate amount so that the next
 						packets will still be played at the correct time at
 						other hosts.						
+					\item {\tt RTPTransmissionInfo *GetTransmissionInfo()}\\
+					    This function returns an instance of a subclass of {\tt RTPTransmissionInfo}
+						which will give some additional information about the transmitter
+						(a list of local IP addresses for example). The user
+						has to delete the returned instance when it is no longer needed.
 					\item {\tt int Poll()}\\
 						If you're not using the poll thread, this function
 						must be called regularly to process incoming data
@@ -2590,13 +2630,18 @@ session.BYEDestroy(delay,"Time's up",9);
 		If you have any questions, remarks or requests about the library or
 		if you think you've discovered a bug, you can contact me at:
 		\begin{verbatim}
-			jori@lumumba.luc.ac.be
+			jori@lumumba.uhasselt.be
 		\end{verbatim}
 		
 		The home page of the library is:
 		\begin{verbatim}
-			http://research.edm.luc.ac.be/jori/jrtplib/jrtplib.html
+			http://research.edm.uhasselt.be/jori/jrtplib/jrtplib.html
 		\end{verbatim}
+
+		There is also a mailing list for the library. To subscribe to the list, 
+		send an e-mail with the text {\tt subscribe jrtplib} as the message body (not 
+		the subject) to {\tt majordomo@edm.uhasselt.be} and you'll receive further 
+		instructions.
 
 \end{document}
 

@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -49,6 +49,9 @@ RTPSessionParams::RTPSessionParams() : mininterval(0,0)
 	acceptown = false;
 	owntsunit = -1; // The user will have to set it to the correct value himself
 	resolvehostname = false;
+#ifdef RTP_SUPPORT_PROBATION
+	probationtype = RTPSources::ProbationStore;
+#endif // RTP_SUPPORT_PROBATION
 
 	mininterval = RTPTime(RTCP_DEFAULTMININTERVAL);
 	sessionbandwidth = RTP_DEFAULTSESSIONBANDWIDTH;
@@ -56,6 +59,7 @@ RTPSessionParams::RTPSessionParams() : mininterval(0,0)
 	senderfrac = RTCP_DEFAULTSENDERFRACTION;
 	usehalfatstartup = RTCP_DEFAULTHALFATSTARTUP;
 	immediatebye = RTCP_DEFAULTIMMEDIATEBYE;
+	SR_BYE = RTCP_DEFAULTSRBYE;
 
 	sendermultiplier = RTP_SENDERTIMEOUTMULTIPLIER;
 	generaltimeoutmultiplier = RTP_MEMBERTIMEOUTMULTIPLIER;

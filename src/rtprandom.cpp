@@ -1,13 +1,13 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2004 Jori Liesenborgs
+  Copyright (c) 1999-2005 Jori Liesenborgs
 
-  Contact: jori@lumumba.luc.ac.be
+  Contact: jori@lumumba.uhasselt.be
 
   This library was developed at the "Expertisecentrum Digitale Media"
-  (http://www.edm.luc.ac.be), a research center of the "Limburgs Universitair
-  Centrum" (http://www.luc.ac.be). The library is based upon work done for 
+  (http://www.edm.uhasselt.be), a research center of the Hasselt University
+  (http://www.uhasselt.be). The library is based upon work done for 
   my thesis at the School for Knowledge Technology (Belgium/The Netherlands).
 
   Permission is hereby granted, free of charge, to any person obtaining a
@@ -35,7 +35,12 @@
 #ifndef WIN32
 	#include <unistd.h>
 #else
-	#include <process.h>
+	#ifndef _WIN32_WCE
+		#include <process.h>
+	#else
+		#include <windows.h>
+		#include <kfuncs.h>
+	#endif // _WIN32_WINCE
 	#include <stdlib.h>
 #endif // WIN32
 
@@ -67,9 +72,21 @@ RTPRandom::RTPRandom()
 
 	u_int32_t x;
 
+#ifndef _WIN32_WCE
 	x = (u_int32_t)getpid();
 	x += (u_int32_t)time(0);
 	x -= (u_int32_t)clock();
+#else
+	x = (u_int32_t)GetCurrentProcessId();
+
+	FILETIME ft;
+	SYSTEMTIME st;
+	
+	GetSystemTime(&st);
+	SystemTimeToFileTime(&st,&ft);
+	
+	x += ft.dwLowDateTime;
+#endif // _WIN32_WCE
 	x ^= (u_int32_t)(this);
 	srand((unsigned int)x);
 

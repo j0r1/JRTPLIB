@@ -1,26 +1,31 @@
 ------------------------------------------------------------------------------
-                                                               October 1, 2004
+                                                            September 19, 2005
 
 
-                                   JRTPLIB (v3.1.0)
+                                   JRTPLIB (v3.2.0)
 
 
                       Developed at the The Expertise Centre for 
-                    Digital Media (EDM), a research institute of 
-                       the Limburgs Universitair Centrum (LUC)
+                      Digital Media (EDM), a research institute  
+                              of the Hasselt University
 
-                              http://www.edm.luc.ac.be/
-                                http://www.luc.ac.be/
+                             http://www.edm.uhasselt.be/
+                               http://www.uhasselt.be/
 
 
 LIBRARY LOCATION AND CONTACT
 ============================
 Normally, you should be able to download the latest version of the library
 from this url:
-	http://research.edm.luc.ac.be/jori/jrtplib/jrtplib.html
+	http://research.edm.uhasselt.be/jori/jrtplib/jrtplib.html
 
 If you have questions about the library, you can mail me at:
-	jori@lumumba.luc.ac.be
+	jori@lumumba.uhasselt.be
+	
+There is also a mailing list for the library. To subscribe to the list, 
+send an e-mail with the text 'subscribe jrtplib' as the message body (not 
+the subject) to majordomo@edm.uhasselt.be and you'll receive further 
+instructions.
 
 ACKNOWLEDGMENT
 ==============
@@ -55,17 +60,19 @@ INSTALLATION NOTES
   script. This should generate a makefile which you can use to start
   building the library using 'make'.
 
-* To compile the library on an MS-Windows platfrom: an Visual Studio
-  workspace file jrtplib.dsw is included. The project will search
-  for JThread files in ..\jthread-1.1.0
+* To compile the library on an MS-Windows platfrom: Visual Studio
+  workspace files are included. The project will search
+  for JThread files in ..\jthread-1.1.2
   To compile the library without using JThread, comment the line
   with RTP_SUPPORT_THREAD in rtpconfig_win.h
-  Note that you must have service pack 6 for Visual Studio installed
-  to be able to compile the library.
+  Note that for Visual Studio 6, you must have service pack 6 for 
+  installed to be able to compile the library.
 
 * For a manual about the library, please refer to doc/ subdirectory.
   Using 'make doc', a PDF version of the documentation will be built.
-  Alternatively, you can download the documentation from the homepage.
+  Note that you'll need to have the pdflatex LaTeX compiler installed.
+  Alternatively, you can download the documentation from the homepage:
+  http://research.edm.uhasselt.be/jori/jrtplib/jrtplib.pdf
 
 * For systems with low memory or for applications which will involve only
   a few participants at a time:
@@ -75,7 +82,9 @@ INSTALLATION NOTES
 
 * Used defines:
 	- WIN32:
-		For compilation on an MS-Windows platform.
+		For compilation on an Win32 platform.
+	- _WIN32_WCE:
+		Define needed for compilation on a WinCE platform
 	- RTP_HAVE_SYS_FILIO:
 		Set if <sys/filio.h> exists.
 	- RTP_HAVE_SYS_SOCKIO:
