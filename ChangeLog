@@ -1,9 +1,14 @@
-							       March 17, 2006
+							       March 24, 2006
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.5.1 (March 2006)
+	* Fixed bug in RTCP scheduler. Due to -= operation on an RTPTime
+	  instance, an incredibly large scheduling interval could be
+	  calculated.
 
  3.5.0 (March 2006)
  	* Now, the define RTP_SNPRINTF is used instead of snprintf,
