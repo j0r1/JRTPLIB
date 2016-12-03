@@ -149,6 +149,8 @@ public:
 	void DumpTransmitter();
 #endif // RTPDEBUG
 protected:
+	virtual RTPTransmitter *NewUserDefinedTransmitter()						{ return 0; }
+	
 	virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime,
 	                         const RTPAddress *senderaddress) 					{ }
 	virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime,

@@ -36,9 +36,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/configure ChangeLog TODO \
-	config.guess config.sub depcomp install-sh ltmain.sh missing \
-	mkinstalldirs
+	$(srcdir)/Makefile.in $(top_srcdir)/configure ChangeLog \
+	INSTALL TODO config.guess config.sub depcomp install-sh \
+	ltmain.sh missing mkinstalldirs
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -99,6 +99,10 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
+GST_CFLAGS = @GST_CFLAGS@
+GST_LIBS = @GST_LIBS@
+GST_PLUGINS_BASE_CFLAGS = @GST_PLUGINS_BASE_CFLAGS@
+GST_PLUGINS_BASE_LIBS = @GST_PLUGINS_BASE_LIBS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -118,15 +122,19 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 RTP_ENDIAN = @RTP_ENDIAN@
 RTP_FILIO = @RTP_FILIO@
+RTP_GSTINCLUDES = @RTP_GSTINCLUDES@
 RTP_HAVE_SOCKADDR_LEN = @RTP_HAVE_SOCKADDR_LEN@
 RTP_JTHREADINCLUDES = @RTP_JTHREADINCLUDES@
+RTP_LINKLIBS = @RTP_LINKLIBS@
 RTP_SOCKIO = @RTP_SOCKIO@
 RTP_SOCKLENTYPE_UINT = @RTP_SOCKLENTYPE_UINT@
 RTP_SUPPORT_GETLOGINR = @RTP_SUPPORT_GETLOGINR@
 RTP_SUPPORT_GNUDRAND = @RTP_SUPPORT_GNUDRAND@
+RTP_SUPPORT_GST = @RTP_SUPPORT_GST@
 RTP_SUPPORT_IFADDRS = @RTP_SUPPORT_IFADDRS@
 RTP_SUPPORT_INLINETEMPLATEPARAM = @RTP_SUPPORT_INLINETEMPLATEPARAM@
 RTP_SUPPORT_IPV4MULTICAST = @RTP_SUPPORT_IPV4MULTICAST@
@@ -183,8 +191,10 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = src tools doc examples
-EXTRA_DIST = LICENSE.MIT ChangeLog README.TXT jrtplib.dsw jrtplib.dsp jrtplib.vcproj jrtplib.sln jrtplib_wce.vcproj jrtplib_wce.sln
+SUBDIRS = src tools doc examples pkgconfig
+EXTRA_DIST = LICENSE.MIT ChangeLog README.TXT jrtplib.dsw jrtplib.dsp jrtplib.vcproj \
+	     jrtplib.sln jrtplib_wce.vcproj jrtplib_wce.sln
+
 all: all-recursive
 
 .SUFFIXES:
@@ -367,7 +377,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/src
+	$(mkdir_p) $(distdir)/pkgconfig $(distdir)/src
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

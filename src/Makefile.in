@@ -68,7 +68,8 @@ am_libjrtp_la_OBJECTS = rtpdebug.lo rtpsession.lo rtperrors.lo \
 	rtcpsrpacket.lo rtplibraryversion.lo rtcppacket.lo \
 	rtcpcompoundpacketbuilder.lo rtprandom.lo rtcpscheduler.lo \
 	rtcppacketbuilder.lo rtpsessionsources.lo rtpcollisionlist.lo \
-	rtpipv6address.lo rtpudpv6transmitter.lo rtptimeutilities.lo
+	rtpipv6address.lo rtpudpv6transmitter.lo rtptimeutilities.lo \
+	rtpgsttransmitter.lo
 libjrtp_la_OBJECTS = $(am_libjrtp_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -125,6 +126,10 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
+GST_CFLAGS = @GST_CFLAGS@
+GST_LIBS = @GST_LIBS@
+GST_PLUGINS_BASE_CFLAGS = @GST_PLUGINS_BASE_CFLAGS@
+GST_PLUGINS_BASE_LIBS = @GST_PLUGINS_BASE_LIBS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -144,15 +149,19 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 RTP_ENDIAN = @RTP_ENDIAN@
 RTP_FILIO = @RTP_FILIO@
+RTP_GSTINCLUDES = @RTP_GSTINCLUDES@
 RTP_HAVE_SOCKADDR_LEN = @RTP_HAVE_SOCKADDR_LEN@
 RTP_JTHREADINCLUDES = @RTP_JTHREADINCLUDES@
+RTP_LINKLIBS = @RTP_LINKLIBS@
 RTP_SOCKIO = @RTP_SOCKIO@
 RTP_SOCKLENTYPE_UINT = @RTP_SOCKLENTYPE_UINT@
 RTP_SUPPORT_GETLOGINR = @RTP_SUPPORT_GETLOGINR@
 RTP_SUPPORT_GNUDRAND = @RTP_SUPPORT_GNUDRAND@
+RTP_SUPPORT_GST = @RTP_SUPPORT_GST@
 RTP_SUPPORT_IFADDRS = @RTP_SUPPORT_IFADDRS@
 RTP_SUPPORT_INLINETEMPLATEPARAM = @RTP_SUPPORT_INLINETEMPLATEPARAM@
 RTP_SUPPORT_IPV4MULTICAST = @RTP_SUPPORT_IPV4MULTICAST@
@@ -224,9 +233,10 @@ libjrtp_la_SOURCES = rtpdebug.cpp rtpsession.cpp rtpconfig_win.h \
 		     rtprandom.cpp rtcpscheduler.cpp \
 		     rtcppacketbuilder.cpp rtpsessionsources.cpp \
 		     rtpcollisionlist.cpp rtpipv6address.cpp \
-		     rtpudpv6transmitter.cpp rtptimeutilities.cpp
+		     rtpudpv6transmitter.cpp rtptimeutilities.cpp \
+		     rtpgsttransmitter.cpp
 
-libjrtp_la_LDFLAGS = -release 3.2.1
+libjrtp_la_LDFLAGS = -release 3.3.0 @RTP_LINKLIBS@
 libjrtpinclude_HEADERS = rtcpapppacket.h rtcpbyepacket.h rtcpcompoundpacket.h \
 			 rtcpcompoundpacketbuilder.h rtcppacket.h rtcppacketbuilder.h \
 			 rtcprrpacket.h rtcpscheduler.h rtcpsdesinfo.h rtcpsdespacket.h \
@@ -239,11 +249,12 @@ libjrtpinclude_HEADERS = rtcpapppacket.h rtcpbyepacket.h rtcpcompoundpacket.h \
 			 rtpstructs.h rtptimeutilities.h rtptransmitter.h \
 			 rtptypes_win.h rtpudpv4transmitter.h rtpsessionsources.h \
 			 rtpcollisionlist.h rtpipv6address.h rtpipv6destination.h \
-			 rtpudpv6transmitter.h rtptypes.h rtptypes_unix.h
+			 rtpudpv6transmitter.h rtptypes.h rtptypes_unix.h \
+			 rtpgsttransmitter.h
 
 EXTRA_DIST = rtpconfig_unix.h.in
 libjrtpincludedir = ${includedir}/jrtplib3
-INCLUDES = @RTP_JTHREADINCLUDES@
+INCLUDES = @RTP_JTHREADINCLUDES@ @RTP_GSTINCLUDES@
 all: all-am
 
 .SUFFIXES:
@@ -329,6 +340,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpcollisionlist.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpdebug.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtperrors.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpgsttransmitter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpinternalsourcedata.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpipv4address.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rtpipv6address.Plo@am__quote@

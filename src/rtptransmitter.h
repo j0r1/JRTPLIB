@@ -48,7 +48,7 @@ class RTPTransmissionInfo;
 class RTPTransmitter
 {
 public:
-	enum TransmissionProtocol { IPv4UDPProto, IPv6UDPProto };
+	enum TransmissionProtocol { IPv4UDPProto, IPv6UDPProto, IPv4GSTProto, UserDefinedProto };
 	enum ReceiveMode { AcceptAll,AcceptSome,IgnoreSome };
 protected:
 	RTPTransmitter()															{ }

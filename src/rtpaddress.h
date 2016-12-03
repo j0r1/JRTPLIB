@@ -40,7 +40,7 @@
 class RTPAddress
 {
 public:
-	enum AddressType { IPv4Address, IPv6Address }; 
+	enum AddressType { IPv4Address, IPv6Address, UserDefinedAddress }; 
 	AddressType GetAddressType() const				{ return addresstype; }
 
 	virtual RTPAddress *CreateCopy() const = 0;

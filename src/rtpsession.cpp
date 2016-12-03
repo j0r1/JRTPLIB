@@ -35,6 +35,7 @@
 #include "rtppollthread.h"
 #include "rtpudpv4transmitter.h"
 #include "rtpudpv6transmitter.h"
+#include "rtpgsttransmitter.h"
 #include "rtpsessionparams.h"
 #include "rtpdefines.h"
 #include "rtprawpacket.h"
@@ -112,6 +113,16 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		rtptrans = new RTPUDPv6Transmitter();
 		break;
 #endif // RTP_SUPPORT_IPV6
+#ifdef RTP_SUPPORT_GST
+	case RTPTransmitter::IPv4GSTProto:
+		rtptrans = new RTPGSTv4Transmitter();
+		break;
+#endif // RTP_SUPPORT_GST
+	case RTPTransmitter::UserDefinedProto:
+		rtptrans = NewUserDefinedTransmitter();
+		if (rtptrans == 0)
+			return ERR_RTP_SESSION_USERDEFINEDTRANSMITTERNULL;
+		break;
 	default:
 		return ERR_RTP_SESSION_UNSUPPORTEDTRANSMISSIONPROTOCOL;
 	}

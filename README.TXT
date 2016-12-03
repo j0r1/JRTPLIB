@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------------
-                                                            September 26, 2005
+                                                               October 2, 2005
 
 
-                                   JRTPLIB (v3.2.1)
+                                   JRTPLIB (v3.3.0)
 
 
                       Developed at the The Expertise Centre for 
@@ -119,6 +119,8 @@ INSTALLATION NOTES
 		If set, IPv6 support is enabled.
 	- RTP_SUPPORT_IPV6MULTICAST:
 		If set, IPv6 multicasting support is enabled.
+	- RTP_SUPPORT_GST:
+		If set, GStreamer support is enabled.
 	- RTPDEBUG:
 		Enables some memory tracking functions and some debug routines.
 	

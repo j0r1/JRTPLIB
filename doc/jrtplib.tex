@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 
-\newcommand{\jversion}{3.2.1}
+\newcommand{\jversion}{3.3.0}
 \newcommand{\headerfile}[1]{\marginpar{\scriptsize Header:\\{\tt #1}}}
 \newcommand{\inherits}[1]{\marginpar{\scriptsize Inherits:\\{\tt #1}}}
 \newcommand{\Paragraph}[1]{\paragraph{#1}\ \\\addcontentsline{toc}{subsection}{\ \hspace{3cm}\ {#1}}}
@@ -22,7 +22,7 @@
 \begin{document}
 	\title{\ \vspace{3.5cm}\ \\{\bf JRTPLIB \jversion}}
 	\author{Jori Liesenborgs\\{\tt jori@lumumba.uhasselt.be}}
-	\date{September 26, 2005\\\vspace{0.5cm}\ \\
+	\date{October 2, 2005\\\vspace{0.5cm}\ \\
 	      {\small{\em Developed at the The Expertise Centre for \\Digital Media (EDM),
 	      a research institute\\of the Hasselt University}\\\ \\
 		  {\tt http://www.edm.uhasselt.be/}\\
@@ -509,13 +509,19 @@ session.BYEDestroy(delay,"Time's up",9);
             \subsubsection{\tt RTPTransmitter}\headerfile{rtptransmitter.h}
 
 				The abstract class {\tt RTPTransmitter} specifies the interface for
-				actual transmission components. Currently, two implementations exist:
-				an UDP over IPv4 transmitter and an UDP over IPv6 transmitter. The
-				{\tt TransmissionProtocol} type is used to specify a specific kind
-				of transmitter:
+				actual transmission components. Currently, three implementations exist:
+				an UDP over IPv4 transmitter, an UDP over IPv6 transmitter and a 
+				GStreamer transmission component. The {\tt TransmissionProtocol} type 
+				is used to specify a specific kind of transmitter:
 				\begin{verbatim}
-					enum TransmissionProtocol { IPv4UDPProto, IPv6UDPProto };
+					enum TransmissionProtocol { IPv4UDPProto, IPv6UDPProto, 
+					                            IPv4GSTProto, UserDefinedProto };
 				\end{verbatim}
+				The {\tt UserDefinedProto} can be used to select your own transmission
+				component when using the {\tt RTPSession} class. In this case, you'll
+				have to implement the {\tt RTPSession} member function 
+				{\tt NewUserDefinedTransmitter()} which should return a pointer to your
+				own {\tt RTPTransmitter} implementation.
 
 				Three kind of receive modes can be specified using the {\tt ReceiveMode}
 				type:
@@ -811,11 +817,12 @@ session.BYEDestroy(delay,"Time's up",9);
 				specify destinations, multicast groups etc. To check which actual
 				implementation is used, the class defines the following type:
 				\begin{verbatim}
-					enum AddressType { IPv4Address, IPv6Address };
+					enum AddressType { IPv4Address, IPv6Address, UserDefinedAddress };
 				\end{verbatim}
 				The type {\tt RTPAddress::IPv4Address} is used by the UDP over IPv4
 				transmitter; {\tt RTPAddress::IPv6Address} is used by the UDP over
-				IPv6 transmitter.
+				IPv6 transmitter. The {\tt RTPAddress::UserDefinedAddress} type can
+				be useful when using a user-defined transmission component.
 				
 				The class defines the following interface:
 				\begin{itemize}
@@ -2331,7 +2338,9 @@ session.BYEDestroy(delay,"Time's up",9);
 				\begin{itemize}
 					\item {\tt RTPSession(RTPTransmitter::Transmission\-Protocol proto = RTP\-Trans\-mitter::IPv4\-UDPProto)}\\
 						Creates an instance which will use the transmission component given
-						by {\tt proto}.
+						by {\tt proto}. When {\tt proto} indicates the a user-defined
+						transmitter, the {\tt NewUserDefinedTransmitter()} member
+						function should be implemented.
 					\item {\tt int Create(const RTPSessionParams \&sessparams, const RTPTransmissionParams *transparams = 0)}\\
 						Creates the session with parameters {\tt sessparams} and transmission parameters {\tt transparams}.
 						If {\tt transparams} is NULL, the defaults for the requested transmitter will
@@ -2577,6 +2586,16 @@ session.BYEDestroy(delay,"Time's up",9);
 						Sets the SDES note item for the local participant to the value {\tt s}
 						with length {\tt len}.
 				\end{itemize}
+
+				In case you specified in the constructor that you want to use your own
+				transmission component, you should override the following function:
+				\begin{itemize}
+					\item {\tt RTPTransmitter *NewUserDefinedTransmitter()}
+				\end{itemize}
+				The {\tt RTPTransmitter} instance returned by this function will then
+				be used to send and receive RTP and RTCP packets. Note that when the
+				session is destroyed, this {\tt RTPTransmitter} instance will be destroyed
+				with a {\tt delete} call.
 
 				By inheriting your own class from {\tt RTPSession} and overriding
 				one or more of the functions below, certain events can be detected:

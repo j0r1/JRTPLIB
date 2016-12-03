@@ -13,8 +13,9 @@ libjrtp_la_SOURCES = rtpdebug.cpp rtpsession.cpp rtpconfig_win.h \
 		     rtprandom.cpp rtcpscheduler.cpp \
 		     rtcppacketbuilder.cpp rtpsessionsources.cpp \
 		     rtpcollisionlist.cpp rtpipv6address.cpp \
-		     rtpudpv6transmitter.cpp rtptimeutilities.cpp
-libjrtp_la_LDFLAGS = -release 3.2.1
+		     rtpudpv6transmitter.cpp rtptimeutilities.cpp \
+		     rtpgsttransmitter.cpp
+libjrtp_la_LDFLAGS = -release 3.3.0 @RTP_LINKLIBS@
 libjrtpinclude_HEADERS = rtcpapppacket.h rtcpbyepacket.h rtcpcompoundpacket.h \
 			 rtcpcompoundpacketbuilder.h rtcppacket.h rtcppacketbuilder.h \
 			 rtcprrpacket.h rtcpscheduler.h rtcpsdesinfo.h rtcpsdespacket.h \
@@ -27,8 +28,9 @@ libjrtpinclude_HEADERS = rtcpapppacket.h rtcpbyepacket.h rtcpcompoundpacket.h \
 			 rtpstructs.h rtptimeutilities.h rtptransmitter.h \
 			 rtptypes_win.h rtpudpv4transmitter.h rtpsessionsources.h \
 			 rtpcollisionlist.h rtpipv6address.h rtpipv6destination.h \
-			 rtpudpv6transmitter.h rtptypes.h rtptypes_unix.h
+			 rtpudpv6transmitter.h rtptypes.h rtptypes_unix.h \
+			 rtpgsttransmitter.h
 EXTRA_DIST = rtpconfig_unix.h.in
 libjrtpincludedir = ${includedir}/jrtplib3
-INCLUDES = @RTP_JTHREADINCLUDES@
+INCLUDES = @RTP_JTHREADINCLUDES@ @RTP_GSTINCLUDES@
 

@@ -34,6 +34,6 @@
 
 RTPLibraryVersion RTPLibraryVersion::GetVersion()
 {
-	return RTPLibraryVersion(3,2,1);
+	return RTPLibraryVersion(3,3,0);
 }
 

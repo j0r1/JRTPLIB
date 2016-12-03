@@ -1,5 +1,6 @@
-SUBDIRS = src tools doc examples
-EXTRA_DIST = LICENSE.MIT ChangeLog README.TXT jrtplib.dsw jrtplib.dsp jrtplib.vcproj jrtplib.sln jrtplib_wce.vcproj jrtplib_wce.sln
+SUBDIRS = src tools doc examples pkgconfig
+EXTRA_DIST = LICENSE.MIT ChangeLog README.TXT jrtplib.dsw jrtplib.dsp jrtplib.vcproj \
+	     jrtplib.sln jrtplib_wce.vcproj jrtplib_wce.sln
 
 dist-hook: distclean
 	rm -f $(distdir)/src/rtpconfig_unix.h
