@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------------
-                                                             September 4, 2004
+                                                             September 6, 2004
 
 
-                                   JRTPLIB (v3.0.1)
+                                   JRTPLIB (v3.0.2)
 
 
                       Developed at the The Expertise Centre for 

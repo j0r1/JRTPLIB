@@ -1,9 +1,15 @@
-                                                           September 4, 2004
+                                                           September 6, 2004
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.0.2 (September 2004)
+ 	* Bugfix in rtpinternalsourcedata.cpp. The bug caused a crash when
+	  duplicate packets were received. Thanks to Dominique Prunier
+	  (dominique.prunier@micromedia-int.com) for informing me about
+	  this.
 
  3.0.1 (September 2004)
  	* Bugfix in rtpudpv4transmitter.cpp and rtpudpv6transmitter.cpp in

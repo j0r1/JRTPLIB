@@ -113,7 +113,6 @@ int RTPInternalSourceData::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &re
 		}
 		else // they're equal !! Drop packet
 		{
-			delete rtppack;
 			done = true;
 		}
 	}
