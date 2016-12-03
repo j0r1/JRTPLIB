@@ -76,7 +76,35 @@ private:
 	std::list<in6_addr> localIPs;
 	u_int8_t multicastTTL;
 };
-	
+
+class RTPUDPv6TransmissionInfo : public RTPTransmissionInfo
+{
+public:
+#ifndef WIN32
+	RTPUDPv6TransmissionInfo(std::list<in6_addr> iplist,int rtpsock,int rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv6UDPProto) 
+#else
+	RTPUDPv6TransmissionInfo(std::list<in6_addr> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv6UDPProto) 
+#endif  // WIN32
+												{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
+
+	~RTPUDPv6TransmissionInfo()								{ }
+	std::list<in6_addr> GetLocalIPList() const						{ return localIPlist; }
+#ifndef WIN32
+	int GetRTPSocket() const								{ return rtpsocket; }
+	int GetRTCPSocket() const								{ return rtcpsocket; }
+#else
+	SOCKET GetRTPSocket() const								{ return rtpsocket; }
+	SOCKET GetRTCPSocket() const								{ return rtcpsocket; }
+#endif // WIN32
+private:
+	std::list<in6_addr> localIPlist;
+#ifndef WIN32
+	int rtpsocket,rtcpsocket;
+#else
+	SOCKET rtpsocket,rtcpsocket;
+#endif // WIN32
+};
+		
 #ifdef RTP_SUPPORT_INLINETEMPLATEPARAM
 	inline int RTPUDPv6Trans_GetHashIndex_IPv6Dest(const RTPIPv6Destination &d)		{ in6_addr ip = d.GetIP(); return ((((u_int32_t)ip.s6_addr[12])<<24)|(((u_int32_t)ip.s6_addr[13])<<16)|(((u_int32_t)ip.s6_addr[14])<<8)|((u_int32_t)ip.s6_addr[15]))%RTPUDPV6TRANS_HASHSIZE; }
 	inline int RTPUDPv6Trans_GetHashIndex_in6_addr(const in6_addr &ip)			{ return ((((u_int32_t)ip.s6_addr[12])<<24)|(((u_int32_t)ip.s6_addr[13])<<16)|(((u_int32_t)ip.s6_addr[14])<<8)|((u_int32_t)ip.s6_addr[15]))%RTPUDPV6TRANS_HASHSIZE; }
@@ -96,6 +124,7 @@ public:
 	int Init(bool treadsafe);
 	int Create(size_t maxpacksize,const RTPTransmissionParams *transparams);
 	void Destroy();
+	RTPTransmissionInfo *GetTransmissionInfo();
 
 	int GetLocalHostName(u_int8_t *buffer,size_t *bufferlength);
 	bool ComesFromThisTransmitter(const RTPAddress *addr);

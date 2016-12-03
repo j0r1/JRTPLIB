@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
 
-\newcommand{\jversion}{3.0.2}
+\newcommand{\jversion}{3.1.0}
 \newcommand{\headerfile}[1]{\marginpar{\scriptsize Header:\\{\tt #1}}}
 \newcommand{\inherits}[1]{\marginpar{\scriptsize Inherits:\\{\tt #1}}}
 \newcommand{\Paragraph}[1]{\paragraph{#1}\ \\\addcontentsline{toc}{subsection}{\ \hspace{3cm}\ {#1}}}
@@ -22,7 +22,7 @@
 \begin{document}
 	\title{\ \vspace{3.5cm}\ \\{\bf JRTPLIB \jversion}}
 	\author{Jori Liesenborgs\\{\tt jori@lumumba.luc.ac.be}}
-	\date{September 6, 2004\\\vspace{0.5cm}\ \\
+	\date{October 1, 2004\\\vspace{0.5cm}\ \\
 	      {\small{\em Developed at the The Expertise Centre for \\Digital Media (EDM),
 	      a research institute of\\ the Limburgs Universitair Centrum (LUC)}\\\ \\
 		  {\tt http://www.edm.luc.ac.be/}\\
@@ -555,6 +555,13 @@ session.BYEDestroy(delay,"Time's up",9);
 						By calling this function, buffers are cleared and the component
 						cannot be used anymore. Only when the {\tt Create} function is
 						called again can the component be used again.
+					\item {\tt RTPTransmissionInfo *GetTransmissionInfo()}\\
+					    This function returns an instance of a subclass of {\tt RTPTransmissionInfo}
+						which will give some additional information about the transmitter
+						(a list of local IP addresses for example). Currently, either
+						an instance of {\tt RTP\-UDPv4\-Trans\-mission\-Info} or {\tt RTP\-UDPv6\-Trans\-mission\-Info}
+						is returned, depending on the type of the transmitter. The user
+						has to delete the returned instance when it is no longer needed.
 					\item {\tt int GetLocalHostName(u\_int8\_t *buffer, size\_t *bufferlength)}\\
 						Looks up the local host name based upon internal information about
 						the local host's addresses. This function might take some time
@@ -649,7 +656,10 @@ session.BYEDestroy(delay,"Time's up",9);
 					\ref{rtpudpv4transmissionparams}. The functions which have
 					an {\tt RTPAddress} argument require an argument of
 					type {\tt RTPIPv4Address} which is described in section
-					\ref{rtpipv4address}.
+					\ref{rtpipv4address}. The {\tt Get\-Trans\-mission\-Info} member function
+					of the {\tt RTP\-UDPv4\-Trans\-mitter} class returns an instance
+					of type {\tt RTP\-UDPv4\-Trans\-mission\-Info} which is described
+					in section \ref{rtpudpv4transmissioninfo}.
 					
 				\Paragraph{UDP over IPv6 transmitter}\headerfile{rtpudpv6transmitter.h}\inherits{RTPTransmitter}
 					
@@ -662,7 +672,10 @@ session.BYEDestroy(delay,"Time's up",9);
 					\ref{rtpudpv6transmissionparams}. The functions which have
 					an {\tt RTPAddress} argument require an argument of
 					type {\tt RTPIPv6Address} which is described in section
-					\ref{rtpipv6address}.
+					\ref{rtpipv6address}. The {\tt Get\-Trans\-mission\-Info} member function
+					of the {\tt RTP\-UDPv6\-Trans\-mitter} class returns an instance
+					of type {\tt RTP\-UDPv6\-Trans\-mission\-Info} which is described
+					in section \ref{rtpudpv6transmissioninfo}.
 
 			\subsubsection{\tt RTPTransmissionParams}\headerfile{rtptransmitter.h}
 			
@@ -741,6 +754,53 @@ session.BYEDestroy(delay,"Time's up",9);
 							Returns the multicast TTL which will be used.
 						\item {\tt const std::list<in6\_addr> \&GetLocalIPList() const}\\
 							Returns the list of local IP addresses.
+					\end{itemize}
+
+			\subsubsection{\tt RTPTransmissionInfo}\headerfile{rtptransmitter.h}
+
+				The {\tt RTPTransmissionInfo} class is an abstract class which
+				will have a specific implementation for a specific kind of
+				transmission component. All actual implementations inherit the
+				following function which identify the component type for which
+				these parameters are valid:
+				\begin{verbatim}
+					RTPTransmitter::TransmissionProtocol GetTransmissionProtocol()
+				\end{verbatim}
+
+				\Paragraph{Info about the UDP over IPv4 transmitter}\headerfile{rtpudpv4transmitter.h}
+				\label{rtpudpv4transmissioninfo}
+				
+					The class {\tt RTPUDPv4TransmissionInfo} gives some additional
+					information about the UDP over IPv4 transmission component. The
+					following member functions are available:
+					\begin{itemize}
+						\item {\tt std::list<u\_int32\_t> GetLocalIPList() const}\\
+							Returns the list of IPv4 addresses the transmitter
+							considers to be the local IP addresses.
+						\item {\tt int GetRTPSocket() const}\\
+							Returns the socket descriptor used for receiving and transmitting
+							RTP packets.
+						\item {\tt int GetRTCPSocket() const}\\
+							Returns the socket descriptor used for receiving and transmitting
+							RTCP packets.
+					\end{itemize}
+
+				\Paragraph{Info about the UDP over IPv6 transmitter}\headerfile{rtpudpv6transmitter.h}
+				\label{rtpudpv6transmissioninfo}
+				
+					The class {\tt RTPUDPv6TransmissionInfo} gives some additional
+					information about the UDP over IPv6 transmission component. The
+					following member functions are available:
+					\begin{itemize}
+						\item {\tt std::list<in6\_addr> GetLocalIPList() const}\\
+							Returns the list of IPv4 addresses the transmitter
+							considers to be the local IP addresses.
+						\item {\tt int GetRTPSocket() const}\\
+							Returns the socket descriptor used for receiving and transmitting
+							RTP packets.
+						\item {\tt int GetRTCPSocket() const}\\
+							Returns the socket descriptor used for receiving and transmitting
+							RTCP packets.
 					\end{itemize}
 
 			\subsubsection{\tt RTPAddress}\headerfile{rtpaddress.h}
@@ -2516,9 +2576,13 @@ session.BYEDestroy(delay,"Time's up",9);
 					\item {\tt void OnNoteTimeout(RTPSourceData *srcdat)}\\
 						Is called when the SDES NOTE item for source {\tt srcdat}
 						has been timed out.
-					\item {\tt virtual void OnPollThreadError(int errcode)}\\
+					\item {\tt void OnPollThreadError(int errcode)}\\
 						Is called when error {\tt errcode} was detected in the
 						poll thread.
+					\item {\tt void OnPollThreadStep()}\\
+						Is called each time the poll thread loops. This happens when
+						incoming data was detected or when its time to send an RTCP
+						compound packet.
 				\end{itemize}
 
 	\section{Contact}

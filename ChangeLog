@@ -1,9 +1,21 @@
-                                                           September 6, 2004
+                                                             October 1, 2004
 				
 				
 				JRTPLIB ChangeLog
 				
 				   -----------
+
+ 3.1.0 (October 2004)
+ 	* Added a callback OnPollThreadStep which is called at the end of 
+	  each loop of the poll thread
+	* Added the examples subdirectory to the package
+	* Fixed bug in rtpudpv4transmitter.cpp and rtpudpv6transmitter.cpp
+	  which caused an infinite loop in LeaveAllMulticastGroups. Thanks
+	  to Stijn Agten (stijn.agten@luc.ac.be) for pointing this out.
+	* Added a function GetTransmissionInfo to the RTPTransmitter class
+	  (and subclasses). The function will return some additional
+	  information about the transmitter, like local IP addresses and
+	  socket descriptors.
 
  3.0.2 (September 2004)
  	* Bugfix in rtpinternalsourcedata.cpp. The bug caused a crash when

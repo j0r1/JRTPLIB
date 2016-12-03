@@ -41,6 +41,7 @@ class RTPRawPacket;
 class RTPAddress;
 class RTPTransmissionParams;
 class RTPTime;
+class RTPTransmissionInfo;
 
 // Abstract class from which actual transmission components should be derived
 
@@ -59,6 +60,9 @@ public:
 	virtual int Init(bool threadsafe) = 0;
 	virtual int Create(size_t maxpacksize,const RTPTransmissionParams *transparams) = 0;
 	virtual void Destroy() = 0;
+
+	// The user MUST delete the returned instance when it is no longer needed
+	virtual RTPTransmissionInfo *GetTransmissionInfo() = 0;
 
 	// If the buffersize ins't large enough, the transmitter must fill in the
 	// required length in 'bufferlength'
@@ -112,9 +116,20 @@ public:
 class RTPTransmissionParams
 {
 protected:
-	RTPTransmissionParams(RTPTransmitter::TransmissionProtocol p)					{ protocol = p; }
+	RTPTransmissionParams(RTPTransmitter::TransmissionProtocol p)				{ protocol = p; }
 public:
 	virtual ~RTPTransmissionParams() { }
+	RTPTransmitter::TransmissionProtocol GetTransmissionProtocol() const			{ return protocol; }
+private:
+	RTPTransmitter::TransmissionProtocol protocol;
+};
+
+class RTPTransmissionInfo
+{
+protected:
+	RTPTransmissionInfo(RTPTransmitter::TransmissionProtocol p)				{ protocol = p; }
+public:
+	virtual ~RTPTransmissionInfo() { }
 	RTPTransmitter::TransmissionProtocol GetTransmissionProtocol() const			{ return protocol; }
 private:
 	RTPTransmitter::TransmissionProtocol protocol;

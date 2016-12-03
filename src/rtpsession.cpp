@@ -631,6 +631,13 @@ int RTPSession::IncrementTimestampDefault()
 	return status;
 }
 
+RTPTransmissionInfo *RTPSession::GetTransmissionInfo()
+{
+	if (!created)
+		return 0;
+	return rtptrans->GetTransmissionInfo();
+}
+
 int RTPSession::Poll()
 {
 	int status;

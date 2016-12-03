@@ -56,6 +56,7 @@ class RTPAddress;
 class RTPSourceData;
 class RTPPacket;
 class RTPPollThread;
+class RTPTransmissionInfo;
 class RTCPCompoundPacket;
 class RTCPPacket;
 class RTCPAPPPacket;
@@ -96,6 +97,7 @@ public:
 	int IncrementTimestamp(u_int32_t inc);
 	int IncrementTimestampDefault();
 	
+	RTPTransmissionInfo *GetTransmissionInfo();
 	int Poll();
 	int WaitForIncomingData(const RTPTime &delay);
 	int AbortWait();
@@ -164,8 +166,11 @@ protected:
 	                                 const RTPAddress *senderaddress)				{ }
 	virtual void OnUnknownPacketFormat(RTCPPacket *rtcppack,const RTPTime &receivetime,
 	                                   const RTPAddress *senderaddress)				{ }
-	virtual void OnPollThreadError(int errcode)							{ }
 	virtual void OnNoteTimeout(RTPSourceData *srcdat)						{ }
+#ifdef RTP_SUPPORT_THREAD
+	virtual void OnPollThreadError(int errcode)							{ }
+	virtual void OnPollThreadStep()									{ }
+#endif // RTP_SUPPORT_THREAD
 private:
 	int CreateCNAME(u_int8_t *buffer,size_t *bufferlength,bool resolve);
 	int ProcessPolledData();
@@ -203,3 +208,4 @@ private:
 };
 
 #endif // RTPSESSION_H
+

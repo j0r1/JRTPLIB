@@ -139,6 +139,7 @@ void *RTPPollThread::Thread()
 				}
 				else
 				{
+					rtpsession.OnPollThreadStep();
 					stopmutex.Lock();
 					stopthread = stop;
 					stopmutex.Unlock();

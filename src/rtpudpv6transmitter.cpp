@@ -385,6 +385,17 @@ void RTPUDPv6Transmitter::Destroy()
 	MAINMUTEX_UNLOCK
 }
 
+RTPTransmissionInfo *RTPUDPv6Transmitter::GetTransmissionInfo()
+{
+	if (!init)
+		return 0;
+
+	MAINMUTEX_LOCK
+	RTPTransmissionInfo *tinf = new RTPUDPv6TransmissionInfo(localIPs,rtpsock,rtcpsock);
+	MAINMUTEX_UNLOCK
+	return tinf;
+}
+
 int RTPUDPv6Transmitter::GetLocalHostName(u_int8_t *buffer,size_t *bufferlength)
 {
 	if (!init)
@@ -969,6 +980,7 @@ void RTPUDPv6Transmitter::LeaveAllMulticastGroups()
 			mcastIP = multicastgroups.GetCurrentElement();
 			RTPUDPV6TRANS_MCASTMEMBERSHIP(rtpsock,IPV6_LEAVE_GROUP,mcastIP,status);
 			RTPUDPV6TRANS_MCASTMEMBERSHIP(rtcpsock,IPV6_LEAVE_GROUP,mcastIP,status);
+			multicastgroups.GotoNextElement();
 		}
 		multicastgroups.Clear();
 	}

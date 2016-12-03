@@ -1,4 +1,4 @@
-SUBDIRS = src tools doc
+SUBDIRS = src tools doc examples
 EXTRA_DIST = LICENSE.MIT ChangeLog README.TXT jrtplib.dsw jrtplib.dsp
 
 dist-hook: distclean

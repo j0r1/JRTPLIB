@@ -1,8 +1,8 @@
 ------------------------------------------------------------------------------
-                                                             September 6, 2004
+                                                               October 1, 2004
 
 
-                                   JRTPLIB (v3.0.2)
+                                   JRTPLIB (v3.1.0)
 
 
                       Developed at the The Expertise Centre for 
@@ -57,9 +57,11 @@ INSTALLATION NOTES
 
 * To compile the library on an MS-Windows platfrom: an Visual Studio
   workspace file jrtplib.dsw is included. The project will search
-  for JThread files in ..\jthread-1.0.1
+  for JThread files in ..\jthread-1.1.0
   To compile the library without using JThread, comment the line
   with RTP_SUPPORT_THREAD in rtpconfig_win.h
+  Note that you must have service pack 6 for Visual Studio installed
+  to be able to compile the library.
 
 * For a manual about the library, please refer to doc/ subdirectory.
   Using 'make doc', a PDF version of the documentation will be built.

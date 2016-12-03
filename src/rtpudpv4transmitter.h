@@ -67,6 +67,34 @@ private:
 	std::list<u_int32_t> localIPs;
 	u_int8_t multicastTTL;
 };
+
+class RTPUDPv4TransmissionInfo : public RTPTransmissionInfo
+{
+public:
+#ifndef WIN32
+	RTPUDPv4TransmissionInfo(std::list<u_int32_t> iplist,int rtpsock,int rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
+#else
+	RTPUDPv4TransmissionInfo(std::list<u_int32_t> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
+#endif  // WIN32
+												{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
+
+	~RTPUDPv4TransmissionInfo()								{ }
+	std::list<u_int32_t> GetLocalIPList() const						{ return localIPlist; }
+#ifndef WIN32
+	int GetRTPSocket() const								{ return rtpsocket; }
+	int GetRTCPSocket() const								{ return rtcpsocket; }
+#else
+	SOCKET GetRTPSocket() const								{ return rtpsocket; }
+	SOCKET GetRTCPSocket() const								{ return rtcpsocket; }
+#endif // WIN32
+private:
+	std::list<u_int32_t> localIPlist;
+#ifndef WIN32
+	int rtpsocket,rtcpsocket;
+#else
+	SOCKET rtpsocket,rtcpsocket;
+#endif // WIN32
+};
 	
 #ifdef RTP_SUPPORT_INLINETEMPLATEPARAM
 	inline int RTPUDPv4Trans_GetHashIndex_IPv4Dest(const RTPIPv4Destination &d)				{ return d.GetIP_HBO()%RTPUDPV4TRANS_HASHSIZE; }
@@ -87,6 +115,7 @@ public:
 	int Init(bool treadsafe);
 	int Create(size_t maxpacksize,const RTPTransmissionParams *transparams);
 	void Destroy();
+	RTPTransmissionInfo *GetTransmissionInfo();
 
 	int GetLocalHostName(u_int8_t *buffer,size_t *bufferlength);
 	bool ComesFromThisTransmitter(const RTPAddress *addr);
