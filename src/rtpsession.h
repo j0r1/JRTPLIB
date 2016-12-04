@@ -529,6 +529,19 @@ protected:
 	 */
 	virtual void OnPollThreadStop()									{ }
 
+	/** By overriding this you can change the data packet that will actually be sent.
+	 *  By overriding this you can change the data packet that will actually be sent. The
+	 *  default implementation just assigns `origdata` and `origlen` to `senddata` and
+	 *  `sendlen` for both RTP and RTCP packets. By changing this behaviour you could
+	 *  add encryption for example. Note that no memory management will be performed
+	 *  on the `senddata` pointer you fill in, so if it needs to be deleted at some point
+	 *  you need to take care of this in some way yourself. If `senddata` is set to
+	 *  0, `sendlen` is set to 0, or if the function returns `false`, no packet will
+	 *  be sent out. This also provides a way to turn off sending RTCP packets if
+	 *  desired.
+	 */
+	virtual bool OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen);
+
 #endif // RTP_SUPPORT_THREAD
 private:
 	int InternalCreate(const RTPSessionParams &sessparams);
@@ -536,7 +549,9 @@ private:
 	int ProcessPolledData();
 	int ProcessRTCPCompoundPacket(RTCPCompoundPacket &rtcpcomppack,RTPRawPacket *pack);
 	RTPRandom *GetRandomNumberGenerator(RTPRandom *r);
-	
+	int SendRTPData(const void *data, size_t len);
+	int SendRTCPData(const void *data, size_t len);
+
 	RTPRandom *rtprnd;
 	bool deletertprnd;
 
@@ -573,6 +588,14 @@ private:
 	friend class RTPSessionSources;
 	friend class RTCPSessionPacketBuilder;
 };
+
+inline bool RTPSession::OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, 
+                                              void **senddata, size_t *sendlen)
+{
+	*senddata = const_cast<void*>(origdata);
+	*sendlen = origlen;
+	return true;
+}
 
 } // end namespace
 

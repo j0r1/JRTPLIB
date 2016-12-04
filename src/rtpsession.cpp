@@ -477,7 +477,7 @@ void RTPSession::BYEDestroy(const RTPTime &maxwaittime,const void *reason,size_t
 				pack = *(byepackets.begin());
 				byepackets.pop_front();
 			
-				rtptrans->SendRTCPData(pack->GetCompoundPacketData(),pack->GetCompoundPacketLength());
+				SendRTCPData(pack->GetCompoundPacketData(),pack->GetCompoundPacketLength());
 				
 				OnSendRTCPCompoundPacket(pack); // we'll place this after the actual send to avoid tampering
 				
@@ -590,7 +590,7 @@ int RTPSession::SendPacket(const void *data,size_t len)
 		BUILDER_UNLOCK
 		return status;
 	}
-	if ((status = rtptrans->SendRTPData(packetbuilder.GetPacket(),packetbuilder.GetPacketLength())) < 0)
+	if ((status = SendRTPData(packetbuilder.GetPacket(),packetbuilder.GetPacketLength())) < 0)
 	{
 		BUILDER_UNLOCK
 		return status;
@@ -620,7 +620,7 @@ int RTPSession::SendPacket(const void *data,size_t len,
 		BUILDER_UNLOCK
 		return status;
 	}
-	if ((status = rtptrans->SendRTPData(packetbuilder.GetPacket(),packetbuilder.GetPacketLength())) < 0)
+	if ((status = SendRTPData(packetbuilder.GetPacket(),packetbuilder.GetPacketLength())) < 0)
 	{
 		BUILDER_UNLOCK
 		return status;
@@ -650,7 +650,7 @@ int RTPSession::SendPacketEx(const void *data,size_t len,
 		BUILDER_UNLOCK
 		return status;
 	}
-	if ((status = rtptrans->SendRTPData(packetbuilder.GetPacket(),packetbuilder.GetPacketLength())) < 0)
+	if ((status = SendRTPData(packetbuilder.GetPacket(),packetbuilder.GetPacketLength())) < 0)
 	{
 		BUILDER_UNLOCK
 		return status;
@@ -681,7 +681,7 @@ int RTPSession::SendPacketEx(const void *data,size_t len,
 		BUILDER_UNLOCK
 		return status;
 	}
-	if ((status = rtptrans->SendRTPData(packetbuilder.GetPacket(),packetbuilder.GetPacketLength())) < 0)
+	if ((status = SendRTPData(packetbuilder.GetPacket(),packetbuilder.GetPacketLength())) < 0)
 	{
 		BUILDER_UNLOCK
 		return status;
@@ -744,7 +744,7 @@ int RTPSession::SendRTCPAPPPacket(uint8_t subtype, const uint8_t name[4], const 
 		return status;
 
 	//send packet
-	status = rtptrans->SendRTCPData(pb.GetCompoundPacketData(),pb.GetCompoundPacketLength());
+	status = SendRTCPData(pb.GetCompoundPacketData(),pb.GetCompoundPacketLength());
 	if(status < 0)
 		return status;
 
@@ -853,8 +853,7 @@ int RTPSession::SendUnknownPacket(bool sr, uint8_t payload_type, uint8_t subtype
 	}
 
 	//send packet
-	status = rtptrans->SendRTCPData(rtcpcomppack->GetCompoundPacketData(),
-		rtcpcomppack->GetCompoundPacketLength());
+	status = SendRTCPData(rtcpcomppack->GetCompoundPacketData(), rtcpcomppack->GetCompoundPacketLength());
 	if(status < 0)
 	{
 		RTPDelete(rtcpcomppack,GetMemoryManager());
@@ -1468,7 +1467,7 @@ int RTPSession::ProcessPolledData()
 				return status;
 			}
 			BUILDER_UNLOCK
-			if ((status = rtptrans->SendRTCPData(pack->GetCompoundPacketData(),pack->GetCompoundPacketLength())) < 0)
+			if ((status = SendRTCPData(pack->GetCompoundPacketData(),pack->GetCompoundPacketLength())) < 0)
 			{
 				SOURCES_UNLOCK
 				RTPDelete(pack,GetMemoryManager());
@@ -1486,7 +1485,7 @@ int RTPSession::ProcessPolledData()
 			pack = *(byepackets.begin());
 			byepackets.pop_front();
 			
-			if ((status = rtptrans->SendRTCPData(pack->GetCompoundPacketData(),pack->GetCompoundPacketLength())) < 0)
+			if ((status = SendRTCPData(pack->GetCompoundPacketData(),pack->GetCompoundPacketLength())) < 0)
 			{
 				SOURCES_UNLOCK
 				RTPDelete(pack,GetMemoryManager());
@@ -1636,6 +1635,30 @@ RTPRandom *RTPSession::GetRandomNumberGenerator(RTPRandom *r)
 	}
 
 	return rnew;
+}
+
+int RTPSession::SendRTPData(const void *data, size_t len)
+{
+	void *pSendData = 0;
+	size_t sendLen = 0;
+	int status = 0;
+
+	if (OnChangeRTPOrRTCPData(data, len, true, &pSendData, &sendLen) && sendLen > 0 && pSendData != 0)
+		status = rtptrans->SendRTPData(pSendData, sendLen);
+
+	return status;
+}
+
+int RTPSession::SendRTCPData(const void *data, size_t len)
+{
+	void *pSendData = 0;
+	size_t sendLen = 0;
+	int status = 0;
+
+	if (OnChangeRTPOrRTCPData(data, len, false, &pSendData, &sendLen) && sendLen > 0 && pSendData != 0)
+		status = rtptrans->SendRTCPData(pSendData, sendLen);
+
+	return status;
 }
 
 #ifdef RTPDEBUG
