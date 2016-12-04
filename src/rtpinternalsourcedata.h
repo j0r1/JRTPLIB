@@ -53,7 +53,7 @@ public:
 	RTPInternalSourceData(uint32_t ssrc, RTPSources::ProbationType probtype, RTPMemoryManager *mgr = 0);
 	~RTPInternalSourceData();
 
-	int ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,bool *stored);
+	int ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,bool *stored, RTPSources *sources);
 	void ProcessSenderInfo(const RTPNTPTime &ntptime,uint32_t rtptime,uint32_t packetcount,
 	                       uint32_t octetcount,const RTPTime &receivetime)				{ SRprevinf = SRinf; SRinf.Set(ntptime,rtptime,packetcount,octetcount,receivetime); stats.SetLastMessageTime(receivetime); }
 	void ProcessReportBlock(uint8_t fractionlost,int32_t lostpackets,uint32_t exthighseqnr,

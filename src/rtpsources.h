@@ -340,6 +340,12 @@ protected:
 
 	/** Is called when the SDES NOTE item for source \c srcdat has been timed out. */
 	virtual void OnNoteTimeout(RTPSourceData *srcdat)															{ }
+
+	/** Allows you to use an RTP packet from the specified source directly.
+	 *  Allows you to use an RTP packet from the specified source directly. If 
+	 *  `ispackethandled` is set to `true`, the packet will no longer be stored in this
+	 *  source's packet list. */
+	virtual void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled) { }
 private:
 	void ClearSourceList();
 	int ObtainSourceDataInstance(uint32_t ssrc,RTPInternalSourceData **srcdat,bool *created);
@@ -357,6 +363,8 @@ private:
 #endif // RTP_SUPPORT_PROBATION
 
 	RTPInternalSourceData *owndata;
+
+	friend class RTPInternalSourceData;
 };
 
 } // end namespace

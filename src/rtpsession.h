@@ -454,7 +454,12 @@ protected:
  	 */
 	virtual RTPTransmitter *NewUserDefinedTransmitter()						{ return 0; }
 	
-	/** Is called when an incoming RTP packet is about to be processed. */
+	/** Is called when an incoming RTP packet is about to be processed. 
+	 *  Is called when an incoming RTP packet is about to be processed. This is _not_
+	 *  a good function to process an RTP packet in, in case you want to avoid iterating
+	 *  over the sources using the GotoFirst/GotoNext functions. In that case, the
+	 *  RTPSession::OnValidatedRTPPacket function should be used.
+	 */
 	virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime,
 	                         const RTPAddress *senderaddress) 					{ }
 
@@ -528,6 +533,7 @@ protected:
 	 *  Is called when the poll thread is going to stop. This happens just before termitating the thread.
 	 */
 	virtual void OnPollThreadStop()									{ }
+#endif // RTP_SUPPORT_THREAD
 
 	/** By overriding this you can change the data packet that will actually be sent.
 	 *  By overriding this you can change the data packet that will actually be sent. The
@@ -542,7 +548,25 @@ protected:
 	 */
 	virtual bool OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen);
 
-#endif // RTP_SUPPORT_THREAD
+	/** By overriding this function, the raw incoming data can be inspected
+	 *  and modified (e.g. for encryption).
+	 *  By overriding this function, the raw incoming data can be inspected
+	 *  and modified (e.g. for encryption). If the function returns `false`,
+	 *  the packet is discarded.
+	 */
+	virtual bool OnChangeIncomingData(RTPRawPacket *rawpack)					{ return true; }
+
+	/** Allows you to use an RTP packet from the specified source directly.
+	 *  Allows you to use an RTP packet from the specified source directly. If 
+	 *  `ispackethandled` is set to `true`, the packet will no longer be stored in this
+	 *  source's packet list. Note that if you do set this flag, you'll need to
+	 *  deallocate the packet yourself at an appropriate time.
+	 *
+	 *  The difference with RTPSession::OnRTPPacket is that that
+	 *  function will always process the RTP packet further and is therefore not
+	 *  really suited to actually do something with the data.
+	 */
+	virtual void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled) { }
 private:
 	int InternalCreate(const RTPSessionParams &sessparams);
 	int CreateCNAME(uint8_t *buffer,size_t *bufferlength,bool resolve);

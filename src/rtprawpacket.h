@@ -84,7 +84,18 @@ public:
 	 *  when the destructor of RTPRawPacket is called.
 	 */
 	void ZeroData()															{ packetdata = 0; packetdatalength = 0; }
+
+	/** Allocates a number of bytes for RTP or RTCP data using the memory manager that
+	 *  was used for this raw packet instance, can be useful if the RTPRawPacket::SetData
+	 *  function will be used. */
+	uint8_t *AllocateBytes(bool isrtp, int recvlen) const;
+
+	/** Deallocates the previously stored data and replaces it with the data that's
+	 *  specified, can be useful when e.g. decrypting data in RTPSession::OnChangeIncomingData */
+	void SetData(uint8_t *data, size_t datalen);
 private:
+	void DeleteData();
+
 	uint8_t *packetdata;
 	size_t packetdatalength;
 	RTPTime receivetime;
@@ -102,10 +113,31 @@ inline RTPRawPacket::RTPRawPacket(uint8_t *data,size_t datalen,RTPAddress *addre
 
 inline RTPRawPacket::~RTPRawPacket()
 {
+	DeleteData();
+}
+
+inline void RTPRawPacket::DeleteData()
+{
 	if (packetdata)
 		RTPDeleteByteArray(packetdata,GetMemoryManager());
 	if (senderaddress)
 		RTPDelete(senderaddress,GetMemoryManager());
+
+	packetdata = 0;
+	senderaddress = 0;
+}
+
+inline uint8_t *RTPRawPacket::AllocateBytes(bool isrtp, int recvlen) const
+{
+	return RTPNew(GetMemoryManager(),(isrtp)?RTPMEM_TYPE_BUFFER_RECEIVEDRTPPACKET:RTPMEM_TYPE_BUFFER_RECEIVEDRTCPPACKET) uint8_t[recvlen];
+}
+
+inline void RTPRawPacket::SetData(uint8_t *data, size_t datalen)
+{
+	DeleteData();
+
+	packetdata = data;
+	packetdatalength = datalen;
 }
 
 } // end namespace

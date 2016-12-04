@@ -318,7 +318,7 @@ int RTPSources::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,c
 	// The packet comes from a valid source, we can process it further now
 	// The following function should delete rtppack itself if something goes
 	// wrong
-	if ((status = srcdat->ProcessRTPPacket(rtppack,receivetime,stored)) < 0)
+	if ((status = srcdat->ProcessRTPPacket(rtppack,receivetime,stored,this)) < 0)
 		return status;
 
 	if (!prevsender && srcdat->IsSender())

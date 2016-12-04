@@ -110,5 +110,10 @@ void RTPSessionSources::OnNoteTimeout(RTPSourceData *srcdat)
 	rtpsession.OnNoteTimeout(srcdat);
 }
 
+void RTPSessionSources::OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled)
+{
+	rtpsession.OnValidatedRTPPacket(srcdat, rtppack, isonprobation, ispackethandled);
+}
+
 } // end namespace
 

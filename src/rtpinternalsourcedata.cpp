@@ -53,7 +53,7 @@ RTPInternalSourceData::~RTPInternalSourceData()
 }
 
 // The following function should delete rtppack if necessary
-int RTPInternalSourceData::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,bool *stored)
+int RTPInternalSourceData::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,bool *stored,RTPSources *sources)
 {
 	bool accept,onprobation,applyprobation;
 	double tsunit;
@@ -108,6 +108,17 @@ int RTPInternalSourceData::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &re
 	if (validated && !ownssrc) // for own ssrc these variables depend on the outgoing packets, not on the incoming
 		issender = true;
 	
+	bool isonprobation = !validated;
+	bool ispackethandled = false;
+
+	sources->OnValidatedRTPPacket(this, rtppack, isonprobation, &ispackethandled);
+	if (ispackethandled) // Packet is already handled in the callback, no need to store it in the list
+	{
+		// Set 'stored' to true to avoid the packet being deallocated
+		*stored = true;
+		return 0;
+	}
+
 	// Now, we can place the packet in the queue
 	
 	if (packetlist.empty())

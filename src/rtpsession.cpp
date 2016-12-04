@@ -1344,6 +1344,13 @@ int RTPSession::ProcessPolledData()
 	SOURCES_LOCK
 	while ((rawpack = rtptrans->GetNextPacket()) != 0)
 	{
+		// Provide a way to change incoming data, for decryption for example
+		if (!OnChangeIncomingData(rawpack))
+		{
+			RTPDelete(rawpack,GetMemoryManager());
+			continue;
+		}
+
 		sources.ClearOwnCollisionFlag();
 
 		// since our sources instance also uses the scheduler (analysis of incoming packets)
