@@ -1,0 +1,56 @@
+To build JThread and JRTPLIB, you'll need to use 'cmake' to generate 
+the project files. Below you can find the procedure you can follow. 
+I've also created a screencast which illustrates the steps in making 
+the library. You can try one of these files (it's the same file, in 
+different video formats):
+
+http://research.edm.uhasselt.be/jori/jthread_jrtplib_example_mpeg1.mpg
+http://research.edm.uhasselt.be/jori/jthread_jrtplib_example_mpeg2.mpg
+http://research.edm.uhasselt.be/jori/jthread_jrtplib_example.avi
+
+In words you'll need to do the following. As an example, I'll assume
+that jrtplib is extracted into c:\projects\jrtplib-3.9.1 and jthread
+is in c:\projects\jthread-1.3.1
+
+First we'll build jthread. Start the CMake gui and enter
+c:\projects\jthread-1.3.1 as the source directory and
+c:\projects\jthread-1.3.1\build as the build directory. Then,
+before doing anything else, you'll need to specify where the library
+should be installed. I always use c:\local as the prefix, which will
+install the headers in c:\local\include and the libraries in
+c:\local\lib. To do this, add the cmake variable
+CMAKE_INSTALL_PREFIX and set it to c:\local
+
+Then, press 'configure'. When this first configure step is complete,
+press 'configure' again, and afterward press 'generate'. There you can
+specify to generate a visual studio project. When this is done, open
+the visual studio project (you can find it in
+c:\projects\jthread-1.3.1\build) and run the 'INSTALL' project.
+When this is done, select the 'release' build type, and run the
+'INSTALL' project again. If all went well, you should find the
+jthread headers in c:\local\include\jthread, and the jthread library
+in c:\local\lib.
+
+Then, follow the exact same procedure for jrtplib. By using the same
+installation prefix (c:\local in my example), the cmake script will
+automatically detect jthread as well. After building and installing
+jrtplib, you should find that the examples are built as well, and
+that you can run them.
+
+To use jrtplib and jthread in another project, you must then do the
+following:
+- in the project settings, add the include directory
+  c:\local\include to the list of include directories (for debug and
+  release builds)
+- in the project settings, add c:\local\lib to the list of library
+  directories.
+- for the release version, add jrtplib.lib, jthread.lib and
+  ws2_32.lib to the list of libraries
+- for the debug version, add jrtplib_d.lib, jthread_d.lib and
+  ws2_32.lib to the list of libraries.
+
+In your program files, include a jrtplib header like this:
+#include <jrtplib3/rtpsession.h>
+and a jthread header like this:
+#include <jthread/jthread.h>
+
