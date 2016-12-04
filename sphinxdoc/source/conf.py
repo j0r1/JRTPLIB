@@ -71,13 +71,21 @@ def getVersion():
     confPath = os.path.join(curDir,"../../configure")
 
     if os.path.exists(cmakePath):
+        gotMajor, gotMinor, gotDebug = False, False, False
+        major, minor, debug = "?","?","?"
         for l in open(cmakePath):
-            pref = "set(VERSION "
+            pref = "set(VERSION_"
             if l.startswith(pref):
                 l = l[len(pref):].strip()
                 idx = l.find(")")
-                version = l[:idx].strip()
-                return checkDevel(version)
+                versionPart = l[:idx].strip()
+                t,n = versionPart.split()
+                if t == "MAJOR": major, gotMajor = n, True
+                elif t == "MINOR": minor, gotMinor = n, True
+                elif t == "DEBUG": debug, gotDebug = n, True
+
+                if gotMajor and gotMinor and gotDebug:
+                    return checkDevel(major + "." + minor + "." + debug)
     elif os.path.exists(confPath):
         for l in open(confPath):
             l = l.strip()
@@ -323,14 +331,19 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 def checkMarkdownSetting():
-    for l in open("Doxyfile"):
+    for l in open("Doxyfile-changed"):
         if "MARKDOWN_SUPPORT" in l: # Markdown was configured
             return
 
     # In older doxygen, there was no markdown so we'll set the default
     # to NO to avoid strange effects
-    with open("Doxyfile", "at") as f:
+    with open("Doxyfile-changed", "at") as f:
         f.write("\nMARKDOWN_SUPPORT = NO\n")
+
+def changeVersionString():
+    data = open("Doxyfile-changed").read()
+    data = data.replace("{X.X.X}", getVersion());
+    open("Doxyfile-changed", "wt").write(data)
 
 import subprocess
 import os
@@ -348,8 +361,10 @@ try:
 
     os.chdir("../../")
     if os.path.exists("Doxyfile"):
+        subprocess.call("cp Doxyfile Doxyfile-changed", shell=True)
         checkMarkdownSetting()
-        subprocess.call("doxygen", shell=True)
+        changeVersionString()
+        subprocess.call("doxygen Doxyfile-changed", shell=True)
         subprocess.call("mv -f documentation/* {}".format(dstdir), shell=True)
     elif os.path.exists("doc/jrtplib.tex"):
         os.chdir("doc")
