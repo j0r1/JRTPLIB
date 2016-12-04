@@ -39,17 +39,14 @@
 #define RTPIPV4DESTINATION_H
 
 #include "rtpconfig.h"
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#include "rtptypes.h"
+#ifndef RTP_SOCKETTYPE_WINSOCK
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
 	#include <sys/socket.h>
-#endif // WIN32
-#ifdef RTPDEBUG
-	#include "rtpdefines.h"
-	#include <stdio.h>
-	#include <string>
-#endif // RTPDEBUG
+#endif // RTP_SOCKETTYPE_WINSOCK
 #include <string.h>
+#include <string>
 
 namespace jrtplib
 {
@@ -86,26 +83,12 @@ public:
 	uint16_t GetRTCPPort_NBO() const							{ return rtcpaddr.sin_port; }
 	const struct sockaddr_in *GetRTPSockAddr() const					{ return &rtpaddr; }
 	const struct sockaddr_in *GetRTCPSockAddr() const					{ return &rtcpaddr; }
-#ifdef RTPDEBUG
 	std::string GetDestinationString() const;
-#endif // RTPDEBUG
 private:
 	uint32_t ip;
 	struct sockaddr_in rtpaddr;
 	struct sockaddr_in rtcpaddr;
 };
-
-#ifdef RTPDEBUG
-inline std::string RTPIPv4Destination::GetDestinationString() const
-{
-	char str[24];
-	uint32_t ip = GetIP();
-	uint16_t portbase = ntohs(GetRTPPort_NBO());
-	
-	RTP_SNPRINTF(str,24,"%d.%d.%d.%d:%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF),(int)(portbase));
-	return std::string(str);
-}
-#endif // RTPDEBUG
 
 } // end namespace
 

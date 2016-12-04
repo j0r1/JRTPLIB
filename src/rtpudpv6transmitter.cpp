@@ -30,6 +30,11 @@
 
 */
 
+// This is for getaddrinfo when using mingw
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
+
 #include "rtpudpv6transmitter.h"
 
 #ifdef RTP_SUPPORT_IPV6
@@ -39,12 +44,17 @@
 #include "rtptimeutilities.h"
 #include "rtpdefines.h"
 #include <stdio.h>
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	#define RTPSOCKERR								INVALID_SOCKET
 	#define RTPCLOSE(x)								closesocket(x)
 	#define RTPSOCKLENTYPE								int
 	#define RTPIOCTL								ioctlsocket
-#else // not Win32
+
+	// These are protected in ws2tcpip.h using a define on the windows version
+	void WSAAPI freeaddrinfo (struct addrinfo*);
+	int WSAAPI getaddrinfo (const char*,const char*,const struct addrinfo*, struct addrinfo**);
+	int WSAAPI getnameinfo(const struct sockaddr*,socklen_t,char*,DWORD, char*,DWORD,int);
+#else // not winsock
 	#include <sys/socket.h>
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
@@ -75,8 +85,9 @@
 	#endif // RTP_SOCKLENTYPE_UINT
 
 	#define RTPIOCTL								ioctl
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 
+#include "rtpinternalutils.h"
 #include "rtpdebug.h"
 
 #define RTPUDPV6TRANS_MAXPACKSIZE							65535
@@ -667,7 +678,7 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 	// if aborted, read from abort buffer
 	if (FD_ISSET(abortdesc[0],&fdset))
 	{
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 		char buf[1];
 		
 		recv(abortdesc[0],buf,1,0);
@@ -678,7 +689,7 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 		{
 			// To get rid of __wur related compiler warnings
 		}
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	}
 	
 	if (dataavailable != 0)
@@ -1268,13 +1279,13 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 	RTPSOCKLENTYPE fromlen;
 	int recvlen;
 	char packetbuffer[RTPUDPV6TRANS_MAXPACKSIZE];
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	SOCKET sock;
 	unsigned long len;
 #else 
 	size_t len;
 	int sock;
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	struct sockaddr_in6 srcaddr;
 	fd_set fdset;
 	struct timeval zerotv;
@@ -1563,7 +1574,7 @@ bool RTPUDPv6Transmitter::ShouldAcceptData(in6_addr srcip,uint16_t srcport)
 	return true;
 }
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 
 int RTPUDPv6Transmitter::CreateAbortDescriptors()
 {
@@ -1665,7 +1676,7 @@ void RTPUDPv6Transmitter::DestroyAbortDescriptors()
 	close(abortdesc[1]);
 }
 
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 int RTPUDPv6Transmitter::CreateLocalIPList()
 {
@@ -1680,7 +1691,7 @@ int RTPUDPv6Transmitter::CreateLocalIPList()
 	return 0;
 }
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 
 bool RTPUDPv6Transmitter::GetLocalIPList_Interfaces()
 {
@@ -1747,7 +1758,7 @@ bool RTPUDPv6Transmitter::GetLocalIPList_Interfaces()
 
 #endif // RTP_SUPPORT_IFADDRS
 
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 void RTPUDPv6Transmitter::GetLocalIPList_DNS()
 {
@@ -1785,14 +1796,14 @@ void RTPUDPv6Transmitter::GetLocalIPList_DNS()
 
 void RTPUDPv6Transmitter::AbortWaitInternal()
 {
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	send(abortdesc[1],"*",1,0);
 #else
 	if (write(abortdesc[1],"*",1))
 	{
 		// To get rid of __wur related compiler warnings
 	}
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 }
 
 

@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2016 Jori Liesenborgs
+  Copyright (c) 1999-2011 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -30,47 +30,20 @@
 
 */
 
-#ifndef RTPDEFINES_H
+#ifndef RTPINTERNALUTILS_H
 
-#define RTPDEFINES_H
+#define RTPINTERNALUTILS_H
 
-#define RTP_VERSION							2
-#define RTP_MAXCSRCS							15
-#define RTP_MINPACKETSIZE						600
-#define RTP_DEFAULTPACKETSIZE						1400
-#define RTP_PROBATIONCOUNT						2
-#define RTP_MAXPRIVITEMS						256
-#define RTP_SENDERTIMEOUTMULTIPLIER					2
-#define RTP_BYETIMEOUTMULTIPLIER					1
-#define RTP_MEMBERTIMEOUTMULTIPLIER					5
-#define RTP_COLLISIONTIMEOUTMULTIPLIER					10
-#define RTP_NOTETTIMEOUTMULTIPLIER					25
-#define RTP_DEFAULTSESSIONBANDWIDTH					10000.0
+#include "rtpconfig.h"
 
-#define RTP_RTCPTYPE_SR							200
-#define RTP_RTCPTYPE_RR							201
-#define RTP_RTCPTYPE_SDES						202
-#define RTP_RTCPTYPE_BYE						203
-#define RTP_RTCPTYPE_APP						204
+#if defined(RTP_HAVE_SNPRINTF_S)
+	#define RTP_SNPRINTF _snprintf_s
+#elif defined(RTP_HAVE_SNPRINTF)
+	#define RTP_SNPRINTF _snprintf
+#else
+	#include <stdio.h>
+	#define RTP_SNPRINTF snprintf
+#endif 
 
-#define RTCP_SDES_ID_CNAME						1
-#define RTCP_SDES_ID_NAME						2
-#define RTCP_SDES_ID_EMAIL						3
-#define RTCP_SDES_ID_PHONE						4
-#define RTCP_SDES_ID_LOCATION						5
-#define RTCP_SDES_ID_TOOL						6
-#define RTCP_SDES_ID_NOTE						7
-#define RTCP_SDES_ID_PRIVATE						8
-#define RTCP_SDES_NUMITEMS_NONPRIVATE					7
-#define RTCP_SDES_MAXITEMLENGTH						255
-
-#define RTCP_BYE_MAXREASONLENGTH					255
-#define RTCP_DEFAULTMININTERVAL						5.0	
-#define RTCP_DEFAULTBANDWIDTHFRACTION					0.05
-#define RTCP_DEFAULTSENDERFRACTION					0.25
-#define RTCP_DEFAULTHALFATSTARTUP					true
-#define RTCP_DEFAULTIMMEDIATEBYE					true
-#define RTCP_DEFAULTSRBYE						true
-
-#endif // RTPDEFINES_H
+#endif // RTPINTERNALUTILS_H
 

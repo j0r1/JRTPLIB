@@ -16,10 +16,11 @@ macro(jrtplib_include_test INCFILE DEFINENAME EMPTYVALUE)
 	endif (jrtplib_include_test_${DEFINENAME})
 endmacro(jrtplib_include_test)
 
-macro (jrtplib_test_feature FILENAME DEFINENAME INVERT EMPTYVALUE) 
+macro (jrtplib_test_feature FILENAME DEFINENAME INVERT EMPTYVALUE EXTRADEFS) 
 	if (NOT DEFINED ${FILENAME}_RESULT)
 		try_compile(${FILENAME}_RESULT "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/tools/${FILENAME}.cpp"
-			    OUTPUT_VARIABLE OUTVAR)
+		            OUTPUT_VARIABLE OUTVAR 
+			    COMPILE_DEFINITIONS "${EXTRADEFS}")
 		message(STATUS "Compiling ${FILENAME}.cpp")
 		set(BLA ${INVERT})
 		if (NOT BLA)

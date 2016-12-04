@@ -32,6 +32,7 @@
 
 #include "rtperrors.h"
 #include "rtpdefines.h"
+#include "rtpinternalutils.h"
 #include <stdio.h>
 
 #include "rtpdebug.h"

@@ -70,6 +70,8 @@ set(SOURCES
 	rtpinternalsourcedata.cpp
 	rtpipv4address.cpp
 	rtpipv6address.cpp
+	rtpipv4destination.cpp
+	rtpipv6destination.cpp
 	rtplibraryversion.cpp
 	rtppacket.cpp
 	rtppacketbuilder.cpp

@@ -40,7 +40,7 @@
 	#include "rtptypes.h"
 
 	void *operator new(size_t s,char filename[],int line);
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#if ! (defined(WIN32) || defined(_WIN32) || defined(_WIN32_WCE))
 	void *operator new[](size_t s,char filename[],int line);
 	#define new new (__FILE__,__LINE__)
 #else

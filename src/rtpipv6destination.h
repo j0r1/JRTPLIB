@@ -44,16 +44,12 @@
 
 #include "rtptypes.h"
 #include <string.h>
-#ifndef WIN32
+#include <string>
+#ifndef RTP_SOCKETTYPE_WINSOCK
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
 	#include <sys/socket.h>
-#endif // WIN32
-#ifdef RTPDEBUG
-	#include "rtpdefines.h"
-	#include <stdio.h>
-	#include <string>
-#endif // RTPDEBUG
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 namespace jrtplib
 {
@@ -81,30 +77,11 @@ public:
 	}
 	const struct sockaddr_in6 *GetRTPSockAddr() const				{ return &rtpaddr; }
 	const struct sockaddr_in6 *GetRTCPSockAddr() const				{ return &rtcpaddr; }
-#ifdef RTPDEBUG
 	std::string GetDestinationString() const;
-#endif // RTPDEBUG
 private:
 	struct sockaddr_in6 rtpaddr;
 	struct sockaddr_in6 rtcpaddr;
 };
-
-#ifdef RTPDEBUG
-inline std::string RTPIPv6Destination::GetDestinationString() const
-{
-	uint16_t ip16[8];
-	char str[48];
-	uint16_t portbase = ntohs(rtpaddr.sin6_port);
-	int i,j;
-	for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	
-	{ 
-		ip16[j] = (((uint16_t)rtpaddr.sin6_addr.s6_addr[i])<<8); 
-		ip16[j] |= ((uint16_t)rtpaddr.sin6_addr.s6_addr[i+1]); 
-	}
-	RTP_SNPRINTF(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X/%d",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7],(int)portbase);
-	return std::string(str);
-}
-#endif // RTPDEBUG
 
 } // end namespace
 

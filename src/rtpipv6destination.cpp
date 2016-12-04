@@ -1,7 +1,7 @@
 /*
 
   This file is a part of JRTPLIB
-  Copyright (c) 1999-2016 Jori Liesenborgs
+  Copyright (c) 1999-2011 Jori Liesenborgs
 
   Contact: jori.liesenborgs@gmail.com
 
@@ -30,47 +30,32 @@
 
 */
 
-#ifndef RTPDEFINES_H
+#include "rtpipv6destination.h"
 
-#define RTPDEFINES_H
+#ifdef RTP_SUPPORT_IPV6
 
-#define RTP_VERSION							2
-#define RTP_MAXCSRCS							15
-#define RTP_MINPACKETSIZE						600
-#define RTP_DEFAULTPACKETSIZE						1400
-#define RTP_PROBATIONCOUNT						2
-#define RTP_MAXPRIVITEMS						256
-#define RTP_SENDERTIMEOUTMULTIPLIER					2
-#define RTP_BYETIMEOUTMULTIPLIER					1
-#define RTP_MEMBERTIMEOUTMULTIPLIER					5
-#define RTP_COLLISIONTIMEOUTMULTIPLIER					10
-#define RTP_NOTETTIMEOUTMULTIPLIER					25
-#define RTP_DEFAULTSESSIONBANDWIDTH					10000.0
+#include "rtpinternalutils.h"
 
-#define RTP_RTCPTYPE_SR							200
-#define RTP_RTCPTYPE_RR							201
-#define RTP_RTCPTYPE_SDES						202
-#define RTP_RTCPTYPE_BYE						203
-#define RTP_RTCPTYPE_APP						204
+namespace jrtplib
+{
 
-#define RTCP_SDES_ID_CNAME						1
-#define RTCP_SDES_ID_NAME						2
-#define RTCP_SDES_ID_EMAIL						3
-#define RTCP_SDES_ID_PHONE						4
-#define RTCP_SDES_ID_LOCATION						5
-#define RTCP_SDES_ID_TOOL						6
-#define RTCP_SDES_ID_NOTE						7
-#define RTCP_SDES_ID_PRIVATE						8
-#define RTCP_SDES_NUMITEMS_NONPRIVATE					7
-#define RTCP_SDES_MAXITEMLENGTH						255
+inline std::string RTPIPv6Destination::GetDestinationString() const
+{
+	uint16_t ip16[8];
+	char str[48];
+	uint16_t portbase = ntohs(rtpaddr.sin6_port);
+	int i,j;
+	for (i = 0,j = 0 ; j < 8 ; j++,i += 2)	
+	{ 
+		ip16[j] = (((uint16_t)rtpaddr.sin6_addr.s6_addr[i])<<8); 
+		ip16[j] |= ((uint16_t)rtpaddr.sin6_addr.s6_addr[i+1]); 
+	}
+	RTP_SNPRINTF(str,48,"%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X/%d",(int)ip16[0],(int)ip16[1],(int)ip16[2],(int)ip16[3],(int)ip16[4],(int)ip16[5],(int)ip16[6],(int)ip16[7],(int)portbase);
+	return std::string(str);
+}
 
-#define RTCP_BYE_MAXREASONLENGTH					255
-#define RTCP_DEFAULTMININTERVAL						5.0	
-#define RTCP_DEFAULTBANDWIDTHFRACTION					0.05
-#define RTCP_DEFAULTSENDERFRACTION					0.25
-#define RTCP_DEFAULTHALFATSTARTUP					true
-#define RTCP_DEFAULTIMMEDIATEBYE					true
-#define RTCP_DEFAULTSRBYE						true
+} // end namespace
 
-#endif // RTPDEFINES_H
+#endif // RTP_SUPPORT_IPV6
+
 

@@ -42,9 +42,9 @@
 #include "rtcppacket.h"
 #include "rtpstructs.h"
 #include "rtpdefines.h"
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SUPPORT_NETINET_IN
 	#include <netinet/in.h>
-#endif // WIN32
+#endif // RTP_SUPPORT_NETINET_IN
 
 namespace jrtplib
 {

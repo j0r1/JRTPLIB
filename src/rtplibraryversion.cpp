@@ -33,6 +33,7 @@
 #include "rtplibraryversion.h"
 #include "rtpdefines.h"
 #include "rtplibraryversioninternal.h"
+#include "rtpinternalutils.h"
 #include <stdio.h>
 
 namespace jrtplib

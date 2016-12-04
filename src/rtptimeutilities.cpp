@@ -30,7 +30,9 @@
 
 */
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#include "rtpconfig.h"
+
+#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 
 #include "rtptimeutilities.h"
 #ifdef RTPDEBUG
@@ -53,5 +55,5 @@ RTPTimeInitializer timeinit;
 
 } // end namespace
 
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 

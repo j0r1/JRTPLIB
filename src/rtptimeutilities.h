@@ -40,16 +40,20 @@
 
 #include "rtpconfig.h"
 #include "rtptypes.h"
-#ifndef WIN32
+#ifndef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	#include <sys/time.h>
 	#include <time.h>
-#else
-		#ifndef _WIN32_WCE
-        	#include <sys/timeb.h>
-        #endif // _WIN32_WINCE
-#endif // WIN32
+#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 
 #define RTP_NTPTIMEOFFSET									2208988800UL
+
+#ifdef RTP_HAVE_VSUINT64SUFFIX
+#define C1000000 1000000ui64
+#define CEPOCH 11644473600000000ui64
+#else
+#define C1000000 1000000ULL
+#define CEPOCH 11644473600000000ULL
+#endif // RTP_HAVE_VSUINT64SUFFIX
 
 namespace jrtplib
 {
@@ -121,9 +125,9 @@ public:
 	bool operator<=(const RTPTime &t) const;
 	bool operator>=(const RTPTime &t) const;
 private:
-#if (defined(WIN32) || defined(_WIN32_WCE))
-	static inline unsigned __int64 CalculateMicroseconds(unsigned __int64 performancecount,unsigned __int64 performancefrequency);
-#endif // WIN32 || _WIN32_WCE
+#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
+	static inline uint64_t CalculateMicroseconds(uint64_t performancecount,uint64_t performancefrequency);
+#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 
 	uint32_t sec,microsec;
 };
@@ -155,25 +159,25 @@ inline RTPTime::RTPTime(RTPNTPTime ntptime)
 	}
 }
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 
-inline unsigned __int64 RTPTime::CalculateMicroseconds(unsigned __int64 performancecount,unsigned __int64 performancefrequency)
+inline uint64_t RTPTime::CalculateMicroseconds(uint64_t performancecount,uint64_t performancefrequency)
 {
-	unsigned __int64 f = performancefrequency;
-	unsigned __int64 a = performancecount;
-	unsigned __int64 b = a/f;
-	unsigned __int64 c = a%f; // a = b*f+c => (a*1000000)/f = b*1000000+(c*1000000)/f
+	uint64_t f = performancefrequency;
+	uint64_t a = performancecount;
+	uint64_t b = a/f;
+	uint64_t c = a%f; // a = b*f+c => (a*1000000)/f = b*1000000+(c*1000000)/f
 
-	return b*1000000ui64+(c*1000000ui64)/f;
+	return b*C1000000+(c*C1000000)/f;
 }
 
 inline RTPTime RTPTime::CurrentTime()
 {
 	static int inited = 0;
-	static unsigned __int64 microseconds, initmicroseconds;
+	static uint64_t microseconds, initmicroseconds;
 	static LARGE_INTEGER performancefrequency;
 
-	unsigned __int64 emulate_microseconds, microdiff;
+	uint64_t emulate_microseconds, microdiff;
 	SYSTEMTIME systemtime;
 	FILETIME filetime;
 
@@ -186,8 +190,8 @@ inline RTPTime RTPTime::CurrentTime()
 		QueryPerformanceFrequency(&performancefrequency);
 		GetSystemTime(&systemtime);
 		SystemTimeToFileTime(&systemtime,&filetime);
-		microseconds = ( ((unsigned __int64)(filetime.dwHighDateTime) << 32) + (unsigned __int64)(filetime.dwLowDateTime) ) / 10ui64;
-		microseconds-= 11644473600000000ui64; // EPOCH
+		microseconds = ( ((uint64_t)(filetime.dwHighDateTime) << 32) + (uint64_t)(filetime.dwLowDateTime) ) / (uint64_t)10;
+		microseconds-= CEPOCH; // EPOCH
 		initmicroseconds = CalculateMicroseconds(performancecount.QuadPart, performancefrequency.QuadPart);
 	}
     
@@ -195,7 +199,7 @@ inline RTPTime RTPTime::CurrentTime()
 
 	microdiff = emulate_microseconds - initmicroseconds;
 
-	return RTPTime((uint32_t)((microseconds + microdiff) / 1000000ui64),((uint32_t)((microseconds + microdiff) % 1000000ui64)));
+	return RTPTime((uint32_t)((microseconds + microdiff) / C1000000),((uint32_t)((microseconds + microdiff) % C1000000)));
 }
 
 inline void RTPTime::Wait(const RTPTime &delay)
@@ -236,7 +240,7 @@ inline void RTPTime::Wait(const RTPTime &delay)
 	nanosleep(&req,&rem);
 }
 
-#endif // WIN32
+#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 
 inline RTPTime &RTPTime::operator-=(const RTPTime &t)
 { 

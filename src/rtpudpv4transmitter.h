@@ -138,18 +138,18 @@ private:
 class JRTPLIB_IMPORTEXPORT RTPUDPv4TransmissionInfo : public RTPTransmissionInfo
 {
 public:
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifndef RTP_SOCKETTYPE_WINSOCK
 	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,int rtpsock,int rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
 #else
 	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
-#endif  // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
 
 	~RTPUDPv4TransmissionInfo()								{ }
 	
 	/** Returns the list of IPv4 addresses the transmitter considers to be the local IP addresses. */
 	std::list<uint32_t> GetLocalIPList() const				{ return localIPlist; }
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifndef RTP_SOCKETTYPE_WINSOCK
 	/** Returns the socket descriptor used for receiving and transmitting RTP packets. */
 	int GetRTPSocket() const								{ return rtpsocket; }
 
@@ -158,14 +158,14 @@ public:
 #else
 	SOCKET GetRTPSocket() const								{ return rtpsocket; }
 	SOCKET GetRTCPSocket() const							{ return rtcpsocket; }
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 private:
 	std::list<uint32_t> localIPlist;
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifndef RTP_SOCKETTYPE_WINSOCK
 	int rtpsocket,rtcpsocket;
 #else
 	SOCKET rtpsocket,rtcpsocket;
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 };
 	
 class JRTPLIB_IMPORTEXPORT RTPUDPv4Trans_GetHashIndex_IPv4Dest
@@ -253,11 +253,11 @@ private:
 	bool init;
 	bool created;
 	bool waitingfordata;
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	SOCKET rtpsock,rtcpsock;
 #else // not using winsock
 	int rtpsock,rtcpsock;
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	uint32_t bindIP, mcastifaceIP;
 	std::list<uint32_t> localIPs;
 	uint16_t portbase;
@@ -288,11 +288,11 @@ private:
 	RTPKeyHashTable<const uint32_t,PortInfo*,RTPUDPv4Trans_GetHashIndex_uint32_t,RTPUDPV4TRANS_HASHSIZE> acceptignoreinfo;
 
 	// notification descriptors for AbortWait (0 is for reading, 1 for writing)
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	SOCKET abortdesc[2];
 #else
 	int abortdesc[2];
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	int CreateAbortDescriptors();
 	void DestroyAbortDescriptors();
 	void AbortWaitInternal();

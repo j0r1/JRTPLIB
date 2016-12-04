@@ -204,11 +204,11 @@ private:
 	int headersize;
 
 	// notification descriptors for AbortWait (0 is for reading, 1 for writing)
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	SOCKET abortdesc[2];
 #else
 	int abortdesc[2];
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	int CreateAbortDescriptors();
 	void DestroyAbortDescriptors();
 	void AbortWaitInternal();

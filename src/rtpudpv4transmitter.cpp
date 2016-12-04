@@ -36,12 +36,12 @@
 #include "rtptimeutilities.h"
 #include "rtpdefines.h"
 #include <stdio.h>
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	#define RTPSOCKERR								INVALID_SOCKET
 	#define RTPCLOSE(x)								closesocket(x)
 	#define RTPSOCKLENTYPE								int
 	#define RTPIOCTL								ioctlsocket
-#else // not Win32
+#else // not winsock
 	#include <sys/socket.h>
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
@@ -71,11 +71,9 @@
 	#endif // RTP_SOCKLENTYPE_UINT
 
 	#define RTPIOCTL								ioctl
-#endif // WIN32
-#ifdef RTPDEBUG
-	#include <iostream>
-#endif // RTPDEBUG
+#endif // RTP_SOCKETTYPE_WINSOCK
 
+#include "rtpinternalutils.h"
 #include "rtpdebug.h"
 
 #include <iostream>
@@ -656,7 +654,7 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 	// if aborted, read from abort buffer
 	if (FD_ISSET(abortdesc[0],&fdset))
 	{
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 		char buf[1];
 		
 		recv(abortdesc[0],buf,1,0);
@@ -667,7 +665,7 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 		{
 			// To get rid of __wur related compiler warnings
 		}
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	}
 
 	if (dataavailable != 0)
@@ -1255,13 +1253,13 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 	RTPSOCKLENTYPE fromlen;
 	int recvlen;
 	char packetbuffer[RTPUDPV4TRANS_MAXPACKSIZE];
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	SOCKET sock;
 	unsigned long len;
 #else 
 	size_t len;
 	int sock;
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	struct sockaddr_in srcaddr;
 	bool dataavailable;
 	fd_set fdset;
@@ -1556,7 +1554,7 @@ bool RTPUDPv4Transmitter::ShouldAcceptData(uint32_t srcip,uint16_t srcport)
 	return true;
 }
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 
 int RTPUDPv4Transmitter::CreateAbortDescriptors()
 {
@@ -1658,7 +1656,7 @@ void RTPUDPv4Transmitter::DestroyAbortDescriptors()
 	close(abortdesc[1]);
 }
 
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 int RTPUDPv4Transmitter::CreateLocalIPList()
 {
@@ -1673,7 +1671,7 @@ int RTPUDPv4Transmitter::CreateLocalIPList()
 	return 0;
 }
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 
 bool RTPUDPv4Transmitter::GetLocalIPList_Interfaces()
 {
@@ -1800,7 +1798,7 @@ bool RTPUDPv4Transmitter::GetLocalIPList_Interfaces()
 
 #endif // RTP_SUPPORT_IFADDRS
 
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 void RTPUDPv4Transmitter::GetLocalIPList_DNS()
 {
@@ -1835,14 +1833,14 @@ void RTPUDPv4Transmitter::GetLocalIPList_DNS()
 
 void RTPUDPv4Transmitter::AbortWaitInternal()
 {
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	send(abortdesc[1],"*",1,0);
 #else
 	if (write(abortdesc[1],"*",1))
 	{
 		// To get rid of __wur related compiler warnings
 	}
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 }
 
 void RTPUDPv4Transmitter::AddLoopbackAddress()

@@ -184,8 +184,7 @@ inline void operator delete(void *buffer, jrtplib::RTPMemoryManager *mgr, int me
 		mgr->FreeBuffer(buffer);
 }
 
-#if defined(WIN32) || defined(_WIN32_WCE)
-#if _MSC_VER >= 1300
+#ifdef RTP_HAVE_ARRAYALLOC
 inline void *operator new[](size_t numbytes, jrtplib::RTPMemoryManager *mgr, int memtype)
 {
 	if (mgr == 0)
@@ -200,23 +199,7 @@ inline void operator delete[](void *buffer, jrtplib::RTPMemoryManager *mgr, int 
 	else
 		mgr->FreeBuffer(buffer);
 }
-#endif // _MSC_VER >= 1300
-#else
-inline void *operator new[](size_t numbytes, jrtplib::RTPMemoryManager *mgr, int memtype)
-{
-	if (mgr == 0)
-		return operator new[](numbytes);
-	return mgr->AllocateBuffer(numbytes,memtype);
-}
-
-inline void operator delete[](void *buffer, jrtplib::RTPMemoryManager *mgr, int memtype)
-{
-	if (mgr == 0)
-		operator delete[](buffer);
-	else
-		mgr->FreeBuffer(buffer);
-}
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_HAVE_ARRAYALLOC
 
 namespace jrtplib
 {

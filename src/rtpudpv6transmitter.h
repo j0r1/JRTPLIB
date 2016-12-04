@@ -46,9 +46,9 @@
 #include "rtpipv6destination.h"
 #include "rtphashtable.h"
 #include "rtpkeyhashtable.h"
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SUPPORT_NETINET_IN
 	#include <netinet/in.h>
-#endif // WIN32
+#endif // RTP_SUPPORT_NETINET_IN
 #include <string.h>
 #include <list>
 
@@ -146,18 +146,18 @@ private:
 class JRTPLIB_IMPORTEXPORT RTPUDPv6TransmissionInfo : public RTPTransmissionInfo
 {
 public:
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifndef RTP_SOCKETTYPE_WINSOCK
 	RTPUDPv6TransmissionInfo(std::list<in6_addr> iplist,int rtpsock,int rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv6UDPProto) 
 #else
 	RTPUDPv6TransmissionInfo(std::list<in6_addr> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv6UDPProto) 
-#endif  // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
 
 	~RTPUDPv6TransmissionInfo()								{ }
 
 	/** Returns the list of IPv6 addresses the transmitter considers to be the local IP addresses. */
 	std::list<in6_addr> GetLocalIPList() const				{ return localIPlist; }
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifndef RTP_SOCKETTYPE_WINSOCK
 	/** Returns the socket descriptor used for receiving and transmitting RTP packets. */
 	int GetRTPSocket() const								{ return rtpsocket; }
 
@@ -166,14 +166,14 @@ public:
 #else
 	SOCKET GetRTPSocket() const								{ return rtpsocket; }
 	SOCKET GetRTCPSocket() const							{ return rtcpsocket; }
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 private:
 	std::list<in6_addr> localIPlist;
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifndef RTP_SOCKETTYPE_WINSOCK
 	int rtpsocket,rtcpsocket;
 #else
 	SOCKET rtpsocket,rtcpsocket;
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 };
 		
 class JRTPLIB_IMPORTEXPORT RTPUDPv6Trans_GetHashIndex_IPv6Dest
@@ -261,11 +261,11 @@ private:
 	bool init;
 	bool created;
 	bool waitingfordata;
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	SOCKET rtpsock,rtcpsock;
 #else // not using winsock
 	int rtpsock,rtcpsock;
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	in6_addr bindIP;
 	unsigned int mcastifidx;
 	std::list<in6_addr> localIPs;
@@ -297,11 +297,11 @@ private:
 	RTPKeyHashTable<const in6_addr,PortInfo*,RTPUDPv6Trans_GetHashIndex_in6_addr,RTPUDPV6TRANS_HASHSIZE> acceptignoreinfo;
 
 	// notification descriptors for AbortWait (0 is for reading, 1 for writing)
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	SOCKET abortdesc[2];
 #else
 	int abortdesc[2];
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	int CreateAbortDescriptors();
 	void DestroyAbortDescriptors();
 	void AbortWaitInternal();
