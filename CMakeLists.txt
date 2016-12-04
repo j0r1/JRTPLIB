@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
+cmake_policy(SET CMP0026 OLD)
 
 project(jrtplib)
 set(VERSION_MAJOR 3)
@@ -127,7 +128,7 @@ save_paths(JRTPLIB_INTERNAL_INCLUDES "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINA
 
 add_subdirectory(src)
 add_subdirectory(examples)
- 
+
 if (UNIX)
 	get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-shared LOCATION)
 	get_filename_component(JRTPLIB_LIBNAME "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME)
