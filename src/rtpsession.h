@@ -507,6 +507,21 @@ protected:
 	/** Is called when the SDES NOTE item for source \c srcdat has been timed out. */
 	virtual void OnNoteTimeout(RTPSourceData *srcdat)						{ }
 
+	/** Is called when an RTCP sender report has been processed for this source. */
+	virtual void OnRTCPSenderReport(RTPSourceData *srcdat)														{ }
+	
+	/** Is called when an RTCP receiver report has been processed for this source. */
+	virtual void OnRTCPReceiverReport(RTPSourceData *srcdat)													{ }
+
+	/** Is called when a specific SDES item was received for this source. */
+	virtual void OnRTCPSDESItem(RTPSourceData *srcdat, RTCPSDESPacket::ItemType t,
+	                            const void *itemdata, size_t itemlength)										{ }
+#ifdef RTP_SUPPORT_SDESPRIV
+	/** Is called when a specific SDES item of 'private' type was received for this source. */
+	virtual void OnRTCPSDESPrivateItem(RTPSourceData *srcdat, const void *prefixdata, size_t prefixlen,
+	                                   const void *valuedata, size_t valuelen)									{ }
+#endif // RTP_SUPPORT_SDESPRIV
+
 	/** Is called when a BYE packet has been processed for source \c srcdat. */
 	virtual void OnBYEPacket(RTPSourceData *srcdat)							{ }
 

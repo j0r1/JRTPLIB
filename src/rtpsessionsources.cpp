@@ -115,5 +115,29 @@ void RTPSessionSources::OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *r
 	rtpsession.OnValidatedRTPPacket(srcdat, rtppack, isonprobation, ispackethandled);
 }
 
+void RTPSessionSources::OnRTCPSenderReport(RTPSourceData *srcdat)
+{
+	rtpsession.OnRTCPSenderReport(srcdat);
+}
+
+void RTPSessionSources::OnRTCPReceiverReport(RTPSourceData *srcdat)
+{
+	rtpsession.OnRTCPReceiverReport(srcdat);
+}
+
+void RTPSessionSources::OnRTCPSDESItem(RTPSourceData *srcdat, RTCPSDESPacket::ItemType t,
+							const void *itemdata, size_t itemlength)
+{
+	rtpsession.OnRTCPSDESItem(srcdat, t, itemdata, itemlength);
+}
+
+#ifdef RTP_SUPPORT_SDESPRIV
+void RTPSessionSources::OnRTCPSDESPrivateItem(RTPSourceData *srcdat, const void *prefixdata, size_t prefixlen,
+								   const void *valuedata, size_t valuelen)
+{
+	rtpsession.OnRTCPSDESPrivateItem(srcdat, prefixdata, prefixlen, valuedata, valuelen);
+}
+#endif // RTP_SUPPORT_SDESPRIV
+
 } // end namespace
 

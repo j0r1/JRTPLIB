@@ -2,14 +2,8 @@ For v3:
  * RTP/RTCP mux
  * experiment with srtp
  * get rid of abort descriptors, try to  use the existing rtp/rtcp sockets for this
- * add a callback for rtcp packets which are validated (current callback is for
-   all rtcp packets)
- * add a callback for rtp packets after validation, which can also disable further
-   storing of the packet
- * OnSDESItemChanged callback 
  * Look into bug here lastmsgtime = srcdat->INF_GetLastMessageTime() was somehow 
    negative
- * Disable RTCP
  * Port 0 chooses a port itself
  * Allow forcing specific RTP and RTCP ports
  * Use pre-created sockets

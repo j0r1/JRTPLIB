@@ -50,6 +50,18 @@ protected:
 		DeletePacket(rtppack);
 		*ispackethandled = true;
 	}
+
+	void OnRTCPSDESItem(RTPSourceData *srcdat, RTCPSDESPacket::ItemType t, const void *itemdata, size_t itemlength)
+	{
+		char msg[1024];
+
+		memset(msg, 0, sizeof(msg));
+		if (itemlength >= sizeof(msg))
+			itemlength = sizeof(msg)-1;
+
+		memcpy(msg, itemdata, itemlength);
+		printf("Received SDES item (%d): %s", (int)t, msg);
+	}
 };
 
 int main(void)
@@ -124,29 +136,6 @@ int main(void)
 		status = sess.SendPacket((void *)"1234567890",10,0,false,10);
 		checkerror(status);
 		
-		sess.BeginDataAccess();
-		
-		// check incoming packets
-		if (sess.GotoFirstSourceWithData())
-		{
-			do
-			{
-				RTPPacket *pack;
-				
-				while ((pack = sess.GetNextPacket()) != NULL)
-				{
-					// You can examine the data here
-					printf("Got packet !\n");
-					
-					// we don't longer need the packet, so
-					// we'll delete it
-					sess.DeletePacket(pack);
-				}
-			} while (sess.GotoNextSourceWithData());
-		}
-		
-		sess.EndDataAccess();
-
 #ifndef RTP_SUPPORT_THREAD
 		status = sess.Poll();
 		checkerror(status);

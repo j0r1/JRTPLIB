@@ -75,6 +75,14 @@ private:
 	                           const RTPAddress *senderaddress);
 	void OnNoteTimeout(RTPSourceData *srcdat);
 	void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled);
+	void OnRTCPSenderReport(RTPSourceData *srcdat);
+	void OnRTCPReceiverReport(RTPSourceData *srcdat);
+	void OnRTCPSDESItem(RTPSourceData *srcdat, RTCPSDESPacket::ItemType t,
+	                            const void *itemdata, size_t itemlength);
+#ifdef RTP_SUPPORT_SDESPRIV
+	void OnRTCPSDESPrivateItem(RTPSourceData *srcdat, const void *prefixdata, size_t prefixlen,
+	                                   const void *valuedata, size_t valuelen);
+#endif // RTP_SUPPORT_SDESPRIV
 	
 	RTPSession &rtpsession;
 	bool owncollision;

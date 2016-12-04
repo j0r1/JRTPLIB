@@ -660,6 +660,8 @@ int RTPSources::ProcessRTCPSenderInfo(uint32_t ssrc,const RTPNTPTime &ntptime,ui
 	if (created)
 		OnNewSource(srcdat);
 
+	OnRTCPSenderReport(srcdat);
+
 	return 0;
 }
 
@@ -682,6 +684,8 @@ int RTPSources::ProcessRTCPReportBlock(uint32_t ssrc,uint8_t fractionlost,int32_
 	// Call the callback
 	if (created)
 		OnNewSource(srcdat);
+
+	OnRTCPReceiverReport(srcdat);
 			
 	return 0;
 }
@@ -738,6 +742,9 @@ int RTPSources::ProcessSDESNormalItem(uint32_t ssrc,RTCPSDESPacket::ItemType t,s
 		OnNewSource(srcdat);
 	if (cnamecollis)
 		OnCNAMECollision(srcdat,senderaddress,(const uint8_t *)itemdata,itemlength);
+
+	if (status >= 0)
+		OnRTCPSDESItem(srcdat, t, itemdata, itemlength);
 	
 	return status;
 }
@@ -761,6 +768,10 @@ int RTPSources::ProcessSDESPrivateItem(uint32_t ssrc,size_t prefixlen,const void
 	// Call the callback
 	if (created)
 		OnNewSource(srcdat);
+
+	if (status >= 0)
+		OnRTCPSDESPrivateItem(srcdat, prefixdata, prefixlen, valuedata, valuelen);
+
 	return status;
 }
 #endif //RTP_SUPPORT_SDESPRIV
