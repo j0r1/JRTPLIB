@@ -39,6 +39,7 @@
 #define RTPIPV4DESTINATION_H
 
 #include "rtpconfig.h"
+#include "rtpipv4address.h"
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
@@ -57,17 +58,24 @@ namespace jrtplib
 class JRTPLIB_IMPORTEXPORT RTPIPv4Destination
 {
 public:
-	RTPIPv4Destination(uint32_t ip,uint16_t rtpportbase)					
+	RTPIPv4Destination()
+	{
+		ip = 0;
+		memset(&rtpaddr,0,sizeof(struct sockaddr_in));
+		memset(&rtcpaddr,0,sizeof(struct sockaddr_in));
+	}
+
+	RTPIPv4Destination(uint32_t ip,uint16_t rtpport,uint16_t rtcpport)
 	{
 		memset(&rtpaddr,0,sizeof(struct sockaddr_in));
 		memset(&rtcpaddr,0,sizeof(struct sockaddr_in));
 		
 		rtpaddr.sin_family = AF_INET;
-		rtpaddr.sin_port = htons(rtpportbase);
+		rtpaddr.sin_port = htons(rtpport);
 		rtpaddr.sin_addr.s_addr = htonl(ip);
 		
 		rtcpaddr.sin_family = AF_INET;
-		rtcpaddr.sin_port = htons(rtpportbase+1);
+		rtcpaddr.sin_port = htons(rtcpport);
 		rtcpaddr.sin_addr.s_addr = htonl(ip);
 
 		RTPIPv4Destination::ip = ip;
@@ -89,6 +97,23 @@ public:
 #ifdef RTPDEBUG
 	std::string GetDestinationString() const;
 #endif // RTPDEBUG
+
+	static bool AddressToDestination(const RTPAddress &addr, RTPIPv4Destination &dest)
+	{
+		if (addr.GetAddressType() != RTPAddress::IPv4Address)
+			return false;
+
+		const RTPIPv4Address &address = (const RTPIPv4Address &)addr;
+		uint16_t rtpport = address.GetPort();
+		uint16_t rtcpport = rtpport;
+
+		if (!address.UseRTCPMultiplexingOnTransmission() && rtcpport < 0xFFFF)
+			rtcpport++;
+
+		dest = RTPIPv4Destination(address.GetIP(),rtpport,rtcpport);
+		return true;
+	}
+
 private:
 	uint32_t ip;
 	struct sockaddr_in rtpaddr;
@@ -100,9 +125,10 @@ inline std::string RTPIPv4Destination::GetDestinationString() const
 {
 	char str[24];
 	uint32_t ip = GetIP();
-	uint16_t portbase = ntohs(GetRTPPort_NBO());
+	uint16_t rtpport = ntohs(GetRTPPort_NBO());
+	uint16_t rtcpport = ntohs(GetRTCPPort_NBO());
 	
-	RTP_SNPRINTF(str,24,"%d.%d.%d.%d:%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF),(int)(portbase));
+	RTP_SNPRINTF(str,24,"%d.%d.%d.%d:%d,%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF),(int)(rtpport),(int)(rtcpport));
 	return std::string(str);
 }
 #endif // RTPDEBUG

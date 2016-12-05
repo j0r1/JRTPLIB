@@ -56,11 +56,15 @@ class RTPMemoryManager;
 class JRTPLIB_IMPORTEXPORT RTPIPv4Address : public RTPAddress
 {
 public:
-	/** Creates an instance with IP address \c ip and port number \c port (both are interpreted in host byte order). */
-	RTPIPv4Address(uint32_t ip = 0, uint16_t port = 0):RTPAddress(IPv4Address)						{ RTPIPv4Address::ip = ip; RTPIPv4Address::port = port; }
+	/** Creates an instance with IP address \c ip and port number \c port (both 
+	 *  are interpreted in host byte order), and possibly sets the RTCP multiplex flag
+	 *  (see RTPIPv4Address::UseRTCPMultiplexingOnTransmission). */
+	RTPIPv4Address(uint32_t ip = 0, uint16_t port = 0,bool rtcpmux = false):RTPAddress(IPv4Address)	{ RTPIPv4Address::ip = ip; RTPIPv4Address::port = port; RTPIPv4Address::rtcpmux = rtcpmux; }
 	
-	/** Creates an instance with IP address \c ip and port number \c port (\c port is interpreted in host byte order). */
-	RTPIPv4Address(const uint8_t ip[4],uint16_t port = 0):RTPAddress(IPv4Address)					{ RTPIPv4Address::ip = (uint32_t)ip[3]; RTPIPv4Address::ip |= (((uint32_t)ip[2])<<8); RTPIPv4Address::ip |= (((uint32_t)ip[1])<<16); RTPIPv4Address::ip |= (((uint32_t)ip[0])<<24); RTPIPv4Address::port = port; }
+	/** Creates an instance with IP address \c ip and port number \c port (\c port is 
+	 *  interpreted in host byte order) and possibly sets the RTCP multiplex flag
+	 *  (see RTPIPv4Address::UseRTCPMultiplexingOnTransmission). */
+	RTPIPv4Address(const uint8_t ip[4],uint16_t port = 0,bool rtcpmux = false):RTPAddress(IPv4Address) { RTPIPv4Address::ip = (uint32_t)ip[3]; RTPIPv4Address::ip |= (((uint32_t)ip[2])<<8); RTPIPv4Address::ip |= (((uint32_t)ip[1])<<16); RTPIPv4Address::ip |= (((uint32_t)ip[0])<<24); RTPIPv4Address::port = port; RTPIPv4Address::rtcpmux = rtcpmux; }
 	~RTPIPv4Address()																				{ }
 
 	/** Sets the IP address for this instance to \c ip which is assumed to be in host byte order. */
@@ -78,6 +82,11 @@ public:
 	/** Returns the port number of this instance in host byte order. */
 	uint16_t GetPort() const																		{ return port; }
 
+	/** Flag that indicates if RTP and RTCP packets should be sent to the same port number, 
+	 *  otherwise outgoing RTCP packets will have a port number that's one more than the RTP
+	 *  port. */
+	bool UseRTCPMultiplexingOnTransmission() const													{ return rtcpmux; }
+
 	RTPAddress *CreateCopy(RTPMemoryManager *mgr) const;
 	bool IsSameAddress(const RTPAddress *addr) const;
 	bool IsFromSameHost(const RTPAddress *addr) const;
@@ -87,6 +96,7 @@ public:
 private:
 	uint32_t ip;
 	uint16_t port;
+	bool rtcpmux;
 };
 
 } // end namespace

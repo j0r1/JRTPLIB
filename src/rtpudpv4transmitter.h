@@ -64,7 +64,7 @@ namespace jrtplib
 class JRTPLIB_IMPORTEXPORT RTPUDPv4TransmissionParams : public RTPTransmissionParams
 {
 public:
-	RTPUDPv4TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	{ portbase = RTPUDPV4TRANS_DEFAULTPORTBASE; bindIP = 0; multicastTTL = 1; mcastifaceIP = 0; rtpsendbuf = RTPUDPV4TRANS_RTPTRANSMITBUFFER; rtprecvbuf= RTPUDPV4TRANS_RTPRECEIVEBUFFER; rtcpsendbuf = RTPUDPV4TRANS_RTCPTRANSMITBUFFER; rtcprecvbuf = RTPUDPV4TRANS_RTCPRECEIVEBUFFER; }
+	RTPUDPv4TransmissionParams();
 
 	/** Sets the IP address which is used to bind the sockets to \c ip. */
 	void SetBindIP(uint32_t ip)									{ bindIP = ip; }
@@ -114,6 +114,12 @@ public:
 	/** Sets the RTCP socket's receive buffer size. */
 	void SetRTCPReceiveBuffer(int s)							{ rtcprecvbuf = s; }
 
+	/** Enables or disables multiplexing RTCP traffic over the RTP channel, so that only a single port is used. */
+	void SetRTCPMultiplexing(bool f)							{ rtcpmux = f; }
+
+	/** Can be used to allow the RTP port base to be any number, not just even numbers. */
+	void SetAllowOddPortbase(bool f)							{ allowoddportbase = f; }
+
 	/** Returns the RTP socket's send buffer size. */
 	int GetRTPSendBuffer() const								{ return rtpsendbuf; }
 
@@ -125,6 +131,12 @@ public:
 
 	/** Returns the RTCP socket's receive buffer size. */
 	int GetRTCPReceiveBuffer() const							{ return rtcprecvbuf; }
+
+	/** Returns a flag indicating if RTCP traffic will be multiplexed over the RTP channel. */
+	bool GetRTCPMultiplexing() const							{ return rtcpmux; }
+
+	/** If true, any RTP portbase will be allowed, not just even numbers. */
+	bool GetAllowOddPortbase() const							{ return allowoddportbase; }
 private:
 	uint16_t portbase;
 	uint32_t bindIP, mcastifaceIP;
@@ -132,7 +144,23 @@ private:
 	uint8_t multicastTTL;
 	int rtpsendbuf, rtprecvbuf;
 	int rtcpsendbuf, rtcprecvbuf;
+	bool rtcpmux;
+	bool allowoddportbase;
 };
+
+inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	
+{ 
+	portbase = RTPUDPV4TRANS_DEFAULTPORTBASE; 
+	bindIP = 0; 
+	multicastTTL = 1; 
+	mcastifaceIP = 0; 
+	rtpsendbuf = RTPUDPV4TRANS_RTPTRANSMITBUFFER; 
+	rtprecvbuf = RTPUDPV4TRANS_RTPRECEIVEBUFFER; 
+	rtcpsendbuf = RTPUDPV4TRANS_RTCPTRANSMITBUFFER; 
+	rtcprecvbuf = RTPUDPV4TRANS_RTCPRECEIVEBUFFER; 
+	rtcpmux = false;
+	allowoddportbase = false;
+}
 
 /** Additional information about the UDP over IPv4 transmitter. */
 class JRTPLIB_IMPORTEXPORT RTPUDPv4TransmissionInfo : public RTPTransmissionInfo

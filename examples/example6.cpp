@@ -21,6 +21,9 @@
 #include <iostream>
 #include <string>
 
+// To avoid having to input parameters, for quick testing
+#define AUTOPARAM
+
 using namespace jrtplib;
 
 //
@@ -81,12 +84,21 @@ int main(void)
 
 	// First, we'll ask for the necessary information
 		
+#ifndef AUTOPARAM
 	std::cout << "Enter local portbase:" << std::endl;
 	std::cin >> portbase;
 	std::cout << std::endl;
+#else
+	portbase = 5000;
+#endif
 	
+#ifndef AUTOPARAM
 	std::cout << "Enter the destination IP address" << std::endl;
 	std::cin >> ipstr;
+#else
+	ipstr = "127.0.0.1";
+#endif
+
 	destip = inet_addr(ipstr.c_str());
 	if (destip == INADDR_NONE)
 	{
@@ -99,13 +111,21 @@ int main(void)
 	// ntohl
 	destip = ntohl(destip);
 	
+#ifndef AUTOPARAM
 	std::cout << "Enter the destination port" << std::endl;
 	std::cin >> destport;
+#else
+	destport = 5000;
+#endif
 	
+#ifndef AUTOPARAM
 	std::cout << std::endl;
 	std::cout << "Number of packets you wish to be sent:" << std::endl;
 	std::cin >> num;
-	
+#else
+	num = 10;
+#endif
+
 	// Now, we'll create a RTP session, set the destination, send some
 	// packets and poll for incoming data.
 	
@@ -120,10 +140,16 @@ int main(void)
 	
 	sessparams.SetAcceptOwnPackets(true);
 	transparams.SetPortbase(portbase);
+	
+	// Let's also use RTCP multiplexing for this example
+	transparams.SetRTCPMultiplexing(true); 
+
 	status = sess.Create(sessparams,&transparams);	
 	checkerror(status);
 	
-	RTPIPv4Address addr(destip,destport);
+	// We're assuming that the destination is also using RTCP multiplexing 
+	// ('true' means that the same port will be used for RTCP)
+	RTPIPv4Address addr(destip,destport,true); 
 	
 	status = sess.AddDestination(addr);
 	checkerror(status);

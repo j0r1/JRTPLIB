@@ -9,6 +9,7 @@ For v3:
  * Use pre-created sockets
  * MingW support
  * Expose GetSequenceNumber for the RTP seq nr
+ * send raw data
 
 
 For v4:
