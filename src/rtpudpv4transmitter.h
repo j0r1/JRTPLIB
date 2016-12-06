@@ -120,6 +120,10 @@ public:
 	/** Can be used to allow the RTP port base to be any number, not just even numbers. */
 	void SetAllowOddPortbase(bool f)							{ allowoddportbase = f; }
 
+	/** Force the RTCP socket to use a specific port, not necessarily one more than
+	 *  the RTP port (set this to zero to disable). */
+	void SetForcedRTCPPort(uint16_t rtcpport)					{ forcedrtcpport = rtcpport; }
+
 	/** Returns the RTP socket's send buffer size. */
 	int GetRTPSendBuffer() const								{ return rtpsendbuf; }
 
@@ -137,6 +141,9 @@ public:
 
 	/** If true, any RTP portbase will be allowed, not just even numbers. */
 	bool GetAllowOddPortbase() const							{ return allowoddportbase; }
+
+	/** If non-zero, the specified port will be used to receive RTCP traffic. */
+	uint16_t GetForcedRTCPPort() const							{ return forcedrtcpport; }
 private:
 	uint16_t portbase;
 	uint32_t bindIP, mcastifaceIP;
@@ -146,6 +153,7 @@ private:
 	int rtcpsendbuf, rtcprecvbuf;
 	bool rtcpmux;
 	bool allowoddportbase;
+	uint16_t forcedrtcpport;
 };
 
 inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	
@@ -160,6 +168,7 @@ inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissio
 	rtcprecvbuf = RTPUDPV4TRANS_RTCPRECEIVEBUFFER; 
 	rtcpmux = false;
 	allowoddportbase = false;
+	forcedrtcpport = 0;
 }
 
 /** Additional information about the UDP over IPv4 transmitter. */

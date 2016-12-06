@@ -105,10 +105,7 @@ public:
 
 		const RTPIPv4Address &address = (const RTPIPv4Address &)addr;
 		uint16_t rtpport = address.GetPort();
-		uint16_t rtcpport = rtpport;
-
-		if (!address.UseRTCPMultiplexingOnTransmission() && rtcpport < 0xFFFF)
-			rtcpport++;
+		uint16_t rtcpport = address.GetRTCPSendPort();
 
 		dest = RTPIPv4Destination(address.GetIP(),rtpport,rtcpport);
 		return true;

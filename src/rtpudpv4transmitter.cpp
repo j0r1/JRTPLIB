@@ -275,9 +275,19 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 
 	if (rtpsock != rtcpsock) // no need to bind same socket twice when multiplexing
 	{
+		uint16_t rtpport = params->GetPortbase();
+		uint16_t rtcpport = params->GetForcedRTCPPort();
+
+		if (rtcpport == 0)
+		{
+			rtcpport = rtpport;
+			if (rtcpport < 0xFFFF)
+				rtcpport++;
+		}
+
 		memset(&addr,0,sizeof(struct sockaddr_in));
 		addr.sin_family = AF_INET;
-		addr.sin_port = htons(params->GetPortbase()+1);
+		addr.sin_port = htons(rtcpport);
 		addr.sin_addr.s_addr = htonl(bindIP);
 		if (bind(rtcpsock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
 		{
