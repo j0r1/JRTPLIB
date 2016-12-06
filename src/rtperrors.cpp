@@ -228,6 +228,12 @@ static RTPErrorInfo ErrorDescriptions[]=
 	{ ERR_RTP_EXTERNALTRANS_NOTWAITING, "The external transmitter is not currently waiting for incoming data"},
 	{ ERR_RTP_EXTERNALTRANS_SENDERROR, "The external transmitter was unable to actually send the data"},
 	{ ERR_RTP_EXTERNALTRANS_SPECIFIEDSIZETOOBIG, "The specified data size exceeds the maximum amount that has been set"},
+
+    { ERR_RTP_UDPV4TRANS_CANTGETSOCKETPORT, "Unable to obtain the existing socket info using 'getsockname'"},
+	{ ERR_RTP_UDPV4TRANS_NOTANIPV4SOCKET, "The existing socket specified does not appear to be an IPv4 socket"},
+	{ ERR_RTP_UDPV4TRANS_SOCKETPORTNOTSET, "The existing socket that was specified does not have its port set yet"},
+	{ ERR_RTP_UDPV4TRANS_CANTGETSOCKETTYPE, "Can't get the socket type of the specified existing socket"},
+	{ ERR_RTP_UDPV4TRANS_INVALIDSOCKETTYPE, "The specified existing socket is not an UDP socket"},
 	{ 0,0 }
 };
 

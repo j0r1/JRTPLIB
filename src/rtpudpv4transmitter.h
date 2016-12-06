@@ -124,6 +124,19 @@ public:
 	 *  the RTP port (set this to zero to disable). */
 	void SetForcedRTCPPort(uint16_t rtcpport)					{ forcedrtcpport = rtcpport; }
 
+	/** Use sockets that have already been created, no checks on port numbers
+	 *  will be done, and no buffer sizes will be set. */
+#ifdef WIN32
+	void SetUseExistingSockets(SOCKET rtpsocket, SOCKET rtcpsocket)
+#else
+	void SetUseExistingSockets(int rtpsocket, int rtcpsocket)
+#endif // WIN32
+	{
+		rtpsock = rtpsocket;
+		rtcpsock = rtcpsocket;
+		useexistingsockets = true;
+	}
+
 	/** Returns the RTP socket's send buffer size. */
 	int GetRTPSendBuffer() const								{ return rtpsendbuf; }
 
@@ -144,6 +157,21 @@ public:
 
 	/** If non-zero, the specified port will be used to receive RTCP traffic. */
 	uint16_t GetForcedRTCPPort() const							{ return forcedrtcpport; }
+
+	/** Returns true and fills in sockets if existing sockets were set
+	 *  using RTPUDPv4TransmissionParams::SetUseExistingSockets. */
+#ifdef WIN32
+	bool GetUseExistingSockets(SOCKET &rtpsocket, SOCKET &rtcpsocket) const
+#else
+	bool GetUseExistingSockets(int &rtpsocket, int &rtcpsocket) const
+#endif // WIN32
+	{
+		if (!useexistingsockets)
+			return false;
+		rtpsocket = rtpsock;
+		rtcpsocket = rtcpsock;
+		return true;
+	}
 private:
 	uint16_t portbase;
 	uint32_t bindIP, mcastifaceIP;
@@ -154,6 +182,13 @@ private:
 	bool rtcpmux;
 	bool allowoddportbase;
 	uint16_t forcedrtcpport;
+
+#ifdef WIN32
+	SOCKET rtpsock, rtcpsock;
+#else
+	int rtpsock, rtcpsock;
+#endif // WIN32
+	bool useexistingsockets;
 };
 
 inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	
@@ -169,6 +204,7 @@ inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissio
 	rtcpmux = false;
 	allowoddportbase = false;
 	forcedrtcpport = 0;
+	useexistingsockets = false;
 }
 
 /** Additional information about the UDP over IPv4 transmitter. */
@@ -176,11 +212,13 @@ class JRTPLIB_IMPORTEXPORT RTPUDPv4TransmissionInfo : public RTPTransmissionInfo
 {
 public:
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
-	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,int rtpsock,int rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
+	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,int rtpsock,int rtcpsock,
+	                         uint16_t rtpport, uint16_t rtcpport) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
 #else
-	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
+	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,SOCKET rtpsock,SOCKET rtcpsock,
+	                         uint16_t rtpport, uint16_t rtcpport) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
 #endif  // WIN32
-															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
+															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; m_rtpPort = rtpport; m_rtcpPort = rtcpport; }
 
 	~RTPUDPv4TransmissionInfo()								{ }
 	
@@ -196,6 +234,11 @@ public:
 	SOCKET GetRTPSocket() const								{ return rtpsocket; }
 	SOCKET GetRTCPSocket() const							{ return rtcpsocket; }
 #endif // WIN32
+	/** Returns the port number that the RTP socket receives packets on. */
+	uint16_t GetRTPPort() const								{ return m_rtpPort; }
+
+	/** Returns the port number that the RTCP socket receives packets on. */
+	uint16_t GetRTCPPort() const							{ return m_rtcpPort; }
 private:
 	std::list<uint32_t> localIPlist;
 #if ! (defined(WIN32) || defined(_WIN32_WCE))
@@ -203,6 +246,7 @@ private:
 #else
 	SOCKET rtpsocket,rtcpsocket;
 #endif // WIN32
+	uint16_t m_rtpPort, m_rtcpPort;
 };
 	
 class JRTPLIB_IMPORTEXPORT RTPUDPv4Trans_GetHashIndex_IPv4Dest
@@ -295,9 +339,9 @@ private:
 #else // not using winsock
 	int rtpsock,rtcpsock;
 #endif // WIN32
-	uint32_t bindIP, mcastifaceIP;
+	uint32_t mcastifaceIP;
 	std::list<uint32_t> localIPs;
-	uint16_t portbase;
+	uint16_t m_rtpPort, m_rtcpPort;
 	uint8_t multicastTTL;
 	RTPTransmitter::ReceiveMode receivemode;
 
@@ -330,6 +374,8 @@ private:
 #else
 	int abortdesc[2];
 #endif // WIN32
+	bool closesocketswhendone;
+
 	int CreateAbortDescriptors();
 	void DestroyAbortDescriptors();
 	void AbortWaitInternal();

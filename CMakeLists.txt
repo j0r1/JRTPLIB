@@ -79,6 +79,7 @@ else (CMAKE_CROSSCOMPILING)
 	endif (JRTPLIB_BIGENDIAN)
 endif (CMAKE_CROSSCOMPILING)
 
+option(JRTPLIB_COMPILE_TESTS "Compile various tests in the 'tests' subdirectory" NO)
 jrtplib_test_feature(socklentest RTP_SOCKLENTYPE_UINT TRUE "// socklen_t is 'int'")
 jrtplib_test_feature(ipv4mcasttest RTP_SUPPORT_IPV4MULTICAST FALSE "// No IPv4 multicasting support")
 jrtplib_test_feature(salentest RTP_HAVE_SOCKADDR_LEN FALSE "// No sa_len member in struct sockaddr")
@@ -128,6 +129,10 @@ save_paths(JRTPLIB_INTERNAL_INCLUDES "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINA
 
 add_subdirectory(src)
 add_subdirectory(examples)
+
+if (JRTPLIB_COMPILE_TESTS)
+	add_subdirectory(tests)
+endif()
 
 if (UNIX)
 	get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-shared LOCATION)

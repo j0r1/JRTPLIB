@@ -1,8 +1,3 @@
-/*
-  This is a variation of example1.cpp, using the OnValidatedRTPPacket
-  callback to process a packet.
-*/
-
 #include "rtpsession.h"
 #include "rtpudpv4transmitter.h"
 #include "rtpipv4address.h"
@@ -21,12 +16,8 @@
 #include <iostream>
 #include <string>
 
-using namespace jrtplib;
 
-//
-// This function checks if there was a RTP error. If so, it displays an error
-// message and exists.
-//
+using namespace jrtplib;
 
 void checkerror(int rtperr)
 {
@@ -36,10 +27,6 @@ void checkerror(int rtperr)
 		exit(-1);
 	}
 }
-
-// In an RTPSession derived class, we're going to overload OnValidatedRTPPacket
-// to process the incoming packets and OnRTCPSDESItem to show the SDES items that
-// are being received
 
 class MyRTPSession : public RTPSession
 {
@@ -60,13 +47,23 @@ protected:
 			itemlength = sizeof(msg)-1;
 
 		memcpy(msg, itemdata, itemlength);
-		printf("SSRC %x: Received SDES item (%d): %s", (unsigned int)srcdat->GetSSRC(), (int)t, msg);
+		printf("Received SDES item (%d): %s", (int)t, msg);
 	}
 };
 
-//
-// The main routine
-//
+int GetASocket()
+{
+	int sock = socket(AF_INET, SOCK_DGRAM, 0);
+	//int sock = socket(AF_INET, SOCK_STREAM, 0); // test with a TCP socket
+	struct sockaddr_in addr;
+
+	memset(&addr, 0, sizeof(addr));
+	addr.sin_family = AF_INET;
+	bind(sock, (struct sockaddr*)&addr, sizeof(addr));	
+
+	return sock;
+}
+
 
 int main(void)
 {
@@ -76,7 +73,6 @@ int main(void)
 #endif // WIN32
 	
 	MyRTPSession sess;
-	uint16_t portbase,destport;
 	uint32_t destip;
 	std::string ipstr;
 	int status,i,num;
@@ -85,13 +81,7 @@ int main(void)
 
 	// First, we'll ask for the necessary information
 		
-	std::cout << "Enter local portbase:" << std::endl;
-	std::cin >> portbase;
-	std::cout << std::endl;
-	
-	std::cout << "Enter the destination IP address" << std::endl;
-	std::cin >> ipstr;
-
+	ipstr = "127.0.0.1";
 	destip = inet_addr(ipstr.c_str());
 	if (destip == INADDR_NONE)
 	{
@@ -103,13 +93,7 @@ int main(void)
 	// we need the IP address in host byte order, so we use a call to
 	// ntohl
 	destip = ntohl(destip);
-	
-	std::cout << "Enter the destination port" << std::endl;
-	std::cin >> destport;
-	
-	std::cout << std::endl;
-	std::cout << "Number of packets you wish to be sent:" << std::endl;
-	std::cin >> num;
+	num = 10;
 
 	// Now, we'll create a RTP session, set the destination, send some
 	// packets and poll for incoming data.
@@ -122,19 +106,25 @@ int main(void)
 	// In this case, we'll be sending 10 samples each second, so we'll
 	// put the timestamp unit to (1.0/10.0)
 	sessparams.SetOwnTimestampUnit(1.0/10.0);		
-	
 	sessparams.SetAcceptOwnPackets(true);
-	transparams.SetPortbase(portbase);
-	
-	// Let's also use RTCP multiplexing for this example
-	transparams.SetRTCPMultiplexing(true); 
+
+	int rtpsock = GetASocket();
+	//int rtcpsock = rtpsock;
+	int rtcpsock = GetASocket();
+	transparams.SetUseExistingSockets(rtpsock, rtcpsock);
 
 	status = sess.Create(sessparams,&transparams);	
 	checkerror(status);
+
+	RTPUDPv4TransmissionInfo *pInf = (RTPUDPv4TransmissionInfo *)sess.GetTransmissionInfo();
+	uint16_t rtpPort = pInf->GetRTPPort();
+	uint16_t rtcpPort = pInf->GetRTCPPort();	
+
+	printf("Using RTP port %d and RTCP port %d\n", (int)rtpPort, (int)rtcpPort);
 	
 	// We're assuming that the destination is also using RTCP multiplexing 
 	// ('true' means that the same port will be used for RTCP)
-	RTPIPv4Address addr(destip,destport,true); 
+	RTPIPv4Address addr(destip,rtpPort,rtcpPort); 
 	
 	status = sess.AddDestination(addr);
 	checkerror(status);
@@ -146,10 +136,6 @@ int main(void)
 		// send the packet
 		status = sess.SendPacket((void *)"1234567890",10,0,false,10);
 		checkerror(status);
-
-		// Either the background thread or the poll function itself will
-		// cause the OnValidatedRTPPacket and OnRTCPSDESItem functions to
-		// be called, so in this loop there's not much left to do. 
 		
 #ifndef RTP_SUPPORT_THREAD
 		status = sess.Poll();

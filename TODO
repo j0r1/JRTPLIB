@@ -1,12 +1,9 @@
 For v3:
- * RTP/RTCP mux
  * experiment with srtp
  * get rid of abort descriptors, try to  use the existing rtp/rtcp sockets for this
  * Look into bug here lastmsgtime = srcdat->INF_GetLastMessageTime() was somehow 
    negative
  * Port 0 chooses a port itself
- * Allow forcing specific RTP and RTCP ports
- * Use pre-created sockets
  * MingW support
  * Expose GetSequenceNumber for the RTP seq nr
  * send raw data
