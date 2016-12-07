@@ -3,7 +3,6 @@ For v3:
  * get rid of abort descriptors, try to  use the existing rtp/rtcp sockets for this
  * Look into bug here lastmsgtime = srcdat->INF_GetLastMessageTime() was somehow 
    negative
- * Port 0 chooses a port itself
  * MingW support
 
 For v4:

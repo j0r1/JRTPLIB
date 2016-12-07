@@ -234,6 +234,7 @@ static RTPErrorInfo ErrorDescriptions[]=
 	{ ERR_RTP_UDPV4TRANS_SOCKETPORTNOTSET, "The existing socket that was specified does not have its port set yet"},
 	{ ERR_RTP_UDPV4TRANS_CANTGETSOCKETTYPE, "Can't get the socket type of the specified existing socket"},
 	{ ERR_RTP_UDPV4TRANS_INVALIDSOCKETTYPE, "The specified existing socket is not an UDP socket"},
+	{ ERR_RTP_UDPV4TRANS_CANTGETVALIDSOCKET, "Can't get a valid socket when trying to choose a port automatically"},
 	{ 0,0 }
 };
 

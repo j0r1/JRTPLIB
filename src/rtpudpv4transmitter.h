@@ -73,7 +73,9 @@ public:
 	/** Sets the multicast interface IP address. */
 	void SetMulticastInterfaceIP(uint32_t ip)					{ mcastifaceIP = ip; }
 
-	/** Sets the RTP portbase to \c pbase. This has to be an even number. */
+	/** Sets the RTP portbase to \c pbase, which has to be an even number
+	 *  unless RTPUDPv4TransmissionParams::SetAllowOddPortbase was called;
+	 *  a port number of zero will cause a port to be chosen automatically. */
 	void SetPortbase(uint16_t pbase)							{ portbase = pbase; }
 
 	/** Sets the multicast TTL to be used to \c mcastTTL. */
