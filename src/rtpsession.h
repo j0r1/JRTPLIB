@@ -196,6 +196,12 @@ public:
 	 */
 	int SendUnknownPacket(bool sr, uint8_t payload_type, uint8_t subtype, const void *data, size_t len);
 #endif // RTP_SUPPORT_RTCPUNKNOWN 
+
+	/** With this function raw data can be sent directly over the RTP or 
+	 *  RTCP channel (if they are different); the data is **not** passed through the
+	 *  RTPSession::OnChangeRTPOrRTCPData function. */
+	int SendRawData(const void *data, size_t len, bool usertpchannel);
+
 	/** Sets the default payload type for RTP packets to \c pt. */
 	int SetDefaultPayloadType(uint8_t pt);
 

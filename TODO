@@ -6,8 +6,6 @@ For v3:
  * Port 0 chooses a port itself
  * MingW support
  * Expose GetSequenceNumber for the RTP seq nr
- * send raw data
-
 
 For v4:
  * introduce a basic transmitter which does not have things like a destination list,

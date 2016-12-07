@@ -874,6 +874,20 @@ int RTPSession::SendUnknownPacket(bool sr, uint8_t payload_type, uint8_t subtype
 
 #endif // RTP_SUPPORT_RTCPUNKNOWN 
 
+int RTPSession::SendRawData(const void *data, size_t len, bool usertpchannel)
+{
+	if (!created)
+		return ERR_RTP_SESSION_NOTCREATED;
+
+	int status;
+
+	if (usertpchannel)
+		status = rtptrans->SendRTPData(data, len);
+	else
+		status = rtptrans->SendRTCPData(data, len);
+	return status;
+}
+
 int RTPSession::SetDefaultPayloadType(uint8_t pt)
 {
 	if (!created)
