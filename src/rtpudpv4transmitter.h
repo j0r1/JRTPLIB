@@ -125,7 +125,8 @@ public:
 	void SetForcedRTCPPort(uint16_t rtcpport)					{ forcedrtcpport = rtcpport; }
 
 	/** Use sockets that have already been created, no checks on port numbers
-	 *  will be done, and no buffer sizes will be set. */
+	 *  will be done, and no buffer sizes will be set; you'll need to close
+	 *  the sockets yourself when done, it will **not** be done automatically. */
 #ifdef WIN32
 	void SetUseExistingSockets(SOCKET rtpsocket, SOCKET rtcpsocket)
 #else
