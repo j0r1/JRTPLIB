@@ -146,9 +146,9 @@ static int GetIPv4SocketPort(SocketType s, uint16_t *pPort)
 		return ERR_RTP_UDPV4TRANS_SOCKETPORTNOTSET;
 	
 	int type = 0;
-	RTPSOCKLENTYPE length;
+	RTPSOCKLENTYPE length = sizeof(type);
 
-	if (getsockopt(s, SOL_SOCKET, SO_TYPE, &type, &length) != 0)
+	if (getsockopt(s, SOL_SOCKET, SO_TYPE, (char*)&type, &length) != 0)
 		return ERR_RTP_UDPV4TRANS_CANTGETSOCKETTYPE;
 
 	if (type != SOCK_DGRAM)
