@@ -5,7 +5,6 @@ For v3:
    negative
  * Port 0 chooses a port itself
  * MingW support
- * Expose GetSequenceNumber for the RTP seq nr
 
 For v4:
  * introduce a basic transmitter which does not have things like a destination list,

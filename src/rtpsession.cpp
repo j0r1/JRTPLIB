@@ -1097,6 +1097,11 @@ RTPPacket *RTPSession::GetNextPacket()
 	return sources.GetNextPacket();
 }
 
+uint16_t RTPSession::GetNextSequenceNumber() const
+{
+    return packetbuilder.GetSequenceNumber();
+}
+
 void RTPSession::DeletePacket(RTPPacket *p)
 {
 	RTPDelete(p,GetMemoryManager());

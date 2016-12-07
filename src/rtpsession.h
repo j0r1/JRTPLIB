@@ -336,6 +336,9 @@ public:
 	 */
 	RTPPacket *GetNextPacket();
 
+    /** Returns the Sequence Number that will be used in the next SendPacket function call. */
+    uint16_t GetNextSequenceNumber() const;
+
 	/** Frees the memory used by \c p. */
 	void DeletePacket(RTPPacket *p);
 
