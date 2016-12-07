@@ -36,51 +36,14 @@
 #include "rtptimeutilities.h"
 #include "rtpdefines.h"
 #include "rtpstructs.h"
+#include "rtpsocketutilinternal.h"
 #include <stdio.h>
-#if (defined(WIN32) || defined(_WIN32_WCE))
-	#define RTPSOCKERR								INVALID_SOCKET
-	#define RTPCLOSE(x)								closesocket(x)
-	#define RTPSOCKLENTYPE								int
-	#define RTPIOCTL								ioctlsocket
-#else // not Win32
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	#include <arpa/inet.h>
-	#include <sys/ioctl.h>
-	#include <net/if.h>
-	#include <string.h>
-	#include <netdb.h>
-	#include <unistd.h>
-
-	#ifdef RTP_HAVE_SYS_FILIO
-		#include <sys/filio.h>
-	#endif // RTP_HAVE_SYS_FILIO
-	#ifdef RTP_HAVE_SYS_SOCKIO
-		#include <sys/sockio.h>
-	#endif // RTP_HAVE_SYS_SOCKIO
-	#ifdef RTP_SUPPORT_IFADDRS
-		#include <ifaddrs.h>
-	#endif // RTP_SUPPORT_IFADDRS
-
-	#define RTPSOCKERR								-1
-	#define RTPCLOSE(x)								close(x)
-
-	#ifdef RTP_SOCKLENTYPE_UINT
-		#define RTPSOCKLENTYPE							unsigned int
-	#else
-		#define RTPSOCKLENTYPE							int
-	#endif // RTP_SOCKLENTYPE_UINT
-
-	#define RTPIOCTL								ioctl
-#endif // WIN32
 #include <assert.h>
 #ifdef RTPDEBUG
 	#include <iostream>
 #endif // RTPDEBUG
 
 #include "rtpdebug.h"
-
-#include <iostream>
 
 #define RTPUDPV4TRANS_MAXPACKSIZE							65535
 #define RTPUDPV4TRANS_IFREQBUFSIZE							8192
@@ -164,22 +127,14 @@ int RTPUDPv4Transmitter::Init(bool tsafe)
 	return 0;
 }
 
-#ifdef WIN32
-static int GetIPv4SocketPort(SOCKET s, uint16_t *pPort)
-#else
-static int GetIPv4SocketPort(int s, uint16_t *pPort)
-#endif // WIN32
+static int GetIPv4SocketPort(SocketType s, uint16_t *pPort)
 {
 	assert(pPort != 0);
 
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 
-#ifdef WIN32
-	int size = sizeof(struct sockaddr_in);
-#else
-	socklen_t size = sizeof(struct sockaddr_in);
-#endif // WIN32
+	RTPSOCKLENTYPE size = sizeof(struct sockaddr_in);
 	if (getsockname(s,(struct sockaddr*)&addr,&size) != 0)
 		return ERR_RTP_UDPV4TRANS_CANTGETSOCKETPORT;
 
@@ -191,11 +146,8 @@ static int GetIPv4SocketPort(int s, uint16_t *pPort)
 		return ERR_RTP_UDPV4TRANS_SOCKETPORTNOTSET;
 	
 	int type = 0;
-#ifdef WIN32
-	int length = 0;
-#else
-	socklen_t length;
-#endif // WIN32
+	RTPSOCKLENTYPE length;
+
 	if (getsockopt(s, SOL_SOCKET, SO_TYPE, &type, &length) != 0)
 		return ERR_RTP_UDPV4TRANS_CANTGETSOCKETTYPE;
 

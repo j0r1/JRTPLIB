@@ -43,6 +43,7 @@
 #include "rtpipv4destination.h"
 #include "rtphashtable.h"
 #include "rtpkeyhashtable.h"
+#include "rtpsocketutil.h"
 #include <list>
 
 #ifdef RTP_SUPPORT_THREAD
@@ -127,16 +128,7 @@ public:
 	/** Use sockets that have already been created, no checks on port numbers
 	 *  will be done, and no buffer sizes will be set; you'll need to close
 	 *  the sockets yourself when done, it will **not** be done automatically. */
-#ifdef WIN32
-	void SetUseExistingSockets(SOCKET rtpsocket, SOCKET rtcpsocket)
-#else
-	void SetUseExistingSockets(int rtpsocket, int rtcpsocket)
-#endif // WIN32
-	{
-		rtpsock = rtpsocket;
-		rtcpsock = rtcpsocket;
-		useexistingsockets = true;
-	}
+	void SetUseExistingSockets(SocketType rtpsocket, SocketType rtcpsocket) { rtpsock = rtpsocket; rtcpsock = rtcpsocket; useexistingsockets = true; }
 
 	/** Returns the RTP socket's send buffer size. */
 	int GetRTPSendBuffer() const								{ return rtpsendbuf; }
@@ -161,18 +153,7 @@ public:
 
 	/** Returns true and fills in sockets if existing sockets were set
 	 *  using RTPUDPv4TransmissionParams::SetUseExistingSockets. */
-#ifdef WIN32
-	bool GetUseExistingSockets(SOCKET &rtpsocket, SOCKET &rtcpsocket) const
-#else
-	bool GetUseExistingSockets(int &rtpsocket, int &rtcpsocket) const
-#endif // WIN32
-	{
-		if (!useexistingsockets)
-			return false;
-		rtpsocket = rtpsock;
-		rtcpsocket = rtcpsock;
-		return true;
-	}
+	bool GetUseExistingSockets(SocketType &rtpsocket, SocketType &rtcpsocket) const { if (!useexistingsockets) return false; rtpsocket = rtpsock; rtcpsocket = rtcpsock; return true; }
 private:
 	uint16_t portbase;
 	uint32_t bindIP, mcastifaceIP;
@@ -184,11 +165,7 @@ private:
 	bool allowoddportbase;
 	uint16_t forcedrtcpport;
 
-#ifdef WIN32
-	SOCKET rtpsock, rtcpsock;
-#else
-	int rtpsock, rtcpsock;
-#endif // WIN32
+	SocketType rtpsock, rtcpsock;
 	bool useexistingsockets;
 };
 
@@ -206,35 +183,29 @@ inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissio
 	allowoddportbase = false;
 	forcedrtcpport = 0;
 	useexistingsockets = false;
+	rtpsock = 0;
+	rtcpsock = 0;
 }
 
 /** Additional information about the UDP over IPv4 transmitter. */
 class JRTPLIB_IMPORTEXPORT RTPUDPv4TransmissionInfo : public RTPTransmissionInfo
 {
 public:
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
-	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,int rtpsock,int rtcpsock,
+	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,SocketType rtpsock,SocketType rtcpsock,
 	                         uint16_t rtpport, uint16_t rtcpport) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
-#else
-	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,SOCKET rtpsock,SOCKET rtcpsock,
-	                         uint16_t rtpport, uint16_t rtcpport) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
-#endif  // WIN32
 															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; m_rtpPort = rtpport; m_rtcpPort = rtcpport; }
 
 	~RTPUDPv4TransmissionInfo()								{ }
 	
 	/** Returns the list of IPv4 addresses the transmitter considers to be the local IP addresses. */
 	std::list<uint32_t> GetLocalIPList() const				{ return localIPlist; }
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+
 	/** Returns the socket descriptor used for receiving and transmitting RTP packets. */
-	int GetRTPSocket() const								{ return rtpsocket; }
+	SocketType GetRTPSocket() const							{ return rtpsocket; }
 
 	/** Returns the socket descriptor used for receiving and transmitting RTCP packets. */
-	int GetRTCPSocket() const								{ return rtcpsocket; }
-#else
-	SOCKET GetRTPSocket() const								{ return rtpsocket; }
-	SOCKET GetRTCPSocket() const							{ return rtcpsocket; }
-#endif // WIN32
+	SocketType GetRTCPSocket() const						{ return rtcpsocket; }
+
 	/** Returns the port number that the RTP socket receives packets on. */
 	uint16_t GetRTPPort() const								{ return m_rtpPort; }
 
@@ -242,11 +213,7 @@ public:
 	uint16_t GetRTCPPort() const							{ return m_rtcpPort; }
 private:
 	std::list<uint32_t> localIPlist;
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
-	int rtpsocket,rtcpsocket;
-#else
-	SOCKET rtpsocket,rtcpsocket;
-#endif // WIN32
+	SocketType rtpsocket,rtcpsocket;
 	uint16_t m_rtpPort, m_rtcpPort;
 };
 	
@@ -335,11 +302,7 @@ private:
 	bool init;
 	bool created;
 	bool waitingfordata;
-#if (defined(WIN32) || defined(_WIN32_WCE))
-	SOCKET rtpsock,rtcpsock;
-#else // not using winsock
-	int rtpsock,rtcpsock;
-#endif // WIN32
+	SocketType rtpsock,rtcpsock;
 	uint32_t mcastifaceIP;
 	std::list<uint32_t> localIPs;
 	uint16_t m_rtpPort, m_rtcpPort;
@@ -370,11 +333,7 @@ private:
 	RTPKeyHashTable<const uint32_t,PortInfo*,RTPUDPv4Trans_GetHashIndex_uint32_t,RTPUDPV4TRANS_HASHSIZE> acceptignoreinfo;
 
 	// notification descriptors for AbortWait (0 is for reading, 1 for writing)
-#if (defined(WIN32) || defined(_WIN32_WCE))
-	SOCKET abortdesc[2];
-#else
-	int abortdesc[2];
-#endif // WIN32
+	SocketType abortdesc[2];
 	bool closesocketswhendone;
 
 	int CreateAbortDescriptors();
