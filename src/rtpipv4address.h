@@ -132,6 +132,9 @@ public:
 	uint16_t GetRTCPSendPort() const																{ return rtcpsendport; }
 
 	RTPAddress *CreateCopy(RTPMemoryManager *mgr) const;
+
+	// Note that these functions are only used for received packets, and for those
+	// the rtcpsendport variable is not important and should be ignored.
 	bool IsSameAddress(const RTPAddress *addr) const;
 	bool IsFromSameHost(const RTPAddress *addr) const;
 #ifdef RTPDEBUG

@@ -93,6 +93,10 @@ public:
 	/** Deallocates the previously stored data and replaces it with the data that's
 	 *  specified, can be useful when e.g. decrypting data in RTPSession::OnChangeIncomingData */
 	void SetData(uint8_t *data, size_t datalen);
+
+	/** Deallocates the currently stored RTPAddress instance and replaces it
+	 *  with the one that's specified (you probably don't need this function). */
+	void SetSenderAddress(RTPAddress *address);
 private:
 	void DeleteData();
 
@@ -134,10 +138,19 @@ inline uint8_t *RTPRawPacket::AllocateBytes(bool isrtp, int recvlen) const
 
 inline void RTPRawPacket::SetData(uint8_t *data, size_t datalen)
 {
-	DeleteData();
+	if (packetdata)
+		RTPDeleteByteArray(packetdata,GetMemoryManager());
 
 	packetdata = data;
 	packetdatalength = datalen;
+}
+
+inline void RTPRawPacket::SetSenderAddress(RTPAddress *address)
+{
+	if (senderaddress)
+		RTPDelete(senderaddress, GetMemoryManager());
+
+	senderaddress = address;
 }
 
 } // end namespace
