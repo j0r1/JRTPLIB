@@ -236,6 +236,7 @@ static RTPErrorInfo ErrorDescriptions[]=
 	{ ERR_RTP_UDPV4TRANS_CANTGETSOCKETTYPE, "Can't get the socket type of the specified existing socket"},
 	{ ERR_RTP_UDPV4TRANS_INVALIDSOCKETTYPE, "The specified existing socket is not an UDP socket"},
 	{ ERR_RTP_UDPV4TRANS_CANTGETVALIDSOCKET, "Can't get a valid socket when trying to choose a port automatically"},
+	{ ERR_RTP_UDPV4TRANS_TOOMANYATTEMPTSCHOOSINGSOCKET, "Can't seem to get RTP/RTCP ports automatically, too many attempts"},
 	{ 0,0 }
 };
 
