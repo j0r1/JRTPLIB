@@ -47,9 +47,9 @@ RTCPPacketBuilder::RTCPPacketBuilder(RTPSources &s,RTPPacketBuilder &pb,RTPMemor
 	: RTPMemoryObject(mgr),sources(s),rtppacketbuilder(pb),prevbuildtime(0,0),transmissiondelay(0,0),ownsdesinfo(mgr)
 {
 	init = false;
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 RTCPPacketBuilder::~RTCPPacketBuilder()

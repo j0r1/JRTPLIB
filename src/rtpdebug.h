@@ -40,12 +40,12 @@
 	#include "rtptypes.h"
 
 	void *operator new(size_t s,char filename[],int line);
-#if ! (defined(WIN32) || defined(_WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_HAVE_ARRAYALLOC
 	void *operator new[](size_t s,char filename[],int line);
 	#define new new (__FILE__,__LINE__)
 #else
 	#define new new (__FILE__,__LINE__)
-#endif // WIN32
+#endif // RTP_HAVE_ARRAYALLOC
 #endif // RTPDEBUG
 
 #endif // RTPDEBUG_H

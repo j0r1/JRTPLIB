@@ -55,11 +55,11 @@ void RTPRandomRand48::SetSeed(uint32_t seed)
 	mutex.Init(); // TODO: check error!
 #endif // RTP_SUPPORT_THREAD
 
-#if (defined(WIN32) || defined(_WIN32_WCE)) && defined(_MSC_VER) && _MSC_VER <= 1200
+#ifdef RTP_HAVE_VSUINT64SUFFIX
 	state = ((uint64_t)seed) << 16 | 0x330Eui64;
 #else
 	state = ((uint64_t)seed) << 16 | 0x330EULL;
-#endif
+#endif // RTP_HAVE_VSUINT64SUFFIX
 }
 
 uint8_t RTPRandomRand48::GetRandom8()
@@ -82,7 +82,7 @@ uint32_t RTPRandomRand48::GetRandom32()
 	mutex.Lock();
 #endif // RTP_SUPPORT_THREAD
 
-#if (defined(WIN32) || defined(_WIN32_WCE)) && defined(_MSC_VER) && _MSC_VER <= 1200
+#ifdef RTP_HAVE_VSUINT64SUFFIX
 	state = ((0x5DEECE66Dui64*state) + 0xBui64)&0x0000ffffffffffffui64;
 
 	uint32_t x = (uint32_t)((state>>16)&0xffffffffui64);
@@ -90,7 +90,7 @@ uint32_t RTPRandomRand48::GetRandom32()
 	state = ((0x5DEECE66DULL*state) + 0xBULL)&0x0000ffffffffffffULL;
 
 	uint32_t x = (uint32_t)((state>>16)&0xffffffffULL);
-#endif
+#endif // RTP_HAVE_VSUINT64SUFFIX
 
 #ifdef RTP_SUPPORT_THREAD
 	mutex.Unlock();
@@ -104,7 +104,7 @@ double RTPRandomRand48::GetRandomDouble()
 	mutex.Lock();
 #endif // RTP_SUPPORT_THREAD
 
-#if (defined(WIN32) || defined(_WIN32_WCE)) && defined(_MSC_VER) && _MSC_VER <= 1200
+#ifdef RTP_HAVE_VSUINT64SUFFIX
 	state = ((0x5DEECE66Dui64*state) + 0xBui64)&0x0000ffffffffffffui64;
 
 	int64_t x = (int64_t)state;
@@ -112,7 +112,7 @@ double RTPRandomRand48::GetRandomDouble()
 	state = ((0x5DEECE66DULL*state) + 0xBULL)&0x0000ffffffffffffULL;
 
 	int64_t x = (int64_t)state;
-#endif
+#endif // RTP_HAVE_VSUINT64SUFFIX
 
 #ifdef RTP_SUPPORT_THREAD
 	mutex.Unlock();

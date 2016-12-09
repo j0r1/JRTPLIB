@@ -96,9 +96,9 @@ RTPUDPv4Transmitter::RTPUDPv4Transmitter(RTPMemoryManager *mgr) : RTPTransmitter
 {
 	created = false;
 	init = false;
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 RTPUDPv4Transmitter::~RTPUDPv4Transmitter()

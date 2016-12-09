@@ -106,11 +106,11 @@ double RTPRandomURandom::GetRandomDouble()
 
 	fread(&value, sizeof(uint64_t), 1, device);
 
-#if (defined(WIN32) || defined(_WIN32_WCE)) && defined(_MSC_VER) && _MSC_VER <= 1200
+#ifdef RTP_HAVE_VSUINT64SUFFIX
 	value &= 0x7fffffffffffffffui64;
 #else
 	value &= 0x7fffffffffffffffULL;
-#endif
+#endif // RTP_HAVE_VSUINT64SUFFIX
 
 	int64_t value2 = (int64_t)value;
 	double x = RTPRANDOM_2POWMIN63*(double)value2;

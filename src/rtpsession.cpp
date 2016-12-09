@@ -48,6 +48,7 @@
 #ifdef RTP_SUPPORT_SENDAPP
 	#include "rtcpcompoundpacket.h"
 #endif // RTP_SUPPORT_SENDAPP
+#include "rtpinternalutils.h"
 #ifndef WIN32
 	#include <unistd.h>
 	#include <stdlib.h>
@@ -89,9 +90,9 @@ RTPSession::RTPSession(RTPRandom *r,RTPMemoryManager *mgr)
 	  rtcpbuilder(sources,packetbuilder,mgr),collisionlist(mgr)
 {
 	created = false;
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 
 	//std::cout << (void *)(rtprnd) << std::endl;
 }
@@ -1583,14 +1584,9 @@ int RTPSession::CreateCNAME(uint8_t *buffer,size_t *bufferlength,bool resolve)
 #ifndef _WIN32_WCE
 	DWORD len = *bufferlength;
 	if (!GetUserName((LPTSTR)buffer,&len))
-#if (defined(_MSC_VER) && _MSC_VER >= 1400 ) // Check if we can use the secure strncpy_s
-		strncpy_s((char *)buffer,*bufferlength,"unknown",_TRUNCATE);
-#else
-		strncpy((char *)buffer,"unknown",*bufferlength);
-#endif // Less secure version
-
+		RTP_STRNCPY((char *)buffer,"unknown",*bufferlength);
 #else 
-	strncpy((char *)buffer,"unknown",*bufferlength);
+	RTP_STRNCPY((char *)buffer,"unknown",*bufferlength);
 #endif // _WIN32_WCE
 	
 #endif // WIN32
@@ -1614,17 +1610,11 @@ int RTPSession::CreateCNAME(uint8_t *buffer,size_t *bufferlength,bool resolve)
 	{
 		char hostname[1024];
 		
-#if defined(WIN32) && !defined(_WIN32_WCE) && (defined(_MSC_VER) && _MSC_VER >= 1400 ) // Check if we can use the secure strncpy_s
-		strncpy_s(hostname,1024,"localhost",_TRUNCATE); // just in case gethostname fails
-#else
-		strncpy(hostname,"localhost",1024); // just in case gethostname fails
-#endif
+		RTP_STRNCPY(hostname,"localhost",1024); // just in case gethostname fails
+
 		gethostname(hostname,1024);
-#if defined(WIN32) && !defined(_WIN32_WCE) && (defined(_MSC_VER) && _MSC_VER >= 1400 ) // Check if we can use the secure strncpy_s
-		strncpy_s((char *)(buffer+offset),buflen2,hostname,_TRUNCATE);
-#else
-		strncpy((char *)(buffer+offset),hostname,buflen2);
-#endif
+		RTP_STRNCPY((char *)(buffer+offset),hostname,buflen2);
+
 		*bufferlength = offset+strlen(hostname);
 	}
 	if (*bufferlength > RTCP_SDES_MAXITEMLENGTH)
@@ -1638,11 +1628,11 @@ RTPRandom *RTPSession::GetRandomNumberGenerator(RTPRandom *r)
 
 	if (r == 0)
 	{
-#if defined(WIN32) || defined(_WIN32_WCE)
+#ifdef RTP_HAVE_RAND_S
 		RTPRandomRandS *rnew2 = new RTPRandomRandS();
 #else
 		RTPRandomURandom *rnew2 = new RTPRandomURandom();
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_HAVE_RAND_S
 
 		if (rnew2->Init() < 0) // fall back to rand48
 		{

@@ -34,9 +34,9 @@
 #include "rtpdefines.h"
 #include "rtpaddress.h"
 #include "rtpmemorymanager.h"
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SUPPORT_NETINET_IN
 	#include <netinet/in.h>
-#endif // WIN32
+#endif // RTP_SUPPORT_NETINET_IN
 
 #ifdef RTPDEBUG
 	#include <iostream>

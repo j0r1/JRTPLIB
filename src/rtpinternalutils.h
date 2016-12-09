@@ -45,5 +45,11 @@
 	#define RTP_SNPRINTF snprintf
 #endif 
 
+#ifdef RTP_HAVE_STRNCPY_S
+	#define RTP_STRNCPY(dest, src, len) strncpy_s((dest), (len), (src), _TRUNCATE)
+#else
+	#define RTP_STRNCPY(dest, src, len) strncpy((dest), (src), (len))
+#endif // RTP_HAVE_STRNCPY_S
+
 #endif // RTPINTERNALUTILS_H
 

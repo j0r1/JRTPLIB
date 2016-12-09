@@ -39,10 +39,10 @@
 #ifdef RTP_SUPPORT_RTCPUNKNOWN
 	#include "rtcpunknownpacket.h"
 #endif // RTP_SUPPORT_RTCPUNKNOWN 
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SUPPORT_NETINET_IN
 	#include <netinet/in.h>
-	#include <string.h>
-#endif // WIN32
+#endif // RTP_SUPPORT_NETINET_IN
+#include <string.h>
 
 #include "rtpdebug.h"
 

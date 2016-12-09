@@ -43,7 +43,7 @@
 namespace jrtplib
 {
 
-#if ! (defined(WIN32) || defined(_WIN32_WCE))
+#ifndef RTP_SOCKETTYPE_WINSOCK
 
 typedef int SocketType;
 
@@ -51,7 +51,7 @@ typedef int SocketType;
 
 typedef SOCKET SocketType;
 
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 } // end namespace
 

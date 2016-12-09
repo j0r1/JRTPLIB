@@ -30,29 +30,26 @@
 
 */
 
-#if defined(WIN32) && !defined(_WIN32_WCE)
+#ifdef RTP_HAVE_RAND_S
 	#define _CRT_RAND_S
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_HAVE_RAND_S
 
 #include "rtprandomrands.h"
 #include "rtperrors.h"
+#include <stdlib.h>
+#include <math.h>
 
-#if (defined(WIN32) && !defined(_WIN32_WCE)) && (defined(_MSC_VER) && _MSC_VER >= 1400 )
-	#include <math.h>
-	#include <stdlib.h>
-	// If compiling on VC 8 or later for full Windows, we'll attempt to use rand_s,
-	// which generates better random numbers.  However, its only supported on Windows XP,
-	// Windows Server 2003, and later, so we'll do a run-time check to see if we can
-	// use it (it won't work on Windows 2000 SP4 for example).
-	#define RTP_SUPPORT_RANDS
-#endif
+// If compiling on VC 8 or later for full Windows, we'll attempt to use rand_s,
+// which generates better random numbers.  However, its only supported on Windows XP,
+// Windows Server 2003, and later, so we'll do a run-time check to see if we can
+// use it (it won't work on Windows 2000 SP4 for example).
 
 #include "rtpdebug.h"
 
 namespace jrtplib
 {
 
-#ifndef RTP_SUPPORT_RANDS
+#ifndef RTP_HAVE_RAND_S
 
 RTPRandomRandS::RTPRandomRandS()
 {
@@ -194,7 +191,7 @@ double RTPRandomRandS::GetRandomDouble()
 	return RTPRANDOM_2POWMIN63*(double)x2;
 }
 
-#endif // RTP_SUPPORT_RANDS
+#endif // RTP_HAVE_RAND_S
 
 } // end namespace
 

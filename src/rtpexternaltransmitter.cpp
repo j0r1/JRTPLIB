@@ -35,6 +35,7 @@
 #include "rtptimeutilities.h"
 #include "rtpdefines.h"
 #include "rtperrors.h"
+#include "rtpsocketutilinternal.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -45,43 +46,6 @@
 #include "rtpdebug.h"
 
 #include <iostream>
-
-#if (defined(WIN32) || defined(_WIN32_WCE))
-	#define RTPSOCKERR								INVALID_SOCKET
-	#define RTPCLOSE(x)								closesocket(x)
-	#define RTPSOCKLENTYPE								int
-	#define RTPIOCTL								ioctlsocket
-#else // not Win32
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	#include <arpa/inet.h>
-	#include <sys/ioctl.h>
-	#include <net/if.h>
-	#include <string.h>
-	#include <netdb.h>
-	#include <unistd.h>
-
-	#ifdef RTP_HAVE_SYS_FILIO
-		#include <sys/filio.h>
-	#endif // RTP_HAVE_SYS_FILIO
-	#ifdef RTP_HAVE_SYS_SOCKIO
-		#include <sys/sockio.h>
-	#endif // RTP_HAVE_SYS_SOCKIO
-	#ifdef RTP_SUPPORT_IFADDRS
-		#include <ifaddrs.h>
-	#endif // RTP_SUPPORT_IFADDRS
-
-	#define RTPSOCKERR								-1
-	#define RTPCLOSE(x)								close(x)
-
-	#ifdef RTP_SOCKLENTYPE_UINT
-		#define RTPSOCKLENTYPE							unsigned int
-	#else
-		#define RTPSOCKLENTYPE							int
-	#endif // RTP_SOCKLENTYPE_UINT
-
-	#define RTPIOCTL								ioctl
-#endif // WIN32
 
 #ifdef RTP_SUPPORT_THREAD
 	#define MAINMUTEX_LOCK 		{ if (threadsafe) mainmutex.Lock(); }
@@ -102,9 +66,9 @@ RTPExternalTransmitter::RTPExternalTransmitter(RTPMemoryManager *mgr) : RTPTrans
 {
 	created = false;
 	init = false;
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 RTPExternalTransmitter::~RTPExternalTransmitter()
@@ -365,13 +329,13 @@ int RTPExternalTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataa
 	if (FD_ISSET(abortdesc[0],&fdset))
 	{
 #define BUFLEN 256
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 		char buf[BUFLEN];
 		unsigned long len, len2;
 #else 
 		size_t len, len2;
 		unsigned char buf[BUFLEN];
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 		len = 0;
 		RTPIOCTL(abortdesc[0],FIONREAD,&len);
@@ -382,11 +346,11 @@ int RTPExternalTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataa
 			if (len2 > BUFLEN)
 				len2 = BUFLEN;
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 			recv(abortdesc[0],buf,len2,0);
 #else 
 			if (read(abortdesc[0],buf,len2)) 	{ } // To get rid of __wur related compiler warnings
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 			len -= len2;
 		}
 	}
@@ -648,7 +612,7 @@ void RTPExternalTransmitter::FlushPackets()
 	rawpacketlist.clear();
 }
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 
 int RTPExternalTransmitter::CreateAbortDescriptors()
 {
@@ -750,18 +714,18 @@ void RTPExternalTransmitter::DestroyAbortDescriptors()
 	close(abortdesc[1]);
 }
 
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 void RTPExternalTransmitter::AbortWaitInternal()
 {
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	send(abortdesc[1],"*",1,0);
 #else
 	if (write(abortdesc[1],"*",1))
 	{
 		// To get rid of __wur related compiler warnings
 	}
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 }
 
 void RTPExternalTransmitter::InjectRTP(const void *data, size_t len, const RTPAddress &a)

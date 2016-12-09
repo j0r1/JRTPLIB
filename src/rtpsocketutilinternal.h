@@ -38,10 +38,10 @@
 
 #define RTPSOCKETUTILINTERNAL_H
 
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	#define RTPSOCKERR								INVALID_SOCKET
 	#define RTPCLOSE(x)								closesocket(x)
-	#define RTPSOCKLENTYPE								int
+	#define RTPSOCKLENTYPE							int
 	#define RTPIOCTL								ioctlsocket
 #else // not Win32
 	#include <sys/socket.h>
@@ -67,13 +67,13 @@
 	#define RTPCLOSE(x)								close(x)
 
 	#ifdef RTP_SOCKLENTYPE_UINT
-		#define RTPSOCKLENTYPE							unsigned int
+		#define RTPSOCKLENTYPE						unsigned int
 	#else
-		#define RTPSOCKLENTYPE							int
+		#define RTPSOCKLENTYPE						int
 	#endif // RTP_SOCKLENTYPE_UINT
 
 	#define RTPIOCTL								ioctl
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 #endif // RTPSOCKETUTILINTERNAL_H
 

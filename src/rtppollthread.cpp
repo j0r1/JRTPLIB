@@ -39,10 +39,7 @@
 #include "rtperrors.h"
 #include "rtprawpacket.h"
 #include <time.h>
-
-#ifndef _WIN32_WCE
-	#include <iostream>
-#endif // _WIN32_WCE
+#include <iostream>
 
 #include "rtpdebug.h"
 
@@ -53,9 +50,9 @@ RTPPollThread::RTPPollThread(RTPSession &session,RTCPScheduler &sched):rtpsessio
 {
 	stop = false;
 	transmitter = 0;
-#if (defined(WIN32) || defined(_WIN32_WCE))
+#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 RTPPollThread::~RTPPollThread()
@@ -106,9 +103,7 @@ void RTPPollThread::Stop()
 
 	if (JThread::IsRunning())
 	{
-#ifndef _WIN32_WCE
 		std::cerr << "RTPPollThread: Warning! Having to kill thread!" << std::endl;
-#endif // _WIN32_WCE
 		JThread::Kill();
 	}
 	stop = false;
