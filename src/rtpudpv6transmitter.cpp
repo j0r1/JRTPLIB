@@ -43,51 +43,10 @@
 #include "rtpipv6address.h"
 #include "rtptimeutilities.h"
 #include "rtpdefines.h"
-#include <stdio.h>
-#ifdef RTP_SOCKETTYPE_WINSOCK
-	#define RTPSOCKERR								INVALID_SOCKET
-	#define RTPCLOSE(x)								closesocket(x)
-	#define RTPSOCKLENTYPE								int
-	#define RTPIOCTL								ioctlsocket
-
-	// These are protected in ws2tcpip.h using a define on the windows version
-	void WSAAPI freeaddrinfo (struct addrinfo*);
-	int WSAAPI getaddrinfo (const char*,const char*,const struct addrinfo*, struct addrinfo**);
-	int WSAAPI getnameinfo(const struct sockaddr*,socklen_t,char*,DWORD, char*,DWORD,int);
-#else // not winsock
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	#include <arpa/inet.h>
-	#include <sys/ioctl.h>
-	#include <net/if.h>
-	#include <string.h>
-	#include <netdb.h>
-	#include <unistd.h>
-
-	#ifdef RTP_HAVE_SYS_FILIO
-		#include <sys/filio.h>
-	#endif // RTP_HAVE_SYS_FILIO
-	#ifdef RTP_HAVE_SYS_SOCKIO
-		#include <sys/sockio.h>
-	#endif // RTP_HAVE_SYS_SOCKIO
-	#ifdef RTP_SUPPORT_IFADDRS
-		#include <ifaddrs.h>
-	#endif // RTP_SUPPORT_IFADDRS
-
-
-	#define RTPSOCKERR								-1
-	#define RTPCLOSE(x)								close(x)
-
-	#ifdef RTP_SOCKLENTYPE_UINT
-		#define RTPSOCKLENTYPE							unsigned int
-	#else
-		#define RTPSOCKLENTYPE							int
-	#endif // RTP_SOCKLENTYPE_UINT
-
-	#define RTPIOCTL								ioctl
-#endif // RTP_SOCKETTYPE_WINSOCK
-
+#include "rtpsocketutilinternal.h"
 #include "rtpinternalutils.h"
+#include <stdio.h>
+
 #include "rtpdebug.h"
 
 #define RTPUDPV6TRANS_MAXPACKSIZE							65535

@@ -56,11 +56,60 @@ class RTPMemoryManager;
 class JRTPLIB_IMPORTEXPORT RTPIPv4Address : public RTPAddress
 {
 public:
-	/** Creates an instance with IP address \c ip and port number \c port (both are interpreted in host byte order). */
-	RTPIPv4Address(uint32_t ip = 0, uint16_t port = 0):RTPAddress(IPv4Address)						{ RTPIPv4Address::ip = ip; RTPIPv4Address::port = port; }
-	
-	/** Creates an instance with IP address \c ip and port number \c port (\c port is interpreted in host byte order). */
-	RTPIPv4Address(const uint8_t ip[4],uint16_t port = 0):RTPAddress(IPv4Address)					{ RTPIPv4Address::ip = (uint32_t)ip[3]; RTPIPv4Address::ip |= (((uint32_t)ip[2])<<8); RTPIPv4Address::ip |= (((uint32_t)ip[1])<<16); RTPIPv4Address::ip |= (((uint32_t)ip[0])<<24); RTPIPv4Address::port = port; }
+	/** Creates an instance with IP address \c ip and port number \c port (both 
+	 *  are interpreted in host byte order), and possibly sets the RTCP multiplex flag
+	 *  (see RTPIPv4Address::UseRTCPMultiplexingOnTransmission). */
+	RTPIPv4Address(uint32_t ip = 0, uint16_t port = 0,bool rtcpmux = false):RTPAddress(IPv4Address)	
+	{ 
+		RTPIPv4Address::ip = ip; 
+		RTPIPv4Address::port = port;
+		if (rtcpmux)
+			rtcpsendport = port;
+		else
+			rtcpsendport = port+1;
+	}
+
+	/** Creates an instance with IP address \c ip and port number \c port (both 
+	 *  are interpreted in host byte order), and sets a specific port to
+	 *  send RTCP packets to (see RTPIPv4Address::GetRTCPSendPort). */
+	RTPIPv4Address(uint32_t ip, uint16_t port, uint16_t rtcpsendport):RTPAddress(IPv4Address)	
+	{
+		RTPIPv4Address::ip = ip; 
+		RTPIPv4Address::port = port; 
+		RTPIPv4Address::rtcpsendport = rtcpsendport; 
+	}
+
+	/** Creates an instance with IP address \c ip and port number \c port (\c port is 
+	 *  interpreted in host byte order) and possibly sets the RTCP multiplex flag
+	 *  (see RTPIPv4Address::UseRTCPMultiplexingOnTransmission). */
+	RTPIPv4Address(const uint8_t ip[4],uint16_t port = 0,bool rtcpmux = false):RTPAddress(IPv4Address) 
+	{
+		RTPIPv4Address::ip = (uint32_t)ip[3]; 
+		RTPIPv4Address::ip |= (((uint32_t)ip[2])<<8); 
+		RTPIPv4Address::ip |= (((uint32_t)ip[1])<<16); 
+		RTPIPv4Address::ip |= (((uint32_t)ip[0])<<24); 
+		
+		RTPIPv4Address::port = port; 
+		if (rtcpmux)
+			rtcpsendport = port;
+		else
+			rtcpsendport = port+1;
+	}
+
+	/** Creates an instance with IP address \c ip and port number \c port (both 
+	 *  are interpreted in host byte order), and sets a specific port to
+	 *  send RTCP packets to (see RTPIPv4Address::GetRTCPSendPort). */
+	RTPIPv4Address(const uint8_t ip[4],uint16_t port,uint16_t rtcpsendport):RTPAddress(IPv4Address) 
+	{
+		RTPIPv4Address::ip = (uint32_t)ip[3]; 
+		RTPIPv4Address::ip |= (((uint32_t)ip[2])<<8); 
+		RTPIPv4Address::ip |= (((uint32_t)ip[1])<<16); 
+		RTPIPv4Address::ip |= (((uint32_t)ip[0])<<24); 
+		
+		RTPIPv4Address::port = port; 
+		RTPIPv4Address::rtcpsendport = rtcpsendport;
+	}
+
 	~RTPIPv4Address()																				{ }
 
 	/** Sets the IP address for this instance to \c ip which is assumed to be in host byte order. */
@@ -78,7 +127,14 @@ public:
 	/** Returns the port number of this instance in host byte order. */
 	uint16_t GetPort() const																		{ return port; }
 
+	/** For outgoing packets, this indicates to which port RTCP packets will be sent (can, 
+	 *  be the same port as the RTP packets in case RTCP multiplexing is used). */
+	uint16_t GetRTCPSendPort() const																{ return rtcpsendport; }
+
 	RTPAddress *CreateCopy(RTPMemoryManager *mgr) const;
+
+	// Note that these functions are only used for received packets, and for those
+	// the rtcpsendport variable is not important and should be ignored.
 	bool IsSameAddress(const RTPAddress *addr) const;
 	bool IsFromSameHost(const RTPAddress *addr) const;
 #ifdef RTPDEBUG
@@ -87,6 +143,7 @@ public:
 private:
 	uint32_t ip;
 	uint16_t port;
+	uint16_t rtcpsendport;
 };
 
 } // end namespace

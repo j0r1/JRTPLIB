@@ -40,6 +40,7 @@
 
 #include "rtpconfig.h"
 #include "rtptypes.h"
+#include "rtpipv4address.h"
 #ifndef RTP_SOCKETTYPE_WINSOCK
 	#include <netinet/in.h>
 	#include <arpa/inet.h>
@@ -54,17 +55,24 @@ namespace jrtplib
 class JRTPLIB_IMPORTEXPORT RTPIPv4Destination
 {
 public:
-	RTPIPv4Destination(uint32_t ip,uint16_t rtpportbase)					
+	RTPIPv4Destination()
+	{
+		ip = 0;
+		memset(&rtpaddr,0,sizeof(struct sockaddr_in));
+		memset(&rtcpaddr,0,sizeof(struct sockaddr_in));
+	}
+
+	RTPIPv4Destination(uint32_t ip,uint16_t rtpport,uint16_t rtcpport)
 	{
 		memset(&rtpaddr,0,sizeof(struct sockaddr_in));
 		memset(&rtcpaddr,0,sizeof(struct sockaddr_in));
 		
 		rtpaddr.sin_family = AF_INET;
-		rtpaddr.sin_port = htons(rtpportbase);
+		rtpaddr.sin_port = htons(rtpport);
 		rtpaddr.sin_addr.s_addr = htonl(ip);
 		
 		rtcpaddr.sin_family = AF_INET;
-		rtcpaddr.sin_port = htons(rtpportbase+1);
+		rtcpaddr.sin_port = htons(rtcpport);
 		rtcpaddr.sin_addr.s_addr = htonl(ip);
 
 		RTPIPv4Destination::ip = ip;
@@ -84,6 +92,20 @@ public:
 	const struct sockaddr_in *GetRTPSockAddr() const					{ return &rtpaddr; }
 	const struct sockaddr_in *GetRTCPSockAddr() const					{ return &rtcpaddr; }
 	std::string GetDestinationString() const;
+
+	static bool AddressToDestination(const RTPAddress &addr, RTPIPv4Destination &dest)
+	{
+		if (addr.GetAddressType() != RTPAddress::IPv4Address)
+			return false;
+
+		const RTPIPv4Address &address = (const RTPIPv4Address &)addr;
+		uint16_t rtpport = address.GetPort();
+		uint16_t rtcpport = address.GetRTCPSendPort();
+
+		dest = RTPIPv4Destination(address.GetIP(),rtpport,rtcpport);
+		return true;
+	}
+
 private:
 	uint32_t ip;
 	struct sockaddr_in rtpaddr;

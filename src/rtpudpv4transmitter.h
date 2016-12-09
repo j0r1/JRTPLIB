@@ -43,6 +43,7 @@
 #include "rtpipv4destination.h"
 #include "rtphashtable.h"
 #include "rtpkeyhashtable.h"
+#include "rtpsocketutil.h"
 #include <list>
 
 #ifdef RTP_SUPPORT_THREAD
@@ -64,7 +65,7 @@ namespace jrtplib
 class JRTPLIB_IMPORTEXPORT RTPUDPv4TransmissionParams : public RTPTransmissionParams
 {
 public:
-	RTPUDPv4TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	{ portbase = RTPUDPV4TRANS_DEFAULTPORTBASE; bindIP = 0; multicastTTL = 1; mcastifaceIP = 0; rtpsendbuf = RTPUDPV4TRANS_RTPTRANSMITBUFFER; rtprecvbuf= RTPUDPV4TRANS_RTPRECEIVEBUFFER; rtcpsendbuf = RTPUDPV4TRANS_RTCPTRANSMITBUFFER; rtcprecvbuf = RTPUDPV4TRANS_RTCPRECEIVEBUFFER; }
+	RTPUDPv4TransmissionParams();
 
 	/** Sets the IP address which is used to bind the sockets to \c ip. */
 	void SetBindIP(uint32_t ip)									{ bindIP = ip; }
@@ -72,7 +73,9 @@ public:
 	/** Sets the multicast interface IP address. */
 	void SetMulticastInterfaceIP(uint32_t ip)					{ mcastifaceIP = ip; }
 
-	/** Sets the RTP portbase to \c pbase. This has to be an even number. */
+	/** Sets the RTP portbase to \c pbase, which has to be an even number
+	 *  unless RTPUDPv4TransmissionParams::SetAllowOddPortbase was called;
+	 *  a port number of zero will cause a port to be chosen automatically. */
 	void SetPortbase(uint16_t pbase)							{ portbase = pbase; }
 
 	/** Sets the multicast TTL to be used to \c mcastTTL. */
@@ -114,6 +117,21 @@ public:
 	/** Sets the RTCP socket's receive buffer size. */
 	void SetRTCPReceiveBuffer(int s)							{ rtcprecvbuf = s; }
 
+	/** Enables or disables multiplexing RTCP traffic over the RTP channel, so that only a single port is used. */
+	void SetRTCPMultiplexing(bool f)							{ rtcpmux = f; }
+
+	/** Can be used to allow the RTP port base to be any number, not just even numbers. */
+	void SetAllowOddPortbase(bool f)							{ allowoddportbase = f; }
+
+	/** Force the RTCP socket to use a specific port, not necessarily one more than
+	 *  the RTP port (set this to zero to disable). */
+	void SetForcedRTCPPort(uint16_t rtcpport)					{ forcedrtcpport = rtcpport; }
+
+	/** Use sockets that have already been created, no checks on port numbers
+	 *  will be done, and no buffer sizes will be set; you'll need to close
+	 *  the sockets yourself when done, it will **not** be done automatically. */
+	void SetUseExistingSockets(SocketType rtpsocket, SocketType rtcpsocket) { rtpsock = rtpsocket; rtcpsock = rtcpsocket; useexistingsockets = true; }
+
 	/** Returns the RTP socket's send buffer size. */
 	int GetRTPSendBuffer() const								{ return rtpsendbuf; }
 
@@ -125,6 +143,19 @@ public:
 
 	/** Returns the RTCP socket's receive buffer size. */
 	int GetRTCPReceiveBuffer() const							{ return rtcprecvbuf; }
+
+	/** Returns a flag indicating if RTCP traffic will be multiplexed over the RTP channel. */
+	bool GetRTCPMultiplexing() const							{ return rtcpmux; }
+
+	/** If true, any RTP portbase will be allowed, not just even numbers. */
+	bool GetAllowOddPortbase() const							{ return allowoddportbase; }
+
+	/** If non-zero, the specified port will be used to receive RTCP traffic. */
+	uint16_t GetForcedRTCPPort() const							{ return forcedrtcpport; }
+
+	/** Returns true and fills in sockets if existing sockets were set
+	 *  using RTPUDPv4TransmissionParams::SetUseExistingSockets. */
+	bool GetUseExistingSockets(SocketType &rtpsocket, SocketType &rtcpsocket) const { if (!useexistingsockets) return false; rtpsocket = rtpsock; rtcpsocket = rtcpsock; return true; }
 private:
 	uint16_t portbase;
 	uint32_t bindIP, mcastifaceIP;
@@ -132,40 +163,60 @@ private:
 	uint8_t multicastTTL;
 	int rtpsendbuf, rtprecvbuf;
 	int rtcpsendbuf, rtcprecvbuf;
+	bool rtcpmux;
+	bool allowoddportbase;
+	uint16_t forcedrtcpport;
+
+	SocketType rtpsock, rtcpsock;
+	bool useexistingsockets;
 };
+
+inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	
+{ 
+	portbase = RTPUDPV4TRANS_DEFAULTPORTBASE; 
+	bindIP = 0; 
+	multicastTTL = 1; 
+	mcastifaceIP = 0; 
+	rtpsendbuf = RTPUDPV4TRANS_RTPTRANSMITBUFFER; 
+	rtprecvbuf = RTPUDPV4TRANS_RTPRECEIVEBUFFER; 
+	rtcpsendbuf = RTPUDPV4TRANS_RTCPTRANSMITBUFFER; 
+	rtcprecvbuf = RTPUDPV4TRANS_RTCPRECEIVEBUFFER; 
+	rtcpmux = false;
+	allowoddportbase = false;
+	forcedrtcpport = 0;
+	useexistingsockets = false;
+	rtpsock = 0;
+	rtcpsock = 0;
+}
 
 /** Additional information about the UDP over IPv4 transmitter. */
 class JRTPLIB_IMPORTEXPORT RTPUDPv4TransmissionInfo : public RTPTransmissionInfo
 {
 public:
-#ifndef RTP_SOCKETTYPE_WINSOCK
-	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,int rtpsock,int rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
-#else
-	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,SOCKET rtpsock,SOCKET rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
-#endif // RTP_SOCKETTYPE_WINSOCK
-															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
+	RTPUDPv4TransmissionInfo(std::list<uint32_t> iplist,SocketType rtpsock,SocketType rtcpsock,
+	                         uint16_t rtpport, uint16_t rtcpport) : RTPTransmissionInfo(RTPTransmitter::IPv4UDPProto) 
+															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; m_rtpPort = rtpport; m_rtcpPort = rtcpport; }
 
 	~RTPUDPv4TransmissionInfo()								{ }
 	
 	/** Returns the list of IPv4 addresses the transmitter considers to be the local IP addresses. */
 	std::list<uint32_t> GetLocalIPList() const				{ return localIPlist; }
-#ifndef RTP_SOCKETTYPE_WINSOCK
+
 	/** Returns the socket descriptor used for receiving and transmitting RTP packets. */
-	int GetRTPSocket() const								{ return rtpsocket; }
+	SocketType GetRTPSocket() const							{ return rtpsocket; }
 
 	/** Returns the socket descriptor used for receiving and transmitting RTCP packets. */
-	int GetRTCPSocket() const								{ return rtcpsocket; }
-#else
-	SOCKET GetRTPSocket() const								{ return rtpsocket; }
-	SOCKET GetRTCPSocket() const							{ return rtcpsocket; }
-#endif // RTP_SOCKETTYPE_WINSOCK
+	SocketType GetRTCPSocket() const						{ return rtcpsocket; }
+
+	/** Returns the port number that the RTP socket receives packets on. */
+	uint16_t GetRTPPort() const								{ return m_rtpPort; }
+
+	/** Returns the port number that the RTCP socket receives packets on. */
+	uint16_t GetRTCPPort() const							{ return m_rtcpPort; }
 private:
 	std::list<uint32_t> localIPlist;
-#ifndef RTP_SOCKETTYPE_WINSOCK
-	int rtpsocket,rtcpsocket;
-#else
-	SOCKET rtpsocket,rtcpsocket;
-#endif // RTP_SOCKETTYPE_WINSOCK
+	SocketType rtpsocket,rtcpsocket;
+	uint16_t m_rtpPort, m_rtcpPort;
 };
 	
 class JRTPLIB_IMPORTEXPORT RTPUDPv4Trans_GetHashIndex_IPv4Dest
@@ -253,14 +304,10 @@ private:
 	bool init;
 	bool created;
 	bool waitingfordata;
-#ifdef RTP_SOCKETTYPE_WINSOCK
-	SOCKET rtpsock,rtcpsock;
-#else // not using winsock
-	int rtpsock,rtcpsock;
-#endif // RTP_SOCKETTYPE_WINSOCK
-	uint32_t bindIP, mcastifaceIP;
+	SocketType rtpsock,rtcpsock;
+	uint32_t mcastifaceIP;
 	std::list<uint32_t> localIPs;
-	uint16_t portbase;
+	uint16_t m_rtpPort, m_rtcpPort;
 	uint8_t multicastTTL;
 	RTPTransmitter::ReceiveMode receivemode;
 
@@ -288,11 +335,9 @@ private:
 	RTPKeyHashTable<const uint32_t,PortInfo*,RTPUDPv4Trans_GetHashIndex_uint32_t,RTPUDPV4TRANS_HASHSIZE> acceptignoreinfo;
 
 	// notification descriptors for AbortWait (0 is for reading, 1 for writing)
-#ifdef RTP_SOCKETTYPE_WINSOCK
-	SOCKET abortdesc[2];
-#else
-	int abortdesc[2];
-#endif // RTP_SOCKETTYPE_WINSOCK
+	SocketType abortdesc[2];
+	bool closesocketswhendone;
+
 	int CreateAbortDescriptors();
 	void DestroyAbortDescriptors();
 	void AbortWaitInternal();

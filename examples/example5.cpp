@@ -10,12 +10,6 @@
 #include "rtpsessionparams.h"
 #include "rtperrors.h"
 #include "rtpmemorymanager.h"
-#ifndef WIN32
-	#include <netinet/in.h>
-	#include <arpa/inet.h>
-#else
-	#include <winsock2.h>
-#endif // WIN32
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>

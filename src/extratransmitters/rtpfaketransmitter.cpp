@@ -620,14 +620,13 @@ int RTPFakeTransmitter::AddDestination(const RTPAddress &addr)
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_FAKETRANS_NOTCREATED;
 	}
-	if (addr.GetAddressType() != RTPAddress::IPv4Address)
+	RTPIPv4Destination dest;
+	if (!RTPIPv4Destination::AddressToDestination(addr, dest))
 	{
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_FAKETRANS_INVALIDADDRESSTYPE;
 	}
 	
-	RTPIPv4Address &address = (RTPIPv4Address &)addr;
-	RTPIPv4Destination dest(address.GetIP(),address.GetPort());
 	int status = destinations.AddElement(dest);
 
 	MAINMUTEX_UNLOCK
@@ -646,14 +645,13 @@ int RTPFakeTransmitter::DeleteDestination(const RTPAddress &addr)
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_FAKETRANS_NOTCREATED;
 	}
-	if (addr.GetAddressType() != RTPAddress::IPv4Address)
+	RTPIPv4Destination dest;
+	if (!RTPIPv4Destination::AddressToDestination(addr, dest))
 	{
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_FAKETRANS_INVALIDADDRESSTYPE;
 	}
 	
-	RTPIPv4Address &address = (RTPIPv4Address &)addr;	
-	RTPIPv4Destination dest(address.GetIP(),address.GetPort());
 	int status = destinations.DeleteElement(dest);
 	
 	MAINMUTEX_UNLOCK

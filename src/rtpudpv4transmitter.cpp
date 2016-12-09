@@ -35,48 +35,21 @@
 #include "rtpipv4address.h"
 #include "rtptimeutilities.h"
 #include "rtpdefines.h"
-#include <stdio.h>
-#ifdef RTP_SOCKETTYPE_WINSOCK
-	#define RTPSOCKERR								INVALID_SOCKET
-	#define RTPCLOSE(x)								closesocket(x)
-	#define RTPSOCKLENTYPE								int
-	#define RTPIOCTL								ioctlsocket
-#else // not winsock
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	#include <arpa/inet.h>
-	#include <sys/ioctl.h>
-	#include <net/if.h>
-	#include <string.h>
-	#include <netdb.h>
-	#include <unistd.h>
-
-	#ifdef RTP_HAVE_SYS_FILIO
-		#include <sys/filio.h>
-	#endif // RTP_HAVE_SYS_FILIO
-	#ifdef RTP_HAVE_SYS_SOCKIO
-		#include <sys/sockio.h>
-	#endif // RTP_HAVE_SYS_SOCKIO
-	#ifdef RTP_SUPPORT_IFADDRS
-		#include <ifaddrs.h>
-	#endif // RTP_SUPPORT_IFADDRS
-
-	#define RTPSOCKERR								-1
-	#define RTPCLOSE(x)								close(x)
-
-	#ifdef RTP_SOCKLENTYPE_UINT
-		#define RTPSOCKLENTYPE							unsigned int
-	#else
-		#define RTPSOCKLENTYPE							int
-	#endif // RTP_SOCKLENTYPE_UINT
-
-	#define RTPIOCTL								ioctl
-#endif // RTP_SOCKETTYPE_WINSOCK
-
+#include "rtpstructs.h"
+#include "rtpsocketutilinternal.h"
 #include "rtpinternalutils.h"
-#include "rtpdebug.h"
+#include <stdio.h>
+#include <assert.h>
+#include <vector>
+#ifdef RTPDEBUG
+	#include <iostream>
+#endif // RTPDEBUG
 
 #include <iostream>
+
+#include "rtpdebug.h"
+
+using namespace std;
 
 #define RTPUDPV4TRANS_MAXPACKSIZE							65535
 #define RTPUDPV4TRANS_IFREQBUFSIZE							8192
@@ -101,6 +74,16 @@
 	#define WAITMUTEX_LOCK
 	#define WAITMUTEX_UNLOCK
 #endif // RTP_SUPPORT_THREAD
+
+#define CLOSESOCKETS do { \
+	if (closesocketswhendone) \
+	{\
+		if (rtpsock != rtcpsock) \
+			RTPCLOSE(rtcpsock); \
+		RTPCLOSE(rtpsock); \
+	} \
+} while(0)
+		
 
 namespace jrtplib
 {
@@ -150,6 +133,168 @@ int RTPUDPv4Transmitter::Init(bool tsafe)
 	return 0;
 }
 
+static int GetIPv4SocketPort(SocketType s, uint16_t *pPort)
+{
+	assert(pPort != 0);
+
+	struct sockaddr_in addr;
+	memset(&addr, 0, sizeof(struct sockaddr_in));
+
+	RTPSOCKLENTYPE size = sizeof(struct sockaddr_in);
+	if (getsockname(s,(struct sockaddr*)&addr,&size) != 0)
+		return ERR_RTP_UDPV4TRANS_CANTGETSOCKETPORT;
+
+	if (addr.sin_family != AF_INET)
+		return ERR_RTP_UDPV4TRANS_NOTANIPV4SOCKET;
+
+	uint16_t port = ntohs(addr.sin_port);
+	if (port == 0)
+		return ERR_RTP_UDPV4TRANS_SOCKETPORTNOTSET;
+	
+	int type = 0;
+	RTPSOCKLENTYPE length = sizeof(type);
+
+	if (getsockopt(s, SOL_SOCKET, SO_TYPE, (char*)&type, &length) != 0)
+		return ERR_RTP_UDPV4TRANS_CANTGETSOCKETTYPE;
+
+	if (type != SOCK_DGRAM)
+		return ERR_RTP_UDPV4TRANS_INVALIDSOCKETTYPE;
+
+	*pPort = port;
+	return 0;
+}
+
+int GetAutoSockets(uint32_t bindIP, bool allowOdd, bool rtcpMux,
+                   SocketType *pRtpSock, SocketType *pRtcpSock, 
+                   uint16_t *pRtpPort, uint16_t *pRtcpPort)
+{
+	const int maxAttempts = 1024;
+	int attempts = 0;
+	vector<SocketType> toClose;
+
+	while (attempts++ < maxAttempts)
+	{
+		SocketType sock = socket(PF_INET, SOCK_DGRAM, 0);
+		if (sock == RTPSOCKERR)
+		{
+			for (size_t i = 0 ; i < toClose.size() ; i++)
+				RTPCLOSE(toClose[i]);
+			return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
+		}
+
+		// First we get an automatically chosen port
+
+		struct sockaddr_in addr;
+		memset(&addr,0,sizeof(struct sockaddr_in));
+
+		addr.sin_family = AF_INET;
+		addr.sin_port = 0;
+		addr.sin_addr.s_addr = htonl(bindIP);
+		if (bind(sock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
+		{
+			RTPCLOSE(sock);
+			for (size_t i = 0 ; i < toClose.size() ; i++)
+				RTPCLOSE(toClose[i]);
+			return ERR_RTP_UDPV4TRANS_CANTGETVALIDSOCKET;
+		}
+
+		uint16_t basePort = 0;
+		int status = GetIPv4SocketPort(sock, &basePort);
+		if (status < 0)
+		{
+			RTPCLOSE(sock);
+			for (size_t i = 0 ; i < toClose.size() ; i++)
+				RTPCLOSE(toClose[i]);
+			return status;
+		}
+
+		if (rtcpMux) // only need one socket
+		{
+			if (basePort%2 == 0 || allowOdd)
+			{
+				*pRtpSock = sock;
+				*pRtcpSock = sock;
+				*pRtpPort = basePort;
+				*pRtcpPort = basePort;
+				for (size_t i = 0 ; i < toClose.size() ; i++)
+					RTPCLOSE(toClose[i]);
+
+				return 0;
+			}
+			else
+				toClose.push_back(sock);
+		}
+		else
+		{
+			SocketType sock2 = socket(PF_INET, SOCK_DGRAM, 0);
+			if (sock2 == RTPSOCKERR)
+			{
+				RTPCLOSE(sock);
+				for (size_t i = 0 ; i < toClose.size() ; i++)
+					RTPCLOSE(toClose[i]);
+				return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
+			}
+
+			// Try the next port or the previous port
+			uint16_t secondPort = basePort;
+			bool possiblyValid = false;
+
+			if (basePort%2 == 0)
+			{
+				secondPort++;
+				possiblyValid = true;
+			}
+			else if (basePort > 1) // avoid landing on port 0
+			{
+				secondPort--;
+				possiblyValid = true;
+			}
+
+			if (possiblyValid)
+			{
+				memset(&addr,0,sizeof(struct sockaddr_in));
+
+				addr.sin_family = AF_INET;
+				addr.sin_port = htons(secondPort);
+				addr.sin_addr.s_addr = htonl(bindIP);
+				if (bind(sock2,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) == 0)
+				{
+					// In this case, we have two consecutive port numbers, the lower of
+					// which is even
+
+					if (basePort < secondPort)
+					{
+						*pRtpSock = sock;
+						*pRtcpSock = sock2;
+						*pRtpPort = basePort;
+						*pRtcpPort = secondPort;
+					}
+					else
+					{
+						*pRtpSock = sock2;
+						*pRtcpSock = sock;
+						*pRtpPort = secondPort;
+						*pRtcpPort = basePort;
+					}
+
+					for (size_t i = 0 ; i < toClose.size() ; i++)
+						RTPCLOSE(toClose[i]);
+
+					return 0;
+				}
+			}
+
+			toClose.push_back(sock);
+			toClose.push_back(sock2);
+		}
+	}
+
+	for (size_t i = 0 ; i < toClose.size() ; i++)
+		RTPCLOSE(toClose[i]);
+
+	return ERR_RTP_UDPV4TRANS_TOOMANYATTEMPTSCHOOSINGSOCKET;
+}
+
 int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionParams *transparams)
 {
 	const RTPUDPv4TransmissionParams *params,defaultparams;
@@ -182,90 +327,150 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 		params = (const RTPUDPv4TransmissionParams *)transparams;
 	}
 
-	// Check if portbase is even
-	if (params->GetPortbase()%2 != 0)
+	if (params->GetUseExistingSockets(rtpsock, rtcpsock))
 	{
-		MAINMUTEX_UNLOCK
-		return ERR_RTP_UDPV4TRANS_PORTBASENOTEVEN;
-	}
+		closesocketswhendone = false;
 
-	// create sockets
-	
-	rtpsock = socket(PF_INET,SOCK_DGRAM,0);
-	if (rtpsock == RTPSOCKERR)
-	{
-		MAINMUTEX_UNLOCK
-		return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
+		// Determine the port numbers
+		int status = GetIPv4SocketPort(rtpsock, &m_rtpPort);
+		if (status < 0)
+		{
+			MAINMUTEX_UNLOCK
+			return status;
+		}
+		status = GetIPv4SocketPort(rtcpsock, &m_rtcpPort);
+		if (status < 0)
+		{
+			MAINMUTEX_UNLOCK
+			return status;
+		}
 	}
-	rtcpsock = socket(PF_INET,SOCK_DGRAM,0);
-	if (rtcpsock == RTPSOCKERR)
+	else
 	{
-		RTPCLOSE(rtpsock);
-		MAINMUTEX_UNLOCK
-		return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
-	}
+		closesocketswhendone = true;
 
-	// set socket buffer sizes
-	
-	size = params->GetRTPReceiveBuffer();
-	if (setsockopt(rtpsock,SOL_SOCKET,SO_RCVBUF,(const char *)&size,sizeof(int)) != 0)
-	{
-		RTPCLOSE(rtpsock);
-		RTPCLOSE(rtcpsock);
-		MAINMUTEX_UNLOCK
-		return ERR_RTP_UDPV4TRANS_CANTSETRTPRECEIVEBUF;
-	}
-	size = params->GetRTPSendBuffer();
-	if (setsockopt(rtpsock,SOL_SOCKET,SO_SNDBUF,(const char *)&size,sizeof(int)) != 0)
-	{
-		RTPCLOSE(rtpsock);
-		RTPCLOSE(rtcpsock);
-		MAINMUTEX_UNLOCK
-		return ERR_RTP_UDPV4TRANS_CANTSETRTPTRANSMITBUF;
-	}
-	size = params->GetRTCPReceiveBuffer();
-	if (setsockopt(rtcpsock,SOL_SOCKET,SO_RCVBUF,(const char *)&size,sizeof(int)) != 0)
-	{
-		RTPCLOSE(rtpsock);
-		RTPCLOSE(rtcpsock);
-		MAINMUTEX_UNLOCK
-		return ERR_RTP_UDPV4TRANS_CANTSETRTCPRECEIVEBUF;
-	}
-	size = params->GetRTCPSendBuffer();
-	if (setsockopt(rtcpsock,SOL_SOCKET,SO_SNDBUF,(const char *)&size,sizeof(int)) != 0)
-	{
-		RTPCLOSE(rtpsock);
-		RTPCLOSE(rtcpsock);
-		MAINMUTEX_UNLOCK
-		return ERR_RTP_UDPV4TRANS_CANTSETRTCPTRANSMITBUF;
-	}
-	
-	// bind sockets
+		if (params->GetPortbase() == 0)
+		{
+			int status = GetAutoSockets(params->GetBindIP(), params->GetAllowOddPortbase(), params->GetRTCPMultiplexing(),
+			                            &rtpsock, &rtcpsock, &m_rtpPort, &m_rtcpPort);
+			if (status < 0)
+			{
+				MAINMUTEX_UNLOCK
+				return status;
+			}
+		}
+		else
+		{
+			// Check if portbase is even (if necessary)
+			if (!params->GetAllowOddPortbase() && params->GetPortbase()%2 != 0)
+			{
+				MAINMUTEX_UNLOCK
+				return ERR_RTP_UDPV4TRANS_PORTBASENOTEVEN;
+			}
 
-	bindIP = params->GetBindIP();
-	mcastifaceIP = params->GetMulticastInterfaceIP();
-	
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(params->GetPortbase());
-	addr.sin_addr.s_addr = htonl(bindIP);
-	if (bind(rtpsock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
-	{
-		RTPCLOSE(rtpsock);
-		RTPCLOSE(rtcpsock);
-		MAINMUTEX_UNLOCK
-		return ERR_RTP_UDPV4TRANS_CANTBINDRTPSOCKET;
-	}
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(params->GetPortbase()+1);
-	addr.sin_addr.s_addr = htonl(bindIP);
-	if (bind(rtcpsock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
-	{
-		RTPCLOSE(rtpsock);
-		RTPCLOSE(rtcpsock);
-		MAINMUTEX_UNLOCK
-		return ERR_RTP_UDPV4TRANS_CANTBINDRTCPSOCKET;
+			// create sockets
+			
+			rtpsock = socket(PF_INET,SOCK_DGRAM,0);
+			if (rtpsock == RTPSOCKERR)
+			{
+				MAINMUTEX_UNLOCK
+				return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
+			}
+
+			// If we're multiplexing, we're just going to set the RTCP socket to equal the RTP socket
+			if (params->GetRTCPMultiplexing())
+				rtcpsock = rtpsock;
+			else
+			{
+				rtcpsock = socket(PF_INET,SOCK_DGRAM,0);
+				if (rtcpsock == RTPSOCKERR)
+				{
+					RTPCLOSE(rtpsock);
+					MAINMUTEX_UNLOCK
+					return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
+				}
+			}
+
+			// bind sockets
+
+			uint32_t bindIP = params->GetBindIP();
+			
+			m_rtpPort = params->GetPortbase();
+
+			memset(&addr,0,sizeof(struct sockaddr_in));
+			addr.sin_family = AF_INET;
+			addr.sin_port = htons(params->GetPortbase());
+			addr.sin_addr.s_addr = htonl(bindIP);
+			if (bind(rtpsock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
+			{
+				CLOSESOCKETS;
+				MAINMUTEX_UNLOCK
+				return ERR_RTP_UDPV4TRANS_CANTBINDRTPSOCKET;
+			}
+
+			if (rtpsock != rtcpsock) // no need to bind same socket twice when multiplexing
+			{
+				uint16_t rtpport = params->GetPortbase();
+				uint16_t rtcpport = params->GetForcedRTCPPort();
+
+				if (rtcpport == 0)
+				{
+					rtcpport = rtpport;
+					if (rtcpport < 0xFFFF)
+						rtcpport++;
+				}
+
+				memset(&addr,0,sizeof(struct sockaddr_in));
+				addr.sin_family = AF_INET;
+				addr.sin_port = htons(rtcpport);
+				addr.sin_addr.s_addr = htonl(bindIP);
+				if (bind(rtcpsock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
+				{
+					CLOSESOCKETS;
+					MAINMUTEX_UNLOCK
+					return ERR_RTP_UDPV4TRANS_CANTBINDRTCPSOCKET;
+				}
+
+				m_rtcpPort = rtcpport;
+			}
+			else
+				m_rtcpPort = m_rtpPort;
+		}
+
+		// set socket buffer sizes
+		
+		size = params->GetRTPReceiveBuffer();
+		if (setsockopt(rtpsock,SOL_SOCKET,SO_RCVBUF,(const char *)&size,sizeof(int)) != 0)
+		{
+			CLOSESOCKETS;
+			MAINMUTEX_UNLOCK
+			return ERR_RTP_UDPV4TRANS_CANTSETRTPRECEIVEBUF;
+		}
+		size = params->GetRTPSendBuffer();
+		if (setsockopt(rtpsock,SOL_SOCKET,SO_SNDBUF,(const char *)&size,sizeof(int)) != 0)
+		{
+			CLOSESOCKETS;
+			MAINMUTEX_UNLOCK
+			return ERR_RTP_UDPV4TRANS_CANTSETRTPTRANSMITBUF;
+		}
+
+		if (rtpsock != rtcpsock) // no need to set RTCP flags when multiplexing
+		{
+			size = params->GetRTCPReceiveBuffer();
+			if (setsockopt(rtcpsock,SOL_SOCKET,SO_RCVBUF,(const char *)&size,sizeof(int)) != 0)
+			{
+				CLOSESOCKETS;
+				MAINMUTEX_UNLOCK
+				return ERR_RTP_UDPV4TRANS_CANTSETRTCPRECEIVEBUF;
+			}
+			size = params->GetRTCPSendBuffer();
+			if (setsockopt(rtcpsock,SOL_SOCKET,SO_SNDBUF,(const char *)&size,sizeof(int)) != 0)
+			{
+				CLOSESOCKETS;
+				MAINMUTEX_UNLOCK
+				return ERR_RTP_UDPV4TRANS_CANTSETRTCPTRANSMITBUF;
+			}
+		}
 	}
 
 	// Try to obtain local IP addresses
@@ -277,8 +482,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 		
 		if ((status = CreateLocalIPList()) < 0)
 		{
-			RTPCLOSE(rtpsock);
-			RTPCLOSE(rtcpsock);
+			CLOSESOCKETS;
 			MAINMUTEX_UNLOCK
 			return status;
 		}
@@ -307,24 +511,22 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 
 	if ((status = CreateAbortDescriptors()) < 0)
 	{
-		RTPCLOSE(rtpsock);
-		RTPCLOSE(rtcpsock);
+		CLOSESOCKETS;
 		MAINMUTEX_UNLOCK
 		return status;
 	}
 	
 	if (maximumpacketsize > RTPUDPV4TRANS_MAXPACKSIZE)
 	{
-		RTPCLOSE(rtpsock);
-		RTPCLOSE(rtcpsock);
+		CLOSESOCKETS;
 		DestroyAbortDescriptors();
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_SPECIFIEDSIZETOOBIG;
 	}
 	
 	maxpacksize = maximumpacketsize;
-	portbase = params->GetPortbase();
 	multicastTTL = params->GetMulticastTTL();
+	mcastifaceIP = params->GetMulticastInterfaceIP();
 	receivemode = RTPTransmitter::AcceptAll;
 
 	localhostname = 0;
@@ -332,7 +534,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 
 	waitingfordata = false;
 	created = true;
-	MAINMUTEX_UNLOCK
+	MAINMUTEX_UNLOCK 
 	return 0;
 }
 
@@ -355,8 +557,7 @@ void RTPUDPv4Transmitter::Destroy()
 		localhostnamelength = 0;
 	}
 	
-	RTPCLOSE(rtpsock);
-	RTPCLOSE(rtcpsock);
+	CLOSESOCKETS;
 	destinations.Clear();
 #ifdef RTP_SUPPORT_IPV4MULTICAST
 	multicastgroups.Clear();
@@ -386,7 +587,7 @@ RTPTransmissionInfo *RTPUDPv4Transmitter::GetTransmissionInfo()
 		return 0;
 
 	MAINMUTEX_LOCK
-	RTPTransmissionInfo *tinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMISSIONINFO) RTPUDPv4TransmissionInfo(localIPs,rtpsock,rtcpsock);
+	RTPTransmissionInfo *tinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMISSIONINFO) RTPUDPv4TransmissionInfo(localIPs,rtpsock,rtcpsock,m_rtpPort,m_rtcpPort);
 	MAINMUTEX_UNLOCK
 	return tinf;
 }
@@ -565,9 +766,7 @@ bool RTPUDPv4Transmitter::ComesFromThisTransmitter(const RTPAddress *addr)
 			v = false;
 		else
 		{
-			if (addr2->GetPort() == portbase) // check for RTP port
-				v = true;
-			else if (addr2->GetPort() == (portbase+1)) // check for RTCP port
+			if (addr2->GetPort() == m_rtpPort || addr2->GetPort() == m_rtcpPort) // check for RTP port and RTCP port
 				v = true;
 			else 
 				v = false;
@@ -594,8 +793,11 @@ int RTPUDPv4Transmitter::Poll()
 		return ERR_RTP_UDPV4TRANS_NOTCREATED;
 	}
 	status = PollSocket(true); // poll RTP socket
-	if (status >= 0)
-		status = PollSocket(false); // poll RTCP socket
+	if (rtpsock != rtcpsock) // no need to poll twice when multiplexing
+	{
+		if (status >= 0)
+			status = PollSocket(false); // poll RTCP socket
+	}
 	MAINMUTEX_UNLOCK
 	return status;
 }
@@ -774,14 +976,14 @@ int RTPUDPv4Transmitter::AddDestination(const RTPAddress &addr)
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_NOTCREATED;
 	}
-	if (addr.GetAddressType() != RTPAddress::IPv4Address)
+
+	RTPIPv4Destination dest;
+	if (!RTPIPv4Destination::AddressToDestination(addr, dest))
 	{
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_INVALIDADDRESSTYPE;
 	}
 	
-	RTPIPv4Address &address = (RTPIPv4Address &)addr;
-	RTPIPv4Destination dest(address.GetIP(),address.GetPort());
 	int status = destinations.AddElement(dest);
 
 	MAINMUTEX_UNLOCK
@@ -800,14 +1002,13 @@ int RTPUDPv4Transmitter::DeleteDestination(const RTPAddress &addr)
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_NOTCREATED;
 	}
-	if (addr.GetAddressType() != RTPAddress::IPv4Address)
+	RTPIPv4Destination dest;
+	if (!RTPIPv4Destination::AddressToDestination(addr, dest))
 	{
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_INVALIDADDRESSTYPE;
 	}
 	
-	RTPIPv4Address &address = (RTPIPv4Address &)addr;	
-	RTPIPv4Destination dest(address.GetIP(),address.GetPort());
 	int status = destinations.DeleteElement(dest);
 	
 	MAINMUTEX_UNLOCK
@@ -884,13 +1085,17 @@ int RTPUDPv4Transmitter::JoinMulticastGroup(const RTPAddress &addr)
 			MAINMUTEX_UNLOCK
 			return ERR_RTP_UDPV4TRANS_COULDNTJOINMULTICASTGROUP;
 		}
-		RTPUDPV4TRANS_MCASTMEMBERSHIP(rtcpsock,IP_ADD_MEMBERSHIP,mcastIP,status);
-		if (status != 0)
+
+		if (rtpsock != rtcpsock) // no need to join multicast group twice when multiplexing
 		{
-			RTPUDPV4TRANS_MCASTMEMBERSHIP(rtpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
-			multicastgroups.DeleteElement(mcastIP);
-			MAINMUTEX_UNLOCK
-			return ERR_RTP_UDPV4TRANS_COULDNTJOINMULTICASTGROUP;
+			RTPUDPV4TRANS_MCASTMEMBERSHIP(rtcpsock,IP_ADD_MEMBERSHIP,mcastIP,status);
+			if (status != 0)
+			{
+				RTPUDPV4TRANS_MCASTMEMBERSHIP(rtpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
+				multicastgroups.DeleteElement(mcastIP);
+				MAINMUTEX_UNLOCK
+				return ERR_RTP_UDPV4TRANS_COULDNTJOINMULTICASTGROUP;
+			}
 		}
 	}
 	MAINMUTEX_UNLOCK	
@@ -930,7 +1135,9 @@ int RTPUDPv4Transmitter::LeaveMulticastGroup(const RTPAddress &addr)
 	if (status >= 0)
 	{	
 		RTPUDPV4TRANS_MCASTMEMBERSHIP(rtpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
-		RTPUDPV4TRANS_MCASTMEMBERSHIP(rtcpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
+		if (rtpsock != rtcpsock) // no need to leave multicast group twice when multiplexing
+			RTPUDPV4TRANS_MCASTMEMBERSHIP(rtcpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
+
 		status = 0;
 	}
 	
@@ -953,8 +1160,11 @@ void RTPUDPv4Transmitter::LeaveAllMulticastGroups()
 			int status = 0;
 
 			mcastIP = multicastgroups.GetCurrentElement();
+			
 			RTPUDPV4TRANS_MCASTMEMBERSHIP(rtpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
-			RTPUDPV4TRANS_MCASTMEMBERSHIP(rtcpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
+			if (rtpsock != rtcpsock) // no need to leave multicast group twice when multiplexing
+				RTPUDPV4TRANS_MCASTMEMBERSHIP(rtcpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
+
 			multicastgroups.GotoNextElement();
 		}
 		multicastgroups.Clear();
@@ -1232,9 +1442,13 @@ bool RTPUDPv4Transmitter::SetMulticastTTL(uint8_t ttl)
 	status = setsockopt(rtpsock,IPPROTO_IP,IP_MULTICAST_TTL,(const char *)&ttl2,sizeof(int));
 	if (status != 0)
 		return false;
-	status = setsockopt(rtcpsock,IPPROTO_IP,IP_MULTICAST_TTL,(const char *)&ttl2,sizeof(int));
-	if (status != 0)
-		return false;
+
+	if (rtpsock != rtcpsock) // no need to set TTL twice when multiplexing
+	{
+		status = setsockopt(rtcpsock,IPPROTO_IP,IP_MULTICAST_TTL,(const char *)&ttl2,sizeof(int));
+		if (status != 0)
+			return false;
+	}
 	return true;
 }
 #endif // RTP_SUPPORT_IPV4MULTICAST
@@ -1270,80 +1484,18 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 	else
 		sock = rtcpsock;
 	
-	len = 0;
-	RTPIOCTL(sock,FIONREAD,&len);
-
-	if (len <= 0) // make sure a packet of length zero is not queued
+	do
 	{
-		// An alternative workaround would be to just use non-blocking sockets.
-		// However, since the user does have access to the sockets and I do not
-		// know how this would affect anyone else's code, I chose to do it using
-		// an extra select call in case ioctl says the length is zero.
-		
-		FD_ZERO(&fdset);
-		FD_SET(sock,&fdset);
-		
-		zerotv.tv_sec = 0;
-		zerotv.tv_usec = 0;
-
-		if (select(FD_SETSIZE,&fdset,0,0,&zerotv) < 0)
-			return ERR_RTP_UDPV4TRANS_ERRORINSELECT;
-
-		if (FD_ISSET(sock, &fdset))
-			dataavailable = true;
-		else
-			dataavailable = false;
-	}
-	else
-		dataavailable = true;
-	
-	while (dataavailable)
-	{
-		RTPTime curtime = RTPTime::CurrentTime();
-		fromlen = sizeof(struct sockaddr_in);
-		recvlen = recvfrom(sock,packetbuffer,RTPUDPV4TRANS_MAXPACKSIZE,0,(struct sockaddr *)&srcaddr,&fromlen);
-		if (recvlen > 0)
-		{
-			bool acceptdata;
-
-			// got data, process it
-			if (receivemode == RTPTransmitter::AcceptAll)
-				acceptdata = true;
-			else
-				acceptdata = ShouldAcceptData(ntohl(srcaddr.sin_addr.s_addr),ntohs(srcaddr.sin_port));
-			
-			if (acceptdata)
-			{
-				RTPRawPacket *pack;
-				RTPIPv4Address *addr;
-				uint8_t *datacopy;
-
-				addr = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPADDRESS) RTPIPv4Address(ntohl(srcaddr.sin_addr.s_addr),ntohs(srcaddr.sin_port));
-				if (addr == 0)
-					return ERR_RTP_OUTOFMEM;
-				datacopy = RTPNew(GetMemoryManager(),(rtp)?RTPMEM_TYPE_BUFFER_RECEIVEDRTPPACKET:RTPMEM_TYPE_BUFFER_RECEIVEDRTCPPACKET) uint8_t[recvlen];
-				if (datacopy == 0)
-				{
-					RTPDelete(addr,GetMemoryManager());
-					return ERR_RTP_OUTOFMEM;
-				}
-				memcpy(datacopy,packetbuffer,recvlen);
-				
-				pack = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPRAWPACKET) RTPRawPacket(datacopy,recvlen,addr,curtime,rtp,GetMemoryManager());
-				if (pack == 0)
-				{
-					RTPDelete(addr,GetMemoryManager());
-					RTPDeleteByteArray(datacopy,GetMemoryManager());
-					return ERR_RTP_OUTOFMEM;
-				}
-				rawpacketlist.push_back(pack);	
-			}
-		}
 		len = 0;
 		RTPIOCTL(sock,FIONREAD,&len);
 
 		if (len <= 0) // make sure a packet of length zero is not queued
 		{
+			// An alternative workaround would be to just use non-blocking sockets.
+			// However, since the user does have access to the sockets and I do not
+			// know how this would affect anyone else's code, I chose to do it using
+			// an extra select call in case ioctl says the length is zero.
+			
 			FD_ZERO(&fdset);
 			FD_SET(sock,&fdset);
 			
@@ -1360,7 +1512,67 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 		}
 		else
 			dataavailable = true;
-	}
+		
+		if (dataavailable)
+		{
+			RTPTime curtime = RTPTime::CurrentTime();
+			fromlen = sizeof(struct sockaddr_in);
+			recvlen = recvfrom(sock,packetbuffer,RTPUDPV4TRANS_MAXPACKSIZE,0,(struct sockaddr *)&srcaddr,&fromlen);
+			if (recvlen > 0)
+			{
+				bool acceptdata;
+
+				// got data, process it
+				if (receivemode == RTPTransmitter::AcceptAll)
+					acceptdata = true;
+				else
+					acceptdata = ShouldAcceptData(ntohl(srcaddr.sin_addr.s_addr),ntohs(srcaddr.sin_port));
+				
+				if (acceptdata)
+				{
+					RTPRawPacket *pack;
+					RTPIPv4Address *addr;
+					uint8_t *datacopy;
+
+					addr = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPADDRESS) RTPIPv4Address(ntohl(srcaddr.sin_addr.s_addr),ntohs(srcaddr.sin_port));
+					if (addr == 0)
+						return ERR_RTP_OUTOFMEM;
+					datacopy = RTPNew(GetMemoryManager(),(rtp)?RTPMEM_TYPE_BUFFER_RECEIVEDRTPPACKET:RTPMEM_TYPE_BUFFER_RECEIVEDRTCPPACKET) uint8_t[recvlen];
+					if (datacopy == 0)
+					{
+						RTPDelete(addr,GetMemoryManager());
+						return ERR_RTP_OUTOFMEM;
+					}
+					memcpy(datacopy,packetbuffer,recvlen);
+					
+					bool isrtp = rtp;
+					if (rtpsock == rtcpsock) // check payload type when multiplexing
+					{
+						isrtp = true;
+
+						if (recvlen > sizeof(RTCPCommonHeader))
+						{
+							RTCPCommonHeader *rtcpheader = (RTCPCommonHeader *)datacopy;
+							uint8_t packettype = rtcpheader->packettype;
+
+    						if (packettype >= 200 && packettype <= 204)
+								isrtp = false;
+						}
+					}
+						
+					pack = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPRAWPACKET) RTPRawPacket(datacopy,recvlen,addr,curtime,isrtp,GetMemoryManager());
+					if (pack == 0)
+					{
+						RTPDelete(addr,GetMemoryManager());
+						RTPDeleteByteArray(datacopy,GetMemoryManager());
+						return ERR_RTP_OUTOFMEM;
+					}
+					rawpacketlist.push_back(pack);	
+				}
+			}
+		}
+	} while (dataavailable);
+
 	return 0;
 }
 
@@ -1876,12 +2088,10 @@ void RTPUDPv4Transmitter::Dump()
 			uint32_t ip;
 			std::list<uint32_t>::const_iterator it;
 			
-			std::cout << "Portbase:                       " << portbase << std::endl;
+			std::cout << "RTP Port:                       " << m_rtpPort << std::endl;
+			std::cout << "RTCP Port:                      " << m_rtcpPort << std::endl;
 			std::cout << "RTP socket descriptor:          " << rtpsock << std::endl;
 			std::cout << "RTCP socket descriptor:         " << rtcpsock << std::endl;
-			ip = bindIP;
-			RTP_SNPRINTF(str,16,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
-			std::cout << "Bind IP address:                " << str << std::endl;
 			ip = mcastifaceIP;
 			RTP_SNPRINTF(str,16,"%d.%d.%d.%d",(int)((ip>>24)&0xFF),(int)((ip>>16)&0xFF),(int)((ip>>8)&0xFF),(int)(ip&0xFF));
 			std::cout << "Multicast interface IP address: " << str << std::endl;

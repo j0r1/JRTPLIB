@@ -152,6 +152,10 @@ save_paths(JRTPLIB_INTERNAL_INCLUDES "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINA
 add_subdirectory(src)
 add_subdirectory(examples)
 
+if (JRTPLIB_COMPILE_TESTS)
+	add_subdirectory(tests)
+endif()
+
 if (UNIX)
 	get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-shared LOCATION)
 	get_filename_component(JRTPLIB_LIBNAME "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME)

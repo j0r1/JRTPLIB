@@ -8,7 +8,9 @@ Library location and contact
 ----------------------------
 
 Normally, you should be able to download the latest version of the library
-from this url: [http://research.edm.uhasselt.be/jori/jrtplib](http://research.edm.uhasselt.be/jori/jrtplib])
+from this url: [http://research.edm.uhasselt.be/jori/jrtplib](http://research.edm.uhasselt.be/jori/jrtplib)
+
+Documentation can be found at [jrtplib.readthedocs.io](http://jrtplib.readthedocs.io)
 
 If you have questions about the library, you can mail me at:
 [jori.liesenborgs@gmail.com](mailto:jori.liesenborgs@gmail.com)
