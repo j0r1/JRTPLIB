@@ -253,7 +253,7 @@ int RTPSession::InternalCreate(const RTPSessionParams &sessparams)
 	}
 	else
 	{
-		strncpy((char *)buf, forcedcname.c_str(), buflen);
+		RTP_STRNCPY((char *)buf, forcedcname.c_str(), buflen);
 		buf[buflen-1] = 0;
 		buflen = strlen((char *)buf);
 	}

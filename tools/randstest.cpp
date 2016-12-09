@@ -3,7 +3,7 @@
 
 int main(void)
 {
-	int number = 0;  
+	unsigned int number = 0;  
 	errno_t err = rand_s(&number);
 	return 0;
 }

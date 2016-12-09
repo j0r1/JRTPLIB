@@ -99,11 +99,11 @@ jrtplib_test_feature(arrayalloc RTP_HAVE_ARRAYALLOC FALSE "// No custom new[]" "
 jrtplib_test_feature(randstest RTP_HAVE_RAND_S FALSE "// No rand_s support" "${TESTDEFS}")
 jrtplib_test_feature(strncpystest RTP_HAVE_STRNCPY_S FALSE "// No strncpy_s support" "${TESTDEFS}")
 
-check_cxx_source_compiles("#include <windows.h>\nint main(void) { char s[1024]; _snprintf_s(s, 1024,\"%d\", 10);\n  return 0; }" JRTPLIB_SNPRINTF_S)
+check_cxx_source_compiles("#include <windows.h>\n#include <stdio.h>\nint main(void) { char s[1024]; _snprintf_s(s, 1024,\"%d\", 10);\n  return 0; }" JRTPLIB_SNPRINTF_S)
 if (JRTPLIB_SNPRINTF_S)
 	set(RTP_SNPRINTF_VERSION "#define RTP_HAVE_SNPRINTF_S")
 else ()
-	check_cxx_source_compiles("#include <windows.h>\nint main(void) { char s[1024]; _snprintf(s, 1024,\"%d\", 10);\n  return 0; }" JRTPLIB_SNPRINTF)
+	check_cxx_source_compiles("#include <windows.h>\n#include <stdio.h>\nint main(void) { char s[1024]; _snprintf(s, 1024,\"%d\", 10);\n  return 0; }" JRTPLIB_SNPRINTF)
 	if (JRTPLIB_SNPRINTF)
 		set(RTP_SNPRINTF_VERSION "#define RTP_HAVE_SNPRINTF")
 	else ()

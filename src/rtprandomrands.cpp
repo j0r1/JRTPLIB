@@ -30,6 +30,7 @@
 
 */
 
+#include "rtpconfig.h"
 #ifdef RTP_HAVE_RAND_S
 	#define _CRT_RAND_S
 #endif // RTP_HAVE_RAND_S
