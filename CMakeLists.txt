@@ -80,6 +80,8 @@ else (CMAKE_CROSSCOMPILING)
 	endif (JRTPLIB_BIGENDIAN)
 endif (CMAKE_CROSSCOMPILING)
 
+option(JRTPLIB_COMPILE_TESTS "Compile various tests in the 'tests' subdirectory" NO)
+
 # Check winsock first
 set(TESTDEFS "")
 jrtplib_test_feature(winsocktest RTP_SOCKETTYPE_WINSOCK FALSE "// Not using winsock sockets" "${TESTDEFS}")
