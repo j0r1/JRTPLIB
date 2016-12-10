@@ -565,12 +565,16 @@ protected:
 	 *  `sendlen` for both RTP and RTCP packets. By changing this behaviour you could
 	 *  add encryption for example. Note that no memory management will be performed
 	 *  on the `senddata` pointer you fill in, so if it needs to be deleted at some point
-	 *  you need to take care of this in some way yourself. If `senddata` is set to
-	 *  0, `sendlen` is set to 0, or if the function returns `false`, no packet will
-	 *  be sent out. This also provides a way to turn off sending RTCP packets if
-	 *  desired.
-	 */
+	 *  you need to take care of this in some way yourself, a good way may be to do this
+	 *  in RTPSession::OnSentRTPOrRTCPData. If `senddata` is set to 0, `sendlen` is set 
+	 *  to 0, or if the function returns `false`, no packet will be sent out. This also 
+	 *  provides a way to turn off sending RTCP packets if desired. */
 	virtual bool OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen);
+
+	/** This function is called when an RTP or RTCP packet was sent, it can be helpful
+	 *  when data was allocated in RTPSession::OnChangeRTPOrRTCPData to deallocate it
+	 *  here. */
+	virtual void OnSentRTPOrRTCPData(void *senddata, size_t sendlen, bool isrtp) { }
 
 	/** By overriding this function, the raw incoming data can be inspected
 	 *  and modified (e.g. for encryption).

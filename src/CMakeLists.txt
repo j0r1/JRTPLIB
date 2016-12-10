@@ -50,7 +50,9 @@ set (HEADERS
 	rtpudpv4transmitter.h
 	rtpudpv6transmitter.h  
 	rtpbyteaddress.h
-	rtpexternaltransmitter.h)
+	rtpexternaltransmitter.h
+	srtpsession.h
+	)
 
 set(SOURCES
 	rtcpapppacket.cpp
@@ -89,7 +91,9 @@ set(SOURCES
 	rtpudpv4transmitter.cpp
 	rtpudpv6transmitter.cpp 
 	rtpbyteaddress.cpp
-	rtpexternaltransmitter.cpp)
+	rtpexternaltransmitter.cpp
+	srtpsession.cpp
+	)
 
 if (UNIX)
 	set (SOURCES ${SOURCES} extratransmitters/rtpfaketransmitter.cpp )

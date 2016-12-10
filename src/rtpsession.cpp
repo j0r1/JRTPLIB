@@ -1660,7 +1660,10 @@ int RTPSession::SendRTPData(const void *data, size_t len)
 	int status = 0;
 
 	if (OnChangeRTPOrRTCPData(data, len, true, &pSendData, &sendLen) && sendLen > 0 && pSendData != 0)
+	{
 		status = rtptrans->SendRTPData(pSendData, sendLen);
+		OnSentRTPOrRTCPData(pSendData, sendLen, true);
+	}
 
 	return status;
 }
@@ -1672,7 +1675,10 @@ int RTPSession::SendRTCPData(const void *data, size_t len)
 	int status = 0;
 
 	if (OnChangeRTPOrRTCPData(data, len, false, &pSendData, &sendLen) && sendLen > 0 && pSendData != 0)
+	{
 		status = rtptrans->SendRTCPData(pSendData, sendLen);
+		OnSentRTPOrRTCPData(pSendData, sendLen, false);
+	}
 
 	return status;
 }
