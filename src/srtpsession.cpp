@@ -296,13 +296,13 @@ bool SRTPSession::OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bo
 	memcpy(pDataCopy, origdata, origlen);
 
 	int dataLength = (int)origlen;
-	cout << "before: " << origlen << endl;
+	//cout << "before: " << origlen << endl;
 	if (!m_pCrypt->encryptData(pDataCopy, dataLength, isrtp))
 	{
 		RTPDeleteByteArray(pDataCopy, GetMemoryManager());
 		return false;
 	}
-	cout << "after: " << dataLength << endl << endl;
+	//cout << "after: " << dataLength << endl << endl;
 
 	*senddata = pDataCopy;
 	*sendlen = dataLength;

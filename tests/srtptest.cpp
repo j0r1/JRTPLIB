@@ -5,6 +5,7 @@
 #include "rtperrors.h"
 #include "rtplibraryversion.h"
 #include "rtpsourcedata.h"
+#include "rtprawpacket.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <srtp.h>
@@ -45,7 +46,7 @@ protected:
 			itemlength = sizeof(msg)-1;
 
 		memcpy(msg, itemdata, itemlength);
-		printf("SSRC %x: Received SDES item (%d): %s", (unsigned int)srcdat->GetSSRC(), (int)t, msg);
+		printf("SSRC %x: Received SDES item (%d): %s\n", (unsigned int)srcdat->GetSSRC(), (int)t, msg);
 	}
 };
 
@@ -58,8 +59,8 @@ int main(void)
 
 	srtp_init();
 	
-	MyRTPSession sess;
-	uint16_t portbase,destport;
+	MyRTPSession sender, receiver;
+	uint16_t portbase1,portbase2;
 	uint32_t destip;
 	std::string ipstr;
 	int status,i,num;
@@ -68,52 +69,31 @@ int main(void)
 
 	// First, we'll ask for the necessary information
 		
-	portbase = 5000;
-	ipstr = "127.0.0.1";
+	portbase1 = 5000;
+	destip = ntohl(inet_addr("127.0.0.1"));
+	portbase2 = 5002;
+	num = 20;
 
-	destip = inet_addr(ipstr.c_str());
-	if (destip == INADDR_NONE)
-	{
-		std::cerr << "Bad IP address specified" << std::endl;
-		return -1;
-	}
-	
-	// The inet_addr function returns a value in network byte order, but
-	// we need the IP address in host byte order, so we use a call to
-	// ntohl
-	destip = ntohl(destip);
-	destport = 5000;
-	num = 10;
-
-	// Now, we'll create a RTP session, set the destination, send some
-	// packets and poll for incoming data.
-	
 	RTPUDPv4TransmissionParams transparams;
 	RTPSessionParams sessparams;
 	
-	// IMPORTANT: The local timestamp unit MUST be set, otherwise
-	//            RTCP Sender Report info will be calculated wrong
-	// In this case, we'll be sending 10 samples each second, so we'll
-	// put the timestamp unit to (1.0/10.0)
 	sessparams.SetOwnTimestampUnit(1.0/10.0);		
-	
-	sessparams.SetAcceptOwnPackets(true);
-	transparams.SetPortbase(portbase);
-	
-	// Let's also use RTCP multiplexing for this example
+	transparams.SetPortbase(portbase1);
 	transparams.SetRTCPMultiplexing(true); 
 
-	status = sess.Create(sessparams,&transparams);	
+	status = sender.Create(sessparams,&transparams);	
+	checkerror(status);
+	status = sender.InitializeEncryption("AES_CM_128_HMAC_SHA1_80", "012345678901234567890123456789");
+	checkerror(status);
+	status = sender.AddDestination(RTPIPv4Address(destip, portbase2, true));
 	checkerror(status);
 
-	status = sess.InitializeEncryption("AES_CM_128_HMAC_SHA1_80", "012345678901234567890123456789");
+	transparams.SetPortbase(portbase2);
+	status = receiver.Create(sessparams,&transparams);	
 	checkerror(status);
-	
-	// We're assuming that the destination is also using RTCP multiplexing 
-	// ('true' means that the same port will be used for RTCP)
-	RTPIPv4Address addr(destip,destport,true); 
-	
-	status = sess.AddDestination(addr);
+	status = receiver.InitializeEncryption("AES_CM_128_HMAC_SHA1_80", "012345678901234567890123456789");
+	checkerror(status);
+	status = receiver.AddDestination(RTPIPv4Address(destip, portbase1, true));
 	checkerror(status);
 	
 	for (i = 1 ; i <= num ; i++)
@@ -121,19 +101,19 @@ int main(void)
 		printf("\nSending packet %d/%d\n",i,num);
 		
 		// send the packet
-		status = sess.SendPacket((void *)"1234567890",10,0,false,10);
+		status = sender.SendPacket((void *)"1234567890",10,0,false,10);
 		checkerror(status);
 		
 #ifndef RTP_SUPPORT_THREAD
-		status = sess.Poll();
+		status = sender.Poll();
+		checkerror(status);
+		status = receiver.Poll();
 		checkerror(status);
 #endif // RTP_SUPPORT_THREAD
 		
 		RTPTime::Wait(RTPTime(1,0));
 	}
 	
-	sess.BYEDestroy(RTPTime(10,0),0,0);
-
 	srtp_shutdown();
 
 #ifdef WIN32
