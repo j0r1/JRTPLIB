@@ -35,17 +35,11 @@ void checkerror(bool ok)
 class MyRTPSession : public RTPSecureSession
 {
 public:
-	bool Init(const std::string &key, uint32_t otherSSRC)
+	bool Init(const std::string &key)
 	{
 		if (!IsActive())
 		{
 			cerr << "The Create function must be called before this one!" << endl;
-			return false;
-		}
-
-		if (otherSSRC == GetLocalSSRC())
-		{
-			cerr << "Can't use own SSRC as other SSRC value" << endl;
 			return false;
 		}
 
@@ -64,8 +58,6 @@ public:
 			checkerror(status);
 		}
 
-		memcpy(m_key, key.c_str(), 30);
-
 		srtp_policy_t policyIn, policyOut;
 
 		memset(&policyIn, 0, sizeof(srtp_policy_t));
@@ -77,14 +69,13 @@ public:
 		crypto_policy_set_rtp_default(&policyOut.rtp);
 		crypto_policy_set_rtcp_default(&policyOut.rtcp);
 
-		policyIn.ssrc.type = ssrc_specific;
-		policyIn.ssrc.value = otherSSRC;
-		policyIn.key = m_key;
+		policyIn.ssrc.type = ssrc_any_inbound;
+		policyIn.key = (uint8_t *)key.c_str();
 		policyIn.next = 0;
 
 		policyOut.ssrc.type = ssrc_specific;
 		policyOut.ssrc.value = GetLocalSSRC();
-		policyOut.key = m_key;
+		policyOut.key = (uint8_t *)key.c_str();
 		policyOut.next = 0;
 
 		srtp_t ctx = LockSRTPContext();
@@ -106,6 +97,34 @@ public:
 		return true;
 	}
 protected:
+	bool OnChangeIncomingData(RTPRawPacket *rawpack)
+	{
+		char fileName[1024];
+
+		bool isrtp = rawpack->IsRTP();
+		sprintf(fileName, "%s-%x-in_enc.dat", (isrtp)?"rtp":"rtcp", GetLocalSSRC());
+		FILE *pFile = fopen(fileName, "ab");
+
+		if (pFile)
+		{
+			fwrite(rawpack->GetData(), 1, rawpack->GetDataLength(), pFile);
+			fclose(pFile);
+		}
+
+		bool status = RTPSecureSession::OnChangeIncomingData(rawpack);
+
+		sprintf(fileName, "%s-%x-in_dec.dat", (isrtp)?"rtp":"rtcp", GetLocalSSRC());
+		pFile = fopen(fileName, "ab");
+
+		if (pFile)
+		{
+			fwrite(rawpack->GetData(), 1, rawpack->GetDataLength(), pFile);
+			fclose(pFile);
+		}
+
+		return status;
+	}
+
 	void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled)
 	{
 		printf("SSRC %x Got packet in OnValidatedRTPPacket from source 0x%04x!\n", GetLocalSSRC(), srcdat->GetSSRC());
@@ -132,8 +151,6 @@ protected:
 			printf("libsrtp error: %d\n", libsrtperrorcode);
 		printf("\n");
 	}
-private:
-	uint8_t m_key[30];
 };
 
 int main(void)
@@ -177,9 +194,10 @@ int main(void)
 	status = receiver.AddDestination(RTPIPv4Address(destip, portbase1, true));
 	checkerror(status);
 	
-	status = sender.Init("012345678901234567890123456789", receiver.GetLocalSSRC());
+	string key = "012345678901234567890123456789";
+	status = sender.Init(key);
 	checkerror(status);
-	status = receiver.Init("012345678901234567890123456789", sender.GetLocalSSRC());
+	status = receiver.Init(key);
 	checkerror(status);
 
 	const int num = 20;

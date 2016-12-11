@@ -71,13 +71,13 @@ protected:
 	void SetLastLibSRTPError(int err);
 
 	virtual void OnErrorChangeIncomingData(int errcode, int libsrtperrorcode) { }
-private:
-	int encryptData(uint8_t *pData, int &dataLength, bool rtp);
-	int decryptRawPacket(RTPRawPacket *rawpack, int *srtpError);
 
 	int OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen);
 	bool OnChangeIncomingData(RTPRawPacket *rawpack);
 	void OnSentRTPOrRTCPData(void *senddata, size_t sendlen, bool isrtp);
+private:
+	int encryptData(uint8_t *pData, int &dataLength, bool rtp);
+	int decryptRawPacket(RTPRawPacket *rawpack, int *srtpError);
 
 	srtp_ctx_t *m_pSRTPContext;
 	int m_lastSRTPError;
