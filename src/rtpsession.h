@@ -73,6 +73,7 @@ class RTCPAPPPacket;
 /** High level class for using RTP.
  *  For most RTP based applications, the RTPSession class will probably be the one to use. It handles 
  *  the RTCP part completely internally, so the user can focus on sending and receiving the actual data.
+ *  In case you want to use SRTP, you should create an RTPSecureSession derived class.
  *  \note The RTPSession class is not meant to be thread safe. The user should use some kind of locking 
  *        mechanism to prevent different threads from using the same RTPSession instance.
  */

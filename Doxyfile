@@ -826,7 +826,7 @@ EXCLUDE_SYMBOLS        =
 # that contain example code fragments that are included (see the \include
 # command).
 
-EXAMPLE_PATH           =
+EXAMPLE_PATH           = 
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp and
@@ -1982,13 +1982,14 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = RTP_SUPPORT_IPV4MULTICAST \
                          RTP_SUPPORT_THREAD \
-			 RTP_SUPPORT_SDESPRIV \
-			 RTP_SUPPORT_PROBATION \
-			 RTP_SUPPORT_IPV6 \
-			 RTP_SUPPORT_IPV6MULTICAST \
-			 RTP_SUPPORT_SENDAPP \
-			 RTP_SUPPORT_MEMORYMANAGEMENT \
-			 RTP_SUPPORT_RTCPUNKNOWN
+						 RTP_SUPPORT_SDESPRIV \
+						 RTP_SUPPORT_PROBATION \
+						 RTP_SUPPORT_IPV6 \
+						 RTP_SUPPORT_IPV6MULTICAST \
+						 RTP_SUPPORT_SENDAPP \
+						 RTP_SUPPORT_MEMORYMANAGEMENT \
+						 RTP_SUPPORT_RTCPUNKNOWN \
+						 RTP_SUPPORT_SRTP
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

@@ -1,3 +1,6 @@
+namespace jrtplib // So that links are created automatically
+{
+
 /**
 
 \htmlonly
@@ -57,8 +60,9 @@ to incoming RTP and RTCP data.
         
 The library provides several classes which can be helpful in
 creating RTP applications. Most users will probably only need the
-RTPSession class for building an application. This class
-provides the necessary functions for sending RTP data and handles
+RTPSession class for building an application, or derive a class
+from RTPSecureSession for SRTP support. These classes
+provide the necessary functions for sending RTP data and handle
 the RTCP part internally.
 
 ### Changes from version 2.x ###
@@ -91,6 +95,7 @@ Copyright license
     
 The library code uses the following copyright license:
 
+~~~{.c}
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation files
     (the "Software"), to deal in the Software without restriction,
@@ -110,6 +115,7 @@ The library code uses the following copyright license:
     ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
+~~~
 
 There are two reasons for using this license. First, since this is the
 license of the 2.x series, it only seemed natural that this rewrite
@@ -125,14 +131,18 @@ Getting started with the RTPSession class
 All classes and functions are part of the `jrtplib` namespace, so to
 simplify the code a bit, we'll declare that we're using this namespace:
 
+~~~{.cpp}
     using namespace jrtplib;
+~~~
     
 To use RTP, you'll have to create an RTPSession object. The constructor
 accepts two parameter, an instance of an RTPRandom object, and an instance 
 of an RTPMemoryManager object. For now, we'll keep it simple and use the
 default settings, so this is our code so far:
 
+~~~{.cpp}
     RTPSession session; 
+~~~
 
 To actually create the session, you'll have to call the Create member 
 function which takes three arguments: the first one is of type RTPSessionParams 
@@ -143,9 +153,11 @@ can be calculated by dividing a certain time interval (in seconds) by the
 number of samples in that interval. So, assuming that we'll send 8000 Hz 
 voice data, we can use this code:
 
+~~~{.cpp}
     RTPSessionParams sessionparams;
 
     sessionparams.SetOwnTimestampUnit(1.0/8000.0);
+~~~
 
 The other session parameters will probably depend on the actual RTP profile
 you intend to work with. 
@@ -157,9 +169,11 @@ an UDP over IPv4 transmitter is used, and for this particular transmitter, the
 transmission parameters should be of type RTPUDPv4TransmissionParams. Assuming 
 that we want our RTP portbase to be 8000, we can do the following:
 
+~~~{.cpp}
     RTPUDPv4TransmissionParams transparams;
 
     transparams.SetPortbase(8000);
+~~~
 
 Now, we're ready to call the Create member function of RTPSession. The return 
 value is stored in the integer `status` so we can check if something went 
@@ -167,12 +181,14 @@ wrong. If this value is negative, it indicates that some error occurred.
 A description of what this error code means can be retrieved by calling
 RTPGetErrorString:
 
+~~~{.cpp}
     int status = session.Create(sessionparams,&transparams);
     if (status < 0)
     {
         std::cerr << RTPGetErrorString(status) << std::endl;
         exit(-1);
     }
+~~~
 
 If the session was created with success, this is probably a good point 
 to specify to which destinations RTP and RTCP data should be sent. This is 
@@ -182,6 +198,7 @@ class and for the UDP over IPv4 transmitter the actual class to be
 used is RTPIPv4Address. Suppose that we want to send our data to a 
 process running on the same host at port 9000, we can do the following:
     
+~~~{.cpp}
     uint8_t localip[]={127,0,0,1};
     RTPIPv4Address addr(localip,9000);
 
@@ -191,6 +208,7 @@ process running on the same host at port 9000, we can do the following:
         std::cerr << RTPGetErrorString(status) << std::endl;
         exit(-1);
     }
+~~~
 
 If the library was compiled with JThread support, incoming data is
 processed in the background. If JThread support was not enabled at
@@ -206,15 +224,18 @@ to indicate when a packet from someone else has been received. Also
 suppose we have L8 data as defined in RFC 3551 and want to use
 payload type 96. First, we'll set some default values:
     
+~~~{.cpp}
     session.SetDefaultPayloadType(96);
     session.SetDefaultMark(false);
     session.SetDefaultTimestampIncrement(160);
+~~~
 
 Next, we'll create the buffer which contains 160 silence samples
 and create an RTPTime instance which indicates 20 ms or 0.020 seconds.
 We'll also store the current time so we'll know    when one minute has 
 passed.
     
+~~~{.cpp}
     uint8_t silencebuffer[160];
 
     for (int i = 0 ; i < 160 ; i++)
@@ -222,12 +243,14 @@ passed.
 
     RTPTime delay(0.020);
     RTPTime starttime = RTPTime::CurrentTime();
+~~~
 
 Next, the main loop will be shown. In this loop, a packet containing
 160 bytes of payload data will be sent. Then, data handling can
 take place but this part is described later in the text. Finally,
 we'll wait 20 ms and check if sixty seconds have passed:
     
+~~~{.cpp}
     bool done = false;
     while (!done)
     {
@@ -249,19 +272,23 @@ we'll wait 20 ms and check if sixty seconds have passed:
         if (t > RTPTime(60.0))
             done = true;
     }
+~~~
 
 Information about participants in the session, packet retrieval
-etc, has to be done between calls to the RTPSession member
-functions BeginDataAccess and EndDataAccess. This ensures that the 
-background thread doesn't try to change the same data you're trying 
-to access. We'll iterate over the participants     using the 
-GotoFirstSource and GotoNextSource member functions. Packets from 
+etc, can be done between calls to the RTPSession member
+functions RTPSession::BeginDataAccess and RTPSession::EndDataAccess. 
+This ensures that the background thread doesn't try to change the same 
+data you're trying 
+to access. We'll iterate over the participants using the 
+RTPSession::GotoFirstSource and RTPSession::GotoNextSource member functions. 
+Packets from 
 the currently selected participant can be retrieved using the 
-GetNextPacket member function which returns a pointer to an 
+RTPSession::GetNextPacket member function which returns a pointer to an 
 instance of the RTPPacket class. When you don't need the packet 
 anymore, it has to be deleted. The processing of incoming data will 
 then be as follows:
     
+~~~{.cpp}
     session.BeginDataAccess();
     if (session.GotoFirstSource())
     {
@@ -279,6 +306,7 @@ then be as follows:
         } while (session.GotoNextSource());
     }
     session.EndDataAccess();
+~~~
 
 Information about the currently selected source can be obtained
 by using the GetCurrentSourceInfo member function of the RTPSession class. 
@@ -286,15 +314,40 @@ This function returns a pointer to an instance of  RTPSourceData which
 contains all information about that source: sender reports from that 
 source, receiver reports, SDES info etc. 
 
+Alternatively, packets can also be handled directly, without iterating
+over the sources, by overriding the RTPSession::OnValidatedRTPPacket
+member function. The example code in `example6.cpp` illustrates this
+approach.
+
 When the main loop is finished, we'll send a BYE packet to inform other 
 participants of our departure and clean up the RTPSession class. Also, 
 we want to wait at most 10 seconds for the BYE packet to be sent, 
 otherwise we'll just leave the session without sending a BYE packet.
     
+~~~{.cpp}
     delay = RTPTime(10.0);
     session.BYEDestroy(delay,"Time's up",9);
+~~~
     
 The complete code of the program is given in `example2.cpp`.
+
+SRTP support
+------------
+
+Support for Secure RTP (SRTP) is provided through the RTPSecureSession
+class, which used [libsrtp](https://github.com/cisco/libsrtp) for
+encryption/decryption of the data. This class itself is not meant to provide 
+a complete ready-to-use solution, since there's a wide variety of options
+that can be configured in `libsrtp`.
+
+Instead, the class provides a means to initialize a `libsrtp`-context,
+which you can then obtain and configure further for your needs. Incoming
+and outgoing packets will be decrypted and encrypted respectively, using
+the context that was constructed and completed this way.
+
+The example code in `example7.cpp` illustrates the use of this class, where
+a single key for sender and receiver is used, together with the default
+encryption algorithm.
 
 Error codes
 -----------
@@ -365,3 +418,4 @@ http://research.edm.uhasselt.be/jori/jrtplib/jrtplib.html
 
 */
 
+}
