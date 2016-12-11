@@ -21,7 +21,7 @@ void checkerror(int rtperr)
 {
 	if (rtperr < 0)
 	{
-		std::cout << "ERROR: " << RTPGetErrorString(rtperr) << std::endl;
+		cerr << "ERROR: " << RTPGetErrorString(rtperr) << std::endl;
 		exit(-1);
 	}
 }
@@ -39,19 +39,19 @@ public:
 	{
 		if (!IsActive())
 		{
-			cout << "The Create function must be called before this one!" << endl;
+			cerr << "The Create function must be called before this one!" << endl;
 			return false;
 		}
 
 		if (otherSSRC == GetLocalSSRC())
 		{
-			cout << "Can't use own SSRC as other SSRC value" << endl;
+			cerr << "Can't use own SSRC as other SSRC value" << endl;
 			return false;
 		}
 
 		if (key.length() != 30)
 		{
-			cout << "Key length must be 30";
+			cerr << "Key length must be 30";
 			return false;
 		}
 
@@ -60,9 +60,11 @@ public:
 		{
 			int srtpErr = GetLastLibSRTPError();
 			if (srtpErr < 0)
-				cout << "libsrtp error: " << srtpErr << endl;
+				cerr << "libsrtp error: " << srtpErr << endl;
 			checkerror(status);
 		}
+
+		memcpy(m_key, key.c_str(), 30);
 
 		srtp_policy_t policyIn, policyOut;
 
@@ -77,18 +79,18 @@ public:
 
 		policyIn.ssrc.type = ssrc_specific;
 		policyIn.ssrc.value = otherSSRC;
-		policyIn.key = (unsigned char *)key.c_str();
+		policyIn.key = m_key;
 		policyIn.next = 0;
 
 		policyOut.ssrc.type = ssrc_specific;
 		policyOut.ssrc.value = GetLocalSSRC();
-		policyOut.key = (unsigned char *)key.c_str();
+		policyOut.key = m_key;
 		policyOut.next = 0;
 
 		srtp_t ctx = LockSRTPContext();
 		if (ctx == 0)
 		{
-			cout << "Unable to get/lock srtp context" << endl;
+			cerr << "Unable to get/lock srtp context" << endl;
 			return false;
 		}
 		err_status_t err = srtp_add_stream(ctx, &policyIn);
@@ -98,7 +100,7 @@ public:
 
 		if (err != err_status_ok)
 		{
-			cout << "libsrtp error while adding stream: " << err << endl;
+			cerr << "libsrtp error while adding stream: " << err << endl;
 			return false;
 		}
 		return true;
@@ -120,16 +122,18 @@ protected:
 			itemlength = sizeof(msg)-1;
 
 		memcpy(msg, itemdata, itemlength);
-		printf("SSRC %d Received SDES item (%d): %s from SSRC\n", GetLocalSSRC(), (int)t, msg, srcdat->GetSSRC());
+		printf("SSRC %x Received SDES item (%d): %s from SSRC %x\n", GetLocalSSRC(), (int)t, msg, srcdat->GetSSRC());
 	}
 
 	void OnErrorChangeIncomingData(int errcode, int libsrtperrorcode) 
 	{
-		cout << "JRTPLIB Error: " << RTPGetErrorString(errcode) << endl;
+		printf("SSRC %x JRTPLIB Error: %s\n", GetLocalSSRC(), RTPGetErrorString(errcode).c_str());
 		if (libsrtperrorcode != err_status_ok)
-			cout << "libsrtp error: " << libsrtperrorcode << endl;
-		cout << endl;
+			printf("libsrtp error: %d\n", libsrtperrorcode);
+		printf("\n");
 	}
+private:
+	uint8_t m_key[30];
 };
 
 int main(void)
@@ -139,22 +143,15 @@ int main(void)
 	WSAStartup(MAKEWORD(2,2),&dat);
 #endif // WIN32
 
+	// Initialize the SRTP library
 	srtp_init();
 	
 	MyRTPSession sender, receiver;
-	uint16_t portbase1,portbase2;
-	uint32_t destip;
-	std::string ipstr;
-	int status,i,num;
+	int status;
 
-	std::cout << "Using version " << RTPLibraryVersion::GetVersion().GetVersionString() << std::endl;
-
-	// First, we'll ask for the necessary information
-		
-	portbase1 = 5000;
-	destip = ntohl(inet_addr("127.0.0.1"));
-	portbase2 = 5002;
-	num = 20;
+	uint16_t portbase1 = 5000;
+	uint16_t portbase2 = 5002;
+	uint32_t destip = ntohl(inet_addr("127.0.0.1"));
 
 	RTPUDPv4TransmissionParams transparams;
 	RTPSessionParams sessparams;
@@ -163,13 +160,19 @@ int main(void)
 	transparams.SetRTCPMultiplexing(true); 
 
 	transparams.SetPortbase(portbase1);
+	sessparams.SetCNAME("sender@host");
 	status = sender.Create(sessparams,&transparams);	
-	checkerror(status);
-	status = sender.AddDestination(RTPIPv4Address(destip, portbase2, true));
 	checkerror(status);
 
 	transparams.SetPortbase(portbase2);
+	sessparams.SetCNAME("receiver@host");
 	status = receiver.Create(sessparams,&transparams);	
+	checkerror(status);
+
+	printf("Sender is:   %x\n", sender.GetLocalSSRC());
+	printf("Receiver is: %x\n\n", receiver.GetLocalSSRC());
+
+	status = sender.AddDestination(RTPIPv4Address(destip, portbase2, true));
 	checkerror(status);
 	status = receiver.AddDestination(RTPIPv4Address(destip, portbase1, true));
 	checkerror(status);
@@ -179,7 +182,8 @@ int main(void)
 	status = receiver.Init("012345678901234567890123456789", sender.GetLocalSSRC());
 	checkerror(status);
 
-	for (i = 1 ; i <= num ; i++)
+	const int num = 20;
+	for (int i = 1 ; i <= num ; i++)
 	{
 		printf("\nSending packet %d/%d\n",i,num);
 		
@@ -196,6 +200,10 @@ int main(void)
 		
 		RTPTime::Wait(RTPTime(1,0));
 	}
+
+	// Make sure we shut the threads down before doing srtp_shutdown
+	sender.Destroy();
+	receiver.Destroy();
 	
 	srtp_shutdown();
 
