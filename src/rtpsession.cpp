@@ -89,6 +89,11 @@ RTPSession::RTPSession(RTPRandom *r,RTPMemoryManager *mgr)
 	: RTPMemoryObject(mgr),rtprnd(GetRandomNumberGenerator(r)),sources(*this,mgr),packetbuilder(*rtprnd,mgr),rtcpsched(sources,*rtprnd),
 	  rtcpbuilder(sources,packetbuilder,mgr),collisionlist(mgr)
 {
+	// We're not going to set these flags in Create, so that the constructor of a derived class
+	// can already change them
+	m_changeIncomingData = false;
+	m_changeOutgoingData = false;
+
 	created = false;
 #ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
@@ -395,7 +400,7 @@ int RTPSession::InternalCreate(const RTPSessionParams &sessparams)
 		}
 	}
 #endif // RTP_SUPPORT_THREAD	
-	
+
 	created = true;
 	return 0;
 }
@@ -1364,11 +1369,14 @@ int RTPSession::ProcessPolledData()
 	SOURCES_LOCK
 	while ((rawpack = rtptrans->GetNextPacket()) != 0)
 	{
-		// Provide a way to change incoming data, for decryption for example
-		if (!OnChangeIncomingData(rawpack))
+		if (m_changeIncomingData)
 		{
-			RTPDelete(rawpack,GetMemoryManager());
-			continue;
+			// Provide a way to change incoming data, for decryption for example
+			if (!OnChangeIncomingData(rawpack))
+			{
+				RTPDelete(rawpack,GetMemoryManager());
+				continue;
+			}
 		}
 
 		sources.ClearOwnCollisionFlag();
@@ -1655,11 +1663,18 @@ RTPRandom *RTPSession::GetRandomNumberGenerator(RTPRandom *r)
 
 int RTPSession::SendRTPData(const void *data, size_t len)
 {
+	if (!m_changeOutgoingData)
+		return rtptrans->SendRTPData(data, len);
+
 	void *pSendData = 0;
 	size_t sendLen = 0;
 	int status = 0;
 
-	if (OnChangeRTPOrRTCPData(data, len, true, &pSendData, &sendLen) && sendLen > 0 && pSendData != 0)
+	status = OnChangeRTPOrRTCPData(data, len, true, &pSendData, &sendLen);
+	if (status < 0)
+		return status;
+
+	if (pSendData)
 	{
 		status = rtptrans->SendRTPData(pSendData, sendLen);
 		OnSentRTPOrRTCPData(pSendData, sendLen, true);
@@ -1670,11 +1685,18 @@ int RTPSession::SendRTPData(const void *data, size_t len)
 
 int RTPSession::SendRTCPData(const void *data, size_t len)
 {
+	if (!m_changeOutgoingData)
+		return rtptrans->SendRTCPData(data, len);
+
 	void *pSendData = 0;
 	size_t sendLen = 0;
 	int status = 0;
 
-	if (OnChangeRTPOrRTCPData(data, len, false, &pSendData, &sendLen) && sendLen > 0 && pSendData != 0)
+	status = OnChangeRTPOrRTCPData(data, len, false, &pSendData, &sendLen);
+	if (status < 0)
+		return status;
+
+	if (pSendData)
 	{
 		status = rtptrans->SendRTCPData(pSendData, sendLen);
 		OnSentRTPOrRTCPData(pSendData, sendLen, false);

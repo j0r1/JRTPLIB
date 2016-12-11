@@ -559,17 +559,25 @@ protected:
 	virtual void OnPollThreadStop()									{ }
 #endif // RTP_SUPPORT_THREAD
 
-	/** By overriding this you can change the data packet that will actually be sent.
-	 *  By overriding this you can change the data packet that will actually be sent. The
-	 *  default implementation just assigns `origdata` and `origlen` to `senddata` and
-	 *  `sendlen` for both RTP and RTCP packets. By changing this behaviour you could
-	 *  add encryption for example. Note that no memory management will be performed
-	 *  on the `senddata` pointer you fill in, so if it needs to be deleted at some point
-	 *  you need to take care of this in some way yourself, a good way may be to do this
-	 *  in RTPSession::OnSentRTPOrRTCPData. If `senddata` is set to 0, `sendlen` is set 
-	 *  to 0, or if the function returns `false`, no packet will be sent out. This also 
-	 *  provides a way to turn off sending RTCP packets if desired. */
-	virtual bool OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen);
+	/** If this is set to true, outgoing data will be passed through RTPSession::OnChangeRTPOrRTCPData
+	 *  and RTPSession::OnSentRTPOrRTCPData, allowing you to modify the data (e.g. to encrypt it). */
+	void SetChangeOutgoingData(bool change)							{ m_changeOutgoingData = change; }
+	
+	/** If this is set to true, incoming data will be passed through RTPSession::OnChangeIncomingData,
+	 *  allowing you to modify the data (e.g. to decrypt it). */
+	void SetChangeIncomingData(bool change)							{ m_changeIncomingData = change; }
+
+	/** If RTPSession::SetChangeOutgoingData was sent to true, overriding this you can change the 
+	 *  data packet that will actually be sent, for example adding encryption.
+	 *  If RTPSession::SetChangeOutgoingData was sent to true, overriding this you can change the 
+	 *  data packet that will actually be sent, for example adding encryption.
+	 *  Note that no memory management will be performed on the `senddata` pointer you fill in, 
+	 *  so if it needs to be deleted at some point you need to take care of this in some way 
+	 *  yourself, a good way may be to do this in RTPSession::OnSentRTPOrRTCPData. If `senddata` is 
+	 *  set to 0, no packet will be sent out. This also provides a way to turn off sending RTCP 
+	 *  packets if desired. */
+	virtual int OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen)
+																	{ return ERR_RTP_RTPSESSION_CHANGEREQUESTEDBUTNOTIMPLEMENTED; } 
 
 	/** This function is called when an RTP or RTCP packet was sent, it can be helpful
 	 *  when data was allocated in RTPSession::OnChangeRTPOrRTCPData to deallocate it
@@ -623,6 +631,8 @@ private:
 	double notemultiplier;
 	bool sentpackets;
 
+	bool m_changeIncomingData, m_changeOutgoingData;
+
 	RTPSessionSources sources;
 	RTPPacketBuilder packetbuilder;
 	RTCPScheduler rtcpsched;
@@ -640,14 +650,6 @@ private:
 	friend class RTPSessionSources;
 	friend class RTCPSessionPacketBuilder;
 };
-
-inline bool RTPSession::OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, 
-                                              void **senddata, size_t *sendlen)
-{
-	*senddata = const_cast<void*>(origdata);
-	*sendlen = origlen;
-	return true;
-}
 
 } // end namespace
 

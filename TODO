@@ -1,9 +1,9 @@
 For v3:
- * experiment with srtp
  * get rid of abort descriptors, try to  use the existing rtp/rtcp sockets for this
  * Look into bug here lastmsgtime = srcdat->INF_GetLastMessageTime() was somehow 
    negative
- * MingW support
+ * add flag to rtpsession to indicate if the OnChange... functions need to be
+   called
 
 For v4:
  * introduce a basic transmitter which does not have things like a destination list,

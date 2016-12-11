@@ -51,7 +51,7 @@ set (HEADERS
 	rtpudpv6transmitter.h  
 	rtpbyteaddress.h
 	rtpexternaltransmitter.h
-	srtpsession.h
+	rtpsecuresession.h
 	)
 
 set(SOURCES
@@ -92,7 +92,7 @@ set(SOURCES
 	rtpudpv6transmitter.cpp 
 	rtpbyteaddress.cpp
 	rtpexternaltransmitter.cpp
-	srtpsession.cpp
+	rtpsecuresession.cpp
 	)
 
 if (UNIX)
