@@ -1,7 +1,7 @@
 apply_include_paths("${JRTPLIB_INTERNAL_INCLUDES}")
 apply_include_paths("${JRTPLIB_EXTERNAL_INCLUDES}")
 
-foreach(IDX 1 2 3 4 5 6)
+foreach(IDX 1 2 3 4 5 6 7)
 	add_executable(example${IDX} example${IDX}.cpp)
 	if (UNIX OR JRTPLIB_COMPILE_STATIC)
 		target_link_libraries(example${IDX} jrtplib-static)
