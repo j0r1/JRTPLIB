@@ -1,4 +1,4 @@
-#include "srtpsession.h"
+#include "rtpsecuresession.h"
 #include "rtpudpv4transmitter.h"
 #include "rtpipv4address.h"
 #include "rtpsessionparams.h"
@@ -13,10 +13,9 @@
 #include <string>
 
 using namespace std;
+using namespace jrtplib;
 
 #ifdef RTP_SUPPORT_SRTP
-
-using namespace jrtplib;
 
 void checkerror(int rtperr)
 {
@@ -27,12 +26,87 @@ void checkerror(int rtperr)
 	}
 }
 
-class MyRTPSession : public SRTPSession
+void checkerror(bool ok)
 {
+	if (!ok)
+		exit(-1);
+}
+
+class MyRTPSession : public RTPSecureSession
+{
+public:
+	bool Init(const std::string &key, uint32_t otherSSRC)
+	{
+		if (!IsActive())
+		{
+			cout << "The Create function must be called before this one!" << endl;
+			return false;
+		}
+
+		if (otherSSRC == GetLocalSSRC())
+		{
+			cout << "Can't use own SSRC as other SSRC value" << endl;
+			return false;
+		}
+
+		if (key.length() != 30)
+		{
+			cout << "Key length must be 30";
+			return false;
+		}
+
+		int status = InitializeSRTPContext();
+		if (status < 0)
+		{
+			int srtpErr = GetLastLibSRTPError();
+			if (srtpErr < 0)
+				cout << "libsrtp error: " << srtpErr << endl;
+			checkerror(status);
+		}
+
+		srtp_policy_t policyIn, policyOut;
+
+		memset(&policyIn, 0, sizeof(srtp_policy_t));
+		memset(&policyOut, 0, sizeof(srtp_policy_t));
+		
+		crypto_policy_set_rtp_default(&policyIn.rtp);
+		crypto_policy_set_rtcp_default(&policyIn.rtcp);
+
+		crypto_policy_set_rtp_default(&policyOut.rtp);
+		crypto_policy_set_rtcp_default(&policyOut.rtcp);
+
+		policyIn.ssrc.type = ssrc_specific;
+		policyIn.ssrc.value = otherSSRC;
+		policyIn.key = (unsigned char *)key.c_str();
+		policyIn.next = 0;
+
+		policyOut.ssrc.type = ssrc_specific;
+		policyOut.ssrc.value = GetLocalSSRC();
+		policyOut.key = (unsigned char *)key.c_str();
+		policyOut.next = 0;
+
+		srtp_t ctx = LockSRTPContext();
+		if (ctx == 0)
+		{
+			cout << "Unable to get/lock srtp context" << endl;
+			return false;
+		}
+		err_status_t err = srtp_add_stream(ctx, &policyIn);
+		if (err == err_status_ok)
+			err = srtp_add_stream(ctx, &policyOut);
+		UnlockSRTPContext();
+
+		if (err != err_status_ok)
+		{
+			cout << "libsrtp error while adding stream: " << err << endl;
+			return false;
+		}
+		return true;
+	}
 protected:
 	void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled)
 	{
-		printf("Got packet in OnValidatedRTPPacket from source 0x%04x!\n", srcdat->GetSSRC());
+		printf("SSRC %x Got packet in OnValidatedRTPPacket from source 0x%04x!\n", GetLocalSSRC(), srcdat->GetSSRC());
 		DeletePacket(rtppack);
 		*ispackethandled = true;
 	}
@@ -46,7 +120,15 @@ protected:
 			itemlength = sizeof(msg)-1;
 
 		memcpy(msg, itemdata, itemlength);
-		printf("SSRC %x: Received SDES item (%d): %s\n", (unsigned int)srcdat->GetSSRC(), (int)t, msg);
+		printf("SSRC %d Received SDES item (%d): %s from SSRC\n", GetLocalSSRC(), (int)t, msg, srcdat->GetSSRC());
+	}
+
+	void OnErrorChangeIncomingData(int errcode, int libsrtperrorcode) 
+	{
+		cout << "JRTPLIB Error: " << RTPGetErrorString(errcode) << endl;
+		if (libsrtperrorcode != err_status_ok)
+			cout << "libsrtp error: " << libsrtperrorcode << endl;
+		cout << endl;
 	}
 };
 
@@ -78,12 +160,10 @@ int main(void)
 	RTPSessionParams sessparams;
 	
 	sessparams.SetOwnTimestampUnit(1.0/10.0);		
-	transparams.SetPortbase(portbase1);
 	transparams.SetRTCPMultiplexing(true); 
 
+	transparams.SetPortbase(portbase1);
 	status = sender.Create(sessparams,&transparams);	
-	checkerror(status);
-	status = sender.InitializeEncryption("AES_CM_128_HMAC_SHA1_80", "012345678901234567890123456789");
 	checkerror(status);
 	status = sender.AddDestination(RTPIPv4Address(destip, portbase2, true));
 	checkerror(status);
@@ -91,11 +171,14 @@ int main(void)
 	transparams.SetPortbase(portbase2);
 	status = receiver.Create(sessparams,&transparams);	
 	checkerror(status);
-	status = receiver.InitializeEncryption("AES_CM_128_HMAC_SHA1_80", "012345678901234567890123456789");
-	checkerror(status);
 	status = receiver.AddDestination(RTPIPv4Address(destip, portbase1, true));
 	checkerror(status);
 	
+	status = sender.Init("012345678901234567890123456789", receiver.GetLocalSSRC());
+	checkerror(status);
+	status = receiver.Init("012345678901234567890123456789", sender.GetLocalSSRC());
+	checkerror(status);
+
 	for (i = 1 ; i <= num ; i++)
 	{
 		printf("\nSending packet %d/%d\n",i,num);

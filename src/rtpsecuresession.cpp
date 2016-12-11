@@ -63,7 +63,7 @@ RTPSecureSession::~RTPSecureSession()
 		srtp_dealloc(m_pSRTPContext);
 }
 
-int RTPSecureSession::InitializeSRTPContext(const srtp_policy_t *policy)
+int RTPSecureSession::InitializeSRTPContext()
 {
 #ifdef RTP_SUPPORT_THREAD
 	if (!m_srtpLock.IsInitialized())
@@ -99,6 +99,15 @@ int RTPSecureSession::GetLastLibSRTPError()
 	m_lastSRTPError = 0; // clear it
 	
 	return err;
+}
+
+void RTPSecureSession::SetLastLibSRTPError(int err)
+{
+#ifdef RTP_SUPPORT_THREAD
+	JMutexAutoLock l(m_srtpLock);
+#endif // RTP_SUPPORT_THREAD
+
+	m_lastSRTPError = err;
 }
 
 srtp_ctx_t *RTPSecureSession::LockSRTPContext()

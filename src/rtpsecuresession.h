@@ -49,7 +49,6 @@
 #endif // RTP_SUPPORT_THREAD
 
 struct srtp_ctx_t;
-struct srtp_policy_t;
 
 namespace jrtplib
 {
@@ -63,14 +62,15 @@ class JRTPLIB_IMPORTEXPORT RTPSecureSession : public RTPSession
 public:
 	RTPSecureSession(RTPRandom *rnd = 0, RTPMemoryManager *mgr = 0);
 	~RTPSecureSession();
-
-	int InitializeSRTPContext(const srtp_policy_t *policy);
+protected:
+	int InitializeSRTPContext();
 	srtp_ctx_t *LockSRTPContext();
 	int UnlockSRTPContext();
 
 	int GetLastLibSRTPError();
-protected:
-	virtual void OnErrorChangeIncomingData(int errCode, int libsrtperrorcode) { }
+	void SetLastLibSRTPError(int err);
+
+	virtual void OnErrorChangeIncomingData(int errcode, int libsrtperrorcode) { }
 private:
 	int encryptData(uint8_t *pData, int &dataLength, bool rtp);
 	int decryptRawPacket(RTPRawPacket *rawpack, int *srtpError);
