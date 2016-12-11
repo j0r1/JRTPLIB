@@ -364,6 +364,7 @@ Memory management
 You can write you own memory manager by deriving a class from RTPMemoryManager.
 The following example shows a very basic implementation.
     
+~~~{.cpp}
     class MyMemoryManager : public RTPMemoryManager
     {
     public:
@@ -380,15 +381,18 @@ The following example shows a very basic implementation.
             free(p);
         }
     };
+~~~
 
 In the constructor of RTPSession, you can specify that you would like to use
 this memory manager:
     
+~~~{.cpp}
     MyMemoryManager mgr;
     RTPSession session(0, &mgr);
+~~~
 
-Now, all memory allocation and deallocation will be done using the AllocateBuffer
-and FreeBuffer implementations of `mgr`.
+Now, all memory allocation and deallocation will be done using the `AllocateBuffer`
+and `FreeBuffer` implementations of `mgr`.
 
 The second parameter of the RTPMemoryManager::AllocateBuffer member function
 indicates what the purpose is of this memory block. This allows you to handle
@@ -404,7 +408,8 @@ Acknowledgment
 
 I would like thank the people at the Expertise Centre for Digital Media
 for giving me the opportunity to create this rewrite of the library.
-
+Special thanks go to Wim Lamotte for getting me started on the RTP
+journey many years ago.
 
 Contact
 -------

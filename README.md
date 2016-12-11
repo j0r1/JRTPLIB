@@ -20,6 +20,8 @@ Acknowledgment
 
 I would like thank the people at the Expertise Centre for Digital Media
 for giving me the opportunity to create this rewrite of the library.
+Special thanks go to Wim Lamotte for getting me started on the RTP
+journey many years ago.
 
 Disclaimer & Copyright
 ----------------------
