@@ -140,12 +140,12 @@ int RTPSecureSession::UnlockSRTPContext()
 
 int RTPSecureSession::encryptData(uint8_t *pData, int &dataLength, bool rtp)
 {
+	int length = dataLength;
+
 	if (rtp)
 	{
-		if (dataLength < sizeof(uint32_t)*3)
+		if (length < sizeof(uint32_t)*3)
 			return ERR_RTP_SECURESESSION_NOTENOUGHDATATOENCRYPT ;
-
-		int length = dataLength;
 
 		err_status_t result = srtp_protect(m_pSRTPContext, (void *)pData, &length);
 		if (result != err_status_ok)
@@ -153,15 +153,11 @@ int RTPSecureSession::encryptData(uint8_t *pData, int &dataLength, bool rtp)
 			m_lastSRTPError = (int)result;
 			return ERR_RTP_SECURESESSION_CANTENCRYPTRTPDATA;
 		}
-
-		dataLength = length;
 	}
 	else // rtcp
 	{
-		if (dataLength < sizeof(uint32_t)*2)
+		if (length < sizeof(uint32_t)*2)
 			return ERR_RTP_SECURESESSION_NOTENOUGHDATATOENCRYPT;
-
-		int length = dataLength;
 
 		err_status_t result = srtp_protect_rtcp(m_pSRTPContext, (void *)pData, &length);
 		if (result != err_status_ok)
@@ -171,6 +167,8 @@ int RTPSecureSession::encryptData(uint8_t *pData, int &dataLength, bool rtp)
 		}
 	}	
 	
+	dataLength = length;
+
 	return 0;
 }
 
