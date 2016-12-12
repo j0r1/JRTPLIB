@@ -1,2 +1,19 @@
 #!/bin/bash
-for i in `cat rtperrors.h | cut -f 2 -d " " | cut -f 1 |grep -e "^ERR"`; do echo $i ; BLA=`grep $i *.cpp *.h|cut -f 1 -d ":"|sort|uniq`; if [ "BLA$BLA" != BLA ] ; then for j in $BLA ; do if [ $j != "rtperrors.h" ] ; then echo -e "\t$j" ; fi ; done ; fi ;done
+for i in `cat rtperrors.h | cut -f 2 -d " " | cut -f 1 |grep -e "^ERR"`; do
+	echo $i
+	BLA=`grep $i rt*.cpp rt*.h extratransmitters/rt*.h extratransmitters/rt*.cpp |cut -f 1 -d ":"|sort|uniq`
+	gotdesc=N
+	if [ "BLA$BLA" != BLA ] ; then 
+		for j in $BLA ; do 
+			if [ $j != "rtperrors.h" ] ; then 
+				echo -e "\t$j" ; 
+				if [ $j = "rtperrors.cpp" ] ; then
+					gotdesc=Y
+				fi
+			fi 
+		done 
+	fi 
+	if [ $gotdesc = "N" ] ; then
+		echo -e "\tNEEDS DESCRIPTION"
+	fi
+done
