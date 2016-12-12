@@ -33,7 +33,7 @@
 #include "rtpbyteaddress.h"
 #include "rtpmemorymanager.h"
 #ifdef RTPDEBUG
-	#include "rtpdefines.h" 
+	#include "rtpinternalutils.h" 
 	#include <stdio.h>
 #endif // RTPDEBUG
 

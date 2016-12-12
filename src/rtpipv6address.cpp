@@ -36,7 +36,7 @@
 #ifdef RTP_SUPPORT_IPV6
 
 #ifdef RTPDEBUG
-	#include "rtpdefines.h"
+	#include "rtpinternalutils.h"
 	#include <stdio.h>
 #endif // RTPDEBUG
 

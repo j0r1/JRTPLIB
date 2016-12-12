@@ -39,7 +39,7 @@
 namespace jrtplib
 {
 
-inline std::string RTPIPv6Destination::GetDestinationString() const
+std::string RTPIPv6Destination::GetDestinationString() const
 {
 	uint16_t ip16[8];
 	char str[48];

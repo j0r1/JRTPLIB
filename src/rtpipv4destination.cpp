@@ -36,7 +36,7 @@
 namespace jrtplib
 {
 
-inline std::string RTPIPv4Destination::GetDestinationString() const
+std::string RTPIPv4Destination::GetDestinationString() const
 {
 	char str[24];
 	uint32_t ip = GetIP();
