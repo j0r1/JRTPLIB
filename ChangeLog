@@ -2,6 +2,29 @@
 				JRTPLIB ChangeLog
 				-----------------
 
+ 3.10.0 (?)
+	* Support for MingW compilation was added
+	* Outgoing data or incoming data can be intercepted and changed
+	  (useful for encryption)
+	* SRTP support (using libsrtp) through the RTPSecureSession class.
+	  Thanks to Vladimir V. Pavluk (vladvic_r@mail.ru) for providing
+	  very helpful code.
+	* RTP packets can now be processed in RTPSession's
+	  OnValidatedRTPPacket virtual function.
+	* Various virtual function were added to the RTPSession class to
+	  get immediate notification of RTCP sender reports, receiver
+	  reports, SDES data.
+	* Support for RTP and RTCP multiplexing over the same port, for the
+	  UDPv4 transmitter.
+	* Added a member function to RTPSession to send raw data, i.e. to
+	  send data directly over the RTP or RTCP channel of the transmitter.
+	* Added a member function to RTPSession by which you can retrieve the
+	  next RTP sequence number.
+	* Specifying port 0 for the UDPv4 transmitter chooses a port pair
+	  by itself.
+	* The UDPv4 transmitter can be initialized using pre-created RTP
+	  and RTCP sockets.
+
  3.9.2 (December 2016)
  	* Major bugfix: zero length UDP packets should no longer block
 	  the reception of packets.
