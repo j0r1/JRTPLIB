@@ -52,6 +52,7 @@ set (HEADERS
 	rtpbyteaddress.h
 	rtpexternaltransmitter.h
 	rtpsecuresession.h
+	rtpsocketutil.h
 	)
 
 set(SOURCES
