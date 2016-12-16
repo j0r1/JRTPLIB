@@ -7,8 +7,9 @@
 	* Outgoing data or incoming data can be intercepted and changed
 	  (useful for encryption)
 	* SRTP support (using libsrtp) through the RTPSecureSession class.
-	  Thanks to Vladimir V. Pavluk (vladvic_r@mail.ru) for providing
-	  very helpful code.
+	  Thanks to Vladimir V. Pavluk (vladvic_r@mail.ru) and to
+	  Alexey Obergan (alex.obergan@gmail.com) for providing very helpful 
+	  code.
 	* RTP packets can now be processed in RTPSession's
 	  OnValidatedRTPPacket virtual function.
 	* Various virtual function were added to the RTPSession class to
