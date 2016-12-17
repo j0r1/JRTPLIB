@@ -294,8 +294,7 @@ double RTPSourceData::INF_GetEstimatedTimestampUnit() const
 	
 	RTPTime t1 = RTPTime(SRinf.GetNTPTimestamp());
 	RTPTime t2 = RTPTime(SRprevinf.GetNTPTimestamp());
-	if ((t1.GetSeconds() == 0 && t1.GetMicroSeconds() == 0) ||
-	    (t2.GetSeconds() == 0 && t2.GetMicroSeconds() == 0)) // one of the times couldn't be calculated
+	if (t1.IsZero() || t2.IsZero()) // one of the times couldn't be calculated
 		return -1.0;
 
 	if (t1 <= t2)

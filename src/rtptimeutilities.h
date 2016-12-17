@@ -66,7 +66,7 @@ class JRTPLIB_IMPORTEXPORT RTPNTPTime
 {
 public:
 	/** This constructor creates and instance with MSW \c m and LSW \c l. */
-	RTPNTPTime(uint32_t m,uint32_t l)							{ msw = m ; lsw = l; }
+	RTPNTPTime(uint32_t m,uint32_t l)					{ msw = m ; lsw = l; }
 
 	/** Returns the most significant word. */
 	uint32_t GetMSW() const								{ return msw; }
@@ -104,16 +104,16 @@ public:
 	RTPTime(RTPNTPTime ntptime);
 
 	/** Creates an instance corresponding to \c seconds and \c microseconds. */
-	RTPTime(uint32_t seconds, uint32_t microseconds)						{ sec = seconds; microsec = microseconds; }
+	RTPTime(int64_t seconds, uint32_t microseconds);
 
 	/** Returns the number of seconds stored in this instance. */
-	uint32_t GetSeconds() const										{ return sec; }
+	int64_t GetSeconds() const;
 
 	/** Returns the number of microseconds stored in this instance. */
-	uint32_t GetMicroSeconds() const								{ return microsec; }
+	uint32_t GetMicroSeconds() const;
 
 	/** Returns the time stored in this instance, expressed in units of seconds. */
-	double GetDouble() const 										{ return (((double)sec)+(((double)microsec)/1000000.0)); }
+	double GetDouble() const 										{ return m_t; }
 
 	/** Returns the NTP time corresponding to the time stored in this instance. */
 	RTPNTPTime GetNTPTime() const;
@@ -124,39 +124,80 @@ public:
 	bool operator>(const RTPTime &t) const;
 	bool operator<=(const RTPTime &t) const;
 	bool operator>=(const RTPTime &t) const;
+
+	bool IsZero() const { return m_t == 0; }
 private:
 #ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	static inline uint64_t CalculateMicroseconds(uint64_t performancecount,uint64_t performancefrequency);
 #endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 
-	uint32_t sec,microsec;
+	double m_t;
 };
 
 inline RTPTime::RTPTime(double t)
 {
-	sec = (uint32_t)t;
+	m_t = t;
+}
 
-	double t2 = t-((double)sec);
-	t2 *= 1000000.0;
-	microsec = (uint32_t)t2;
+inline RTPTime::RTPTime(int64_t seconds, uint32_t microseconds)
+{
+	if (seconds >= 0)
+	{
+		m_t = (double)seconds + 1e-6*(double)microseconds;
+	}
+	else
+	{
+		int64_t possec = -seconds;
+
+		m_t = (double)possec + 1e-6*(double)microseconds;
+		m_t = -m_t;
+	}
 }
 
 inline RTPTime::RTPTime(RTPNTPTime ntptime)
 {
 	if (ntptime.GetMSW() < RTP_NTPTIMEOFFSET)
 	{
-		sec = 0;
-		microsec = 0;
+		m_t = 0;
 	}
 	else
 	{
-		sec = ntptime.GetMSW() - RTP_NTPTIMEOFFSET;
+		uint32_t sec = ntptime.GetMSW() - RTP_NTPTIMEOFFSET;
 		
 		double x = (double)ntptime.GetLSW();
 		x /= (65536.0*65536.0);
 		x *= 1000000.0;
-		microsec = (uint32_t)x;
+		uint32_t microsec = (uint32_t)x;
+
+		m_t = (double)sec + 1e-6*(double)microsec;
 	}
+}
+
+inline int64_t RTPTime::GetSeconds() const
+{
+	return (int64_t)m_t;
+}
+
+inline uint32_t RTPTime::GetMicroSeconds() const
+{
+	uint32_t microsec;
+
+	if (m_t >= 0)
+	{
+		int64_t sec = (int64_t)m_t;
+		microsec = (uint32_t)(1e6*(m_t - (double)sec) + 0.5);
+	}
+	else // m_t < 0
+	{
+		int64_t sec = (int64_t)(-m_t);
+		microsec = (uint32_t)(1e6*((-m_t) - (double)sec) + 0.5);
+	}
+
+	if (microsec >= 1000000)
+		return 999999;
+	if (microsec < 0)
+		return 0;
+	return microsec;
 }
 
 #ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
@@ -199,14 +240,18 @@ inline RTPTime RTPTime::CurrentTime()
 
 	microdiff = emulate_microseconds - initmicroseconds;
 
-	return RTPTime((uint32_t)((microseconds + microdiff) / C1000000),((uint32_t)((microseconds + microdiff) % C1000000)));
+	double t = 1e-6*(double)(microseconds + microdiff);
+	return RTPTime(t);
 }
 
 inline void RTPTime::Wait(const RTPTime &delay)
 {
-	DWORD t;
+	if (delay.m_t <= 0)
+		return;
 
-	t = ((DWORD)delay.GetSeconds())*1000+(((DWORD)delay.GetMicroSeconds())/1000);
+	uint64_t sec = (uint64_t)delay.m_t;
+	uint32_t microsec = (uint32_t)(1e6*(delay.m_t-(double)sec));
+	DWORD t = ((DWORD)sec)*1000+(((DWORD)microsec)/1000);
 	Sleep(t);
 }
 
@@ -228,15 +273,21 @@ inline RTPTime RTPTime::CurrentTime()
 	struct timeval tv;
 	
 	gettimeofday(&tv,0);
-	return RTPTime((uint32_t)tv.tv_sec,(uint32_t)tv.tv_usec);
+	return RTPTime((uint64_t)tv.tv_sec,(uint32_t)tv.tv_usec);
 }
 
 inline void RTPTime::Wait(const RTPTime &delay)
 {
+	if (delay.m_t <= 0)
+		return;
+
+	uint64_t sec = (uint64_t)delay.m_t;
+	uint64_t nanosec = (uint32_t)(1e9*(delay.m_t-(double)sec));
+
 	struct timespec req,rem;
 
-	req.tv_sec = (time_t)delay.sec;
-	req.tv_nsec = ((long)delay.microsec)*1000;
+	req.tv_sec = (time_t)sec;
+	req.tv_nsec = ((long)nanosec);
 	nanosleep(&req,&rem);
 }
 
@@ -244,35 +295,26 @@ inline void RTPTime::Wait(const RTPTime &delay)
 
 inline RTPTime &RTPTime::operator-=(const RTPTime &t)
 { 
-	sec -= t.sec; 
-	if (t.microsec > microsec)
-	{
-		sec--;
-		microsec += 1000000;
-	}
-	microsec -= t.microsec;
+	m_t -= t.m_t;
 	return *this;
 }
 
 inline RTPTime &RTPTime::operator+=(const RTPTime &t)
 { 
-	sec += t.sec; 
-	microsec += t.microsec;
-	if (microsec >= 1000000)
-	{
-		sec++;
-		microsec -= 1000000;
-	}
+	m_t += t.m_t;
 	return *this;
 }
 
 inline RTPNTPTime RTPTime::GetNTPTime() const
 {
+	uint32_t sec = (uint32_t)m_t;
+	uint32_t microsec = (uint32_t)((m_t - (double)sec)*1e6);
+
 	uint32_t msw = sec+RTP_NTPTIMEOFFSET;
 	uint32_t lsw;
 	double x;
 	
-      	x = microsec/1000000.0;
+    x = microsec/1000000.0;
 	x *= (65536.0*65536.0);
 	lsw = (uint32_t)x;
 
@@ -281,46 +323,22 @@ inline RTPNTPTime RTPTime::GetNTPTime() const
 
 inline bool RTPTime::operator<(const RTPTime &t) const
 {
-	if (sec < t.sec)
-		return true;
-	if (sec > t.sec)
-		return false;
-	if (microsec < t.microsec)
-		return true;
-	return false;
+	return m_t < t.m_t;
 }
 
 inline bool RTPTime::operator>(const RTPTime &t) const
 {
-	if (sec > t.sec)
-		return true;
-	if (sec < t.sec)
-		return false;
-	if (microsec > t.microsec)
-		return true;
-	return false;
+	return m_t > t.m_t;
 }
 
 inline bool RTPTime::operator<=(const RTPTime &t) const
 {
-	if (sec < t.sec)
-		return true;
-	if (sec > t.sec)
-		return false;
-	if (microsec <= t.microsec)
-		return true;
-	return false;
+	return m_t <= t.m_t;
 }
 
 inline bool RTPTime::operator>=(const RTPTime &t) const
 {
-	if (sec > t.sec)
-		return true;
-	if (sec < t.sec)
-		return false;
-	if (microsec >= t.microsec)
-		return true;
-	return false;
+	return m_t >= t.m_t;
 }
 
 } // end namespace
