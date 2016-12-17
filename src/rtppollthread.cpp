@@ -50,9 +50,7 @@ RTPPollThread::RTPPollThread(RTPSession &session,RTCPScheduler &sched):rtpsessio
 {
 	stop = false;
 	transmitter = 0;
-#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 RTPPollThread::~RTPPollThread()

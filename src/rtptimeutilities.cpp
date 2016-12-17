@@ -31,9 +31,6 @@
 */
 
 #include "rtpconfig.h"
-
-#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
-
 #include "rtptimeutilities.h"
 #ifdef RTPDEBUG
 	#include <iostream>
@@ -42,7 +39,7 @@
 namespace jrtplib
 {
 
-RTPTimeInitializer::RTPTimeInitializer()
+RTPTimeInitializerObject::RTPTimeInitializerObject()
 {
 #ifdef RTPDEBUG
 	std::cout << "RTPTimeInitializer: Initializing RTPTime::CurrentTime()" << std::endl;
@@ -51,9 +48,7 @@ RTPTimeInitializer::RTPTimeInitializer()
 	dummy = -1;
 }
 
-RTPTimeInitializer timeinit;
+RTPTimeInitializerObject timeinit;
 
 } // end namespace
-
-#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 

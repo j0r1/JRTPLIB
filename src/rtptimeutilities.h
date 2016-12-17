@@ -255,18 +255,44 @@ inline void RTPTime::Wait(const RTPTime &delay)
 	Sleep(t);
 }
 
-class JRTPLIB_IMPORTEXPORT RTPTimeInitializer
-{
-public:
-	RTPTimeInitializer();
-	void Dummy() { dummy++; }
-private:
-	int dummy;
-};
-
-extern RTPTimeInitializer timeinit;
-
 #else // unix style
+
+#ifdef RTP_HAVE_CLOCK_GETTIME
+inline double RTPTime_timespecToDouble(struct timespec &ts)
+{
+	return (double)ts.tv_sec + 1e-9*(double)ts.tv_nsec;
+}
+
+inline RTPTime RTPTime::CurrentTime()
+{
+	static bool s_initialized = false;
+	static double s_startOffet = 0;
+
+	if (!s_initialized)
+	{
+		s_initialized = true;
+
+		// Get the corresponding times in system time and monotonic time
+		struct timespec tpSys, tpMono;
+
+		clock_gettime(CLOCK_REALTIME, &tpSys);
+		clock_gettime(CLOCK_MONOTONIC, &tpMono);
+
+		double tSys = RTPTime_timespecToDouble(tpSys);
+		double tMono = RTPTime_timespecToDouble(tpMono);
+
+		s_startOffet = tSys - tMono;
+		return tSys;
+	}
+
+	struct timespec tpMono;
+	clock_gettime(CLOCK_MONOTONIC, &tpMono);
+
+	double tMono0 = RTPTime_timespecToDouble(tpMono);
+	return tMono0 + s_startOffet;
+}
+
+#else // gettimeofday fallback
 
 inline RTPTime RTPTime::CurrentTime()
 {
@@ -275,6 +301,7 @@ inline RTPTime RTPTime::CurrentTime()
 	gettimeofday(&tv,0);
 	return RTPTime((uint64_t)tv.tv_sec,(uint32_t)tv.tv_usec);
 }
+#endif // RTP_HAVE_CLOCK_GETTIME
 
 inline void RTPTime::Wait(const RTPTime &delay)
 {
@@ -341,7 +368,19 @@ inline bool RTPTime::operator>=(const RTPTime &t) const
 	return m_t >= t.m_t;
 }
 
+class JRTPLIB_IMPORTEXPORT RTPTimeInitializerObject
+{
+public:
+	RTPTimeInitializerObject();
+	void Dummy() { dummy++; }
+private:
+	int dummy;
+};
+
+extern RTPTimeInitializerObject timeinit;
+
 } // end namespace
+
 
 #endif // RTPTIMEUTILITIES_H
 

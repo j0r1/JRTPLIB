@@ -90,9 +90,6 @@ RTPUDPv6Transmitter::RTPUDPv6Transmitter(RTPMemoryManager *mgr) : RTPTransmitter
 {
 	created = false;
 	init = false;
-#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
-	timeinit.Dummy();
-#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 RTPUDPv6Transmitter::~RTPUDPv6Transmitter()

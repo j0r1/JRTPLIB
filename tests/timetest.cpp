@@ -1,5 +1,6 @@
 #include "rtptimeutilities.h"
 #include <iostream>
+#include <stdio.h>
 
 using namespace std;
 using namespace jrtplib;
@@ -29,6 +30,13 @@ int main(void)
 		cout << "Output Microseconds: " << t.GetMicroSeconds() << endl;
 		cout << "Output Double:       " << t.GetDouble() << endl;
 		cout << endl;
+	}
+
+	for (int i = 0 ; i < 10 ; i++)
+	{
+		RTPTime now = RTPTime::CurrentTime();
+		fprintf(stderr, "%10u.%06d\n", (uint32_t)now.GetSeconds(), now.GetMicroSeconds());
+		RTPTime::Wait(RTPTime(1));
 	}
 	return 0;
 }

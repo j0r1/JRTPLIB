@@ -48,9 +48,7 @@ namespace jrtplib
 RTPPacketBuilder::RTPPacketBuilder(RTPRandom &r,RTPMemoryManager *mgr) : RTPMemoryObject(mgr),rtprnd(r),lastwallclocktime(0,0)
 {
 	init = false;
-#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 
 	//std::cout << (void *)(&rtprnd) << std::endl;
 }

@@ -25,6 +25,10 @@
 	  by itself.
 	* The UDPv4 transmitter can be initialized using pre-created RTP
 	  and RTCP sockets.
+	* Modified RTPTime class to use an internal representation of a
+	  double precision floating point number. Also using clock_gettime
+	  if available instead of gettimeofday, to obtain times that are
+	  not affected by clock adjustments.
 
  3.9.2 (December 2016)
  	* Major bugfix: zero length UDP packets should no longer block

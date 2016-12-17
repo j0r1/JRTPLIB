@@ -95,9 +95,7 @@ RTPSession::RTPSession(RTPRandom *r,RTPMemoryManager *mgr)
 	m_changeOutgoingData = false;
 
 	created = false;
-#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 
 	//std::cout << (void *)(rtprnd) << std::endl;
 }

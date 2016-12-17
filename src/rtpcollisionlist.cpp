@@ -44,9 +44,7 @@ namespace jrtplib
 
 RTPCollisionList::RTPCollisionList(RTPMemoryManager *mgr) : RTPMemoryObject(mgr)
 {
-#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 void RTPCollisionList::Clear()

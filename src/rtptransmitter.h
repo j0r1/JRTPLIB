@@ -41,6 +41,7 @@
 #include "rtpconfig.h"
 #include "rtptypes.h"
 #include "rtpmemoryobject.h"
+#include "rtptimeutilities.h"
 
 namespace jrtplib
 {
@@ -83,7 +84,7 @@ public:
 	};
 protected:
 	/** Constructor in which you can specify a memory manager to use. */
-	RTPTransmitter(RTPMemoryManager *mgr) : RTPMemoryObject(mgr)									{ }
+	RTPTransmitter(RTPMemoryManager *mgr) : RTPMemoryObject(mgr)									{ timeinit.Dummy(); }
 public:
 	virtual ~RTPTransmitter()													{ }
 

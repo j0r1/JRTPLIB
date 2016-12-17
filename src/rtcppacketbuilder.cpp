@@ -47,9 +47,7 @@ RTCPPacketBuilder::RTCPPacketBuilder(RTPSources &s,RTPPacketBuilder &pb,RTPMemor
 	: RTPMemoryObject(mgr),sources(s),rtppacketbuilder(pb),prevbuildtime(0,0),transmissiondelay(0,0),ownsdesinfo(mgr)
 {
 	init = false;
-#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 RTCPPacketBuilder::~RTCPPacketBuilder()

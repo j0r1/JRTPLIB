@@ -51,9 +51,7 @@ RTCPSchedulerParams::RTCPSchedulerParams() : mininterval(RTCP_DEFAULTMININTERVAL
 	senderfraction = RTCP_DEFAULTSENDERFRACTION;
 	usehalfatstartup = RTCP_DEFAULTHALFATSTARTUP;
 	immediatebye = RTCP_DEFAULTIMMEDIATEBYE;
-#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	timeinit.Dummy();
-#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 RTCPSchedulerParams::~RTCPSchedulerParams()

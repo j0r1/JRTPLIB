@@ -66,9 +66,6 @@ RTPExternalTransmitter::RTPExternalTransmitter(RTPMemoryManager *mgr) : RTPTrans
 {
 	created = false;
 	init = false;
-#ifdef RTP_HAVE_QUERYPERFORMANCECOUNTER
-	timeinit.Dummy();
-#endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 }
 
 RTPExternalTransmitter::~RTPExternalTransmitter()
