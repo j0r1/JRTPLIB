@@ -42,6 +42,13 @@ public:
 			fclose(pLogFile);
 	}
 protected:
+	void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled)
+	{
+		// Make sure no RTP packets are stored internally, we'd just be wasting memory
+		DeletePacket(rtppack);
+		*ispackethandled = true;
+	}
+
 	bool OnChangeIncomingData(RTPRawPacket *pPack)
 	{
 		if (pLogFile)
