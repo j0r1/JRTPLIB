@@ -39,6 +39,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef RTP_SUPPORT_THREAD
+#include <jthread/jmutex.h>
+#include <jthread/jmutexautolock.h>
+using namespace jthread;
+#endif // RTP_SUPPORT_THREAD
+
 struct MemoryInfo
 {
 	void *ptr;
@@ -49,12 +55,26 @@ struct MemoryInfo
 	MemoryInfo *next;
 };
 
+#ifdef RTP_SUPPORT_THREAD
+JMutex mutex;
+#endif // RTP_SUPPORT_THREAD
+
 class MemoryTracker
 {
 public:
-	MemoryTracker() { firstblock = NULL; }
+	MemoryTracker() 
+	{ 
+		firstblock = NULL; 
+#ifdef RTP_SUPPORT_THREAD
+		mutex.Init();
+#endif // RTP_SUPPORT_THREAD
+	}
 	~MemoryTracker()
 	{
+#ifdef RTP_SUPPORT_THREAD
+		JMutexAutoLock l(mutex);
+#endif // RTP_SUPPORT_THREAD
+
 		MemoryInfo *tmp;
 		int count = 0;
 		
@@ -85,6 +105,10 @@ static MemoryTracker memtrack;
 
 void *donew(size_t s,char filename[],int line)
 {	
+#ifdef RTP_SUPPORT_THREAD
+	JMutexAutoLock l(mutex);
+#endif // RTP_SUPPORT_THREAD
+
 	void *p;
 	MemoryInfo *meminf;
 	
@@ -105,6 +129,10 @@ void *donew(size_t s,char filename[],int line)
 
 void dodelete(void *p)
 {
+#ifdef RTP_SUPPORT_THREAD
+	JMutexAutoLock l(mutex);
+#endif // RTP_SUPPORT_THREAD
+
 	MemoryInfo *tmp,*tmpprev;
 	bool found;
 	
