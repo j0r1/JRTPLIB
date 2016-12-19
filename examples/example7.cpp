@@ -27,7 +27,7 @@ using namespace std;
 #include "rtprawpacket.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <srtp.h>
+#include <srtp/srtp.h>
 #include <string>
 
 using namespace jrtplib;

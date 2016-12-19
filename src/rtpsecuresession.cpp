@@ -36,7 +36,7 @@
 
 #include "rtprawpacket.h"
 #include <jthread/jmutexautolock.h>
-#include <srtp.h>
+#include <srtp/srtp.h>
 #include <iostream>
 #include <vector>
 
