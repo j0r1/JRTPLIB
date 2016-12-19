@@ -2,7 +2,7 @@
 				JRTPLIB ChangeLog
 				-----------------
 
- 3.10.0 (?)
+ 3.10.0 (December 2016)
 	* Support for MingW compilation was added
 	* Outgoing data or incoming data can be intercepted and changed
 	  (useful for encryption)
