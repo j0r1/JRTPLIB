@@ -10,6 +10,13 @@
 
 */
 
+#include "rtpconfig.h"
+#include <iostream>
+
+using namespace std;
+
+#ifdef RTP_SUPPORT_SRTP
+
 #include "rtpsecuresession.h"
 #include "rtpudpv4transmitter.h"
 #include "rtpipv4address.h"
@@ -21,13 +28,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <srtp.h>
-#include <iostream>
 #include <string>
 
-using namespace std;
 using namespace jrtplib;
-
-#ifdef RTP_SUPPORT_SRTP
 
 void checkerror(int rtperr)
 {
