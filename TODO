@@ -1,5 +1,7 @@
 For v3:
- * get rid of abort descriptors, try to  use the existing rtp/rtcp sockets for this
+ * Docs for rtpabortdescriptors.h
+ * Error descriptions for new errors
+
  * Look into bug here lastmsgtime = srcdat->INF_GetLastMessageTime() was somehow 
    negative
  * similar changes to udpv6 transmitter as to udpv4 transmitter
