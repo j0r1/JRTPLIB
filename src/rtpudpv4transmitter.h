@@ -133,6 +133,11 @@ public:
 	 *  the sockets yourself when done, it will **not** be done automatically. */
 	void SetUseExistingSockets(SocketType rtpsocket, SocketType rtcpsocket) { rtpsock = rtpsocket; rtcpsock = rtcpsocket; useexistingsockets = true; }
 
+	/** If non null, the specified abort descriptors will be used to cancel
+	 *  the function that's waiting for packets to arrive; set to null (the default
+	 *  to let the transmitter create its own instance. */
+	void SetCreatedAbortDescriptors(RTPAbortDescriptors *desc) { m_pAbortDesc = desc; }
+
 	/** Returns the RTP socket's send buffer size. */
 	int GetRTPSendBuffer() const								{ return rtpsendbuf; }
 
@@ -157,6 +162,11 @@ public:
 	/** Returns true and fills in sockets if existing sockets were set
 	 *  using RTPUDPv4TransmissionParams::SetUseExistingSockets. */
 	bool GetUseExistingSockets(SocketType &rtpsocket, SocketType &rtcpsocket) const { if (!useexistingsockets) return false; rtpsocket = rtpsock; rtcpsocket = rtcpsock; return true; }
+
+	/** If non-null, this RTPAbortDescriptors instance will be used internally,
+	 *  which can be useful when creating your own poll thread for multiple
+	 *  sessions. */
+	RTPAbortDescriptors *GetCreatedAbortDescriptors() const		{ return m_pAbortDesc; }
 private:
 	uint16_t portbase;
 	uint32_t bindIP, mcastifaceIP;
@@ -170,6 +180,8 @@ private:
 
 	SocketType rtpsock, rtcpsock;
 	bool useexistingsockets;
+
+	RTPAbortDescriptors *m_pAbortDesc;
 };
 
 inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	
@@ -188,6 +200,7 @@ inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissio
 	useexistingsockets = false;
 	rtpsock = 0;
 	rtcpsock = 0;
+	m_pAbortDesc = 0;
 }
 
 /** Additional information about the UDP over IPv4 transmitter. */
@@ -337,6 +350,7 @@ private:
 
 	bool closesocketswhendone;
 	RTPAbortDescriptors m_abortDesc;
+	RTPAbortDescriptors *m_pAbortDesc; // in case an external one was specified
 
 #ifdef RTP_SUPPORT_THREAD
 	jthread::JMutex mainmutex,waitmutex;

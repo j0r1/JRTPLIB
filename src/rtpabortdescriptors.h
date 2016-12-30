@@ -16,6 +16,7 @@ public:
 
 	int Init();
 	SocketType GetAbortSocket() const													{ return m_descriptors[0]; }
+	bool IsInitialized() const															{ return m_init; }
 	void Destroy();
 
 	int SendAbortSignal();

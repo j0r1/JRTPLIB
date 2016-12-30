@@ -506,21 +506,34 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	supportsmulticasting = false;
 #endif // RTP_SUPPORT_IPV4MULTICAST
 
-	if ((status = m_abortDesc.Init()) < 0)
-	{
-		CLOSESOCKETS;
-		MAINMUTEX_UNLOCK
-		return status;
-	}
-	
 	if (maximumpacketsize > RTPUDPV4TRANS_MAXPACKSIZE)
 	{
 		CLOSESOCKETS;
-		m_abortDesc.Destroy();
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_SPECIFIEDSIZETOOBIG;
 	}
 	
+	if (!params->GetCreatedAbortDescriptors())
+	{
+		if ((status = m_abortDesc.Init()) < 0)
+		{
+			CLOSESOCKETS;
+			MAINMUTEX_UNLOCK
+			return status;
+		}
+		m_pAbortDesc = &m_abortDesc;
+	}
+	else
+	{
+		m_pAbortDesc = params->GetCreatedAbortDescriptors();
+		if (!m_pAbortDesc->IsInitialized())
+		{
+			CLOSESOCKETS;
+			MAINMUTEX_UNLOCK
+			return ERR_RTP_ABORTDESC_NOTINIT;
+		}
+	}
+
 	maxpacksize = maximumpacketsize;
 	multicastTTL = params->GetMulticastTTL();
 	mcastifaceIP = params->GetMulticastInterfaceIP();
@@ -566,14 +579,14 @@ void RTPUDPv4Transmitter::Destroy()
 	
 	if (waitingfordata)
 	{
-		m_abortDesc.SendAbortSignal();
-		m_abortDesc.Destroy();
+		m_pAbortDesc->SendAbortSignal();
+		m_abortDesc.Destroy(); // Doesn't do anything if not initialized
 		MAINMUTEX_UNLOCK
 		WAITMUTEX_LOCK // to make sure that the WaitForIncomingData function ended
 		WAITMUTEX_UNLOCK
 	}
 	else
-		m_abortDesc.Destroy();
+		m_abortDesc.Destroy(); // Doesn't do anything if not initialized
 
 	MAINMUTEX_UNLOCK
 }
@@ -820,10 +833,12 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 		return ERR_RTP_UDPV4TRANS_ALREADYWAITING;
 	}
 	
+	SocketType abortSocket = m_pAbortDesc->GetAbortSocket();
+
 	FD_ZERO(&fdset);
 	FD_SET(rtpsock,&fdset);
 	FD_SET(rtcpsock,&fdset);
-	FD_SET(m_abortDesc.GetAbortSocket(),&fdset);
+	FD_SET(abortSocket,&fdset);
 	tv.tv_sec = delay.GetSeconds();
 	tv.tv_usec = delay.GetMicroSeconds();
 	
@@ -851,8 +866,8 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 	}
 		
 	// if aborted, read from abort buffer
-	if (FD_ISSET(m_abortDesc.GetAbortSocket(),&fdset))
-		m_abortDesc.ReadSignallingByte();
+	if (FD_ISSET(abortSocket,&fdset))
+		m_pAbortDesc->ReadSignallingByte();
 
 	if (dataavailable != 0)
 	{
@@ -884,7 +899,7 @@ int RTPUDPv4Transmitter::AbortWait()
 		return ERR_RTP_UDPV4TRANS_NOTWAITING;
 	}
 
-	m_abortDesc.SendAbortSignal();
+	m_pAbortDesc->SendAbortSignal();
 	
 	MAINMUTEX_UNLOCK
 	return 0;

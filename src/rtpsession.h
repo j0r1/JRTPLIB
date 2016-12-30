@@ -619,7 +619,7 @@ private:
 	RTPTransmitter *rtptrans;
 	bool created;
 	bool deletetransmitter;
-	bool usingpollthread;
+	bool usingpollthread, needthreadsafety;
 	bool acceptownpackets;
 	bool useSR_BYEifpossible;
 	size_t maxpacksize;

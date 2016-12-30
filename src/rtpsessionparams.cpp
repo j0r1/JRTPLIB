@@ -44,8 +44,10 @@ RTPSessionParams::RTPSessionParams() : mininterval(0,0)
 {
 #ifdef RTP_SUPPORT_THREAD
 	usepollthread = true;
+	m_needThreadSafety = true;
 #else
 	usepollthread = false;
+	m_needThreadSafety = false;
 #endif // RTP_SUPPORT_THREAD
 	maxpacksize = RTP_DEFAULTPACKETSIZE;
 	receivemode = RTPTransmitter::AcceptAll;
@@ -80,6 +82,16 @@ int RTPSessionParams::SetUsePollThread(bool usethread)
 	return ERR_RTP_NOTHREADSUPPORT;
 #else
 	usepollthread = usethread;
+	return 0;
+#endif // RTP_SUPPORT_THREAD
+}
+
+int RTPSessionParams::SetNeedThreadSafety(bool s)
+{
+#ifndef RTP_SUPPORT_THREAD
+	return ERR_RTP_NOTHREADSUPPORT;
+#else
+	m_needThreadSafety = s;
 	return 0;
 #endif // RTP_SUPPORT_THREAD
 }

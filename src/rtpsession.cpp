@@ -63,14 +63,14 @@
 #include "rtpdebug.h"
 
 #ifdef RTP_SUPPORT_THREAD
-	#define SOURCES_LOCK					{ if (usingpollthread) sourcesmutex.Lock(); }
-	#define SOURCES_UNLOCK					{ if (usingpollthread) sourcesmutex.Unlock(); }
-	#define BUILDER_LOCK					{ if (usingpollthread) buildermutex.Lock(); }
-	#define BUILDER_UNLOCK					{ if (usingpollthread) buildermutex.Unlock(); }
-	#define SCHED_LOCK					{ if (usingpollthread) schedmutex.Lock(); }
-	#define SCHED_UNLOCK					{ if (usingpollthread) schedmutex.Unlock(); }
-	#define PACKSENT_LOCK					{ if (usingpollthread) packsentmutex.Lock(); }
-	#define PACKSENT_UNLOCK					{ if (usingpollthread) packsentmutex.Unlock(); } 
+	#define SOURCES_LOCK					{ if (needthreadsafety) sourcesmutex.Lock(); }
+	#define SOURCES_UNLOCK					{ if (needthreadsafety) sourcesmutex.Unlock(); }
+	#define BUILDER_LOCK					{ if (needthreadsafety) buildermutex.Lock(); }
+	#define BUILDER_UNLOCK					{ if (needthreadsafety) buildermutex.Unlock(); }
+	#define SCHED_LOCK						{ if (needthreadsafety) schedmutex.Lock(); }
+	#define SCHED_UNLOCK					{ if (needthreadsafety) schedmutex.Unlock(); }
+	#define PACKSENT_LOCK					{ if (needthreadsafety) packsentmutex.Lock(); }
+	#define PACKSENT_UNLOCK					{ if (needthreadsafety) packsentmutex.Unlock(); } 
 #else
 	#define SOURCES_LOCK
 	#define SOURCES_UNLOCK
@@ -117,6 +117,10 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 		return ERR_RTP_SESSION_ALREADYCREATED;
 
 	usingpollthread = sessparams.IsUsingPollThread();
+	needthreadsafety = sessparams.NeedThreadSafety();
+	if (usingpollthread && !needthreadsafety)
+		return ERR_RTP_SESSION_THREADSAFETYCONFLICT;
+
 	useSR_BYEifpossible = sessparams.GetSenderReportForBYE();
 	sentpackets = false;
 	
@@ -152,7 +156,7 @@ int RTPSession::Create(const RTPSessionParams &sessparams,const RTPTransmissionP
 	
 	if (rtptrans == 0)
 		return ERR_RTP_OUTOFMEM;
-	if ((status = rtptrans->Init(usingpollthread)) < 0)
+	if ((status = rtptrans->Init(needthreadsafety)) < 0)
 	{
 		RTPDelete(rtptrans,GetMemoryManager());
 		return status;
@@ -175,6 +179,10 @@ int RTPSession::Create(const RTPSessionParams &sessparams,RTPTransmitter *transm
 		return ERR_RTP_SESSION_ALREADYCREATED;
 
 	usingpollthread = sessparams.IsUsingPollThread();
+	needthreadsafety = sessparams.NeedThreadSafety();
+	if (usingpollthread && !needthreadsafety)
+		return ERR_RTP_SESSION_THREADSAFETYCONFLICT;
+
 	useSR_BYEifpossible = sessparams.GetSenderReportForBYE();
 	sentpackets = false;
 	
