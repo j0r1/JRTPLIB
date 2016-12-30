@@ -44,6 +44,7 @@
 #include "rtphashtable.h"
 #include "rtpkeyhashtable.h"
 #include "rtpsocketutil.h"
+#include "rtpabortdescriptors.h"
 #include <list>
 
 #ifdef RTP_SUPPORT_THREAD
@@ -334,13 +335,9 @@ private:
 
 	RTPKeyHashTable<const uint32_t,PortInfo*,RTPUDPv4Trans_GetHashIndex_uint32_t,RTPUDPV4TRANS_HASHSIZE> acceptignoreinfo;
 
-	// notification descriptors for AbortWait (0 is for reading, 1 for writing)
-	SocketType abortdesc[2];
 	bool closesocketswhendone;
+	RTPAbortDescriptors m_abortDesc;
 
-	int CreateAbortDescriptors();
-	void DestroyAbortDescriptors();
-	void AbortWaitInternal();
 #ifdef RTP_SUPPORT_THREAD
 	jthread::JMutex mainmutex,waitmutex;
 	int threadsafe;

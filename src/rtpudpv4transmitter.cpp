@@ -506,7 +506,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	supportsmulticasting = false;
 #endif // RTP_SUPPORT_IPV4MULTICAST
 
-	if ((status = CreateAbortDescriptors()) < 0)
+	if ((status = m_abortDesc.Init()) < 0)
 	{
 		CLOSESOCKETS;
 		MAINMUTEX_UNLOCK
@@ -516,7 +516,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	if (maximumpacketsize > RTPUDPV4TRANS_MAXPACKSIZE)
 	{
 		CLOSESOCKETS;
-		DestroyAbortDescriptors();
+		m_abortDesc.Destroy();
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV4TRANS_SPECIFIEDSIZETOOBIG;
 	}
@@ -566,14 +566,14 @@ void RTPUDPv4Transmitter::Destroy()
 	
 	if (waitingfordata)
 	{
-		AbortWaitInternal();
-		DestroyAbortDescriptors();
+		m_abortDesc.SendAbortSignal();
+		m_abortDesc.Destroy();
 		MAINMUTEX_UNLOCK
 		WAITMUTEX_LOCK // to make sure that the WaitForIncomingData function ended
 		WAITMUTEX_UNLOCK
 	}
 	else
-		DestroyAbortDescriptors();
+		m_abortDesc.Destroy();
 
 	MAINMUTEX_UNLOCK
 }
@@ -823,7 +823,7 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 	FD_ZERO(&fdset);
 	FD_SET(rtpsock,&fdset);
 	FD_SET(rtcpsock,&fdset);
-	FD_SET(abortdesc[0],&fdset);
+	FD_SET(m_abortDesc.GetAbortSocket(),&fdset);
 	tv.tv_sec = delay.GetSeconds();
 	tv.tv_usec = delay.GetMicroSeconds();
 	
@@ -851,21 +851,8 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 	}
 		
 	// if aborted, read from abort buffer
-	if (FD_ISSET(abortdesc[0],&fdset))
-	{
-#ifdef RTP_SOCKETTYPE_WINSOCK
-		char buf[1];
-		
-		recv(abortdesc[0],buf,1,0);
-#else 
-		unsigned char buf[1];
-
-		if (read(abortdesc[0],buf,1))
-		{
-			// To get rid of __wur related compiler warnings
-		}
-#endif // RTP_SOCKETTYPE_WINSOCK
-	}
+	if (FD_ISSET(m_abortDesc.GetAbortSocket(),&fdset))
+		m_abortDesc.ReadSignallingByte();
 
 	if (dataavailable != 0)
 	{
@@ -897,7 +884,7 @@ int RTPUDPv4Transmitter::AbortWait()
 		return ERR_RTP_UDPV4TRANS_NOTWAITING;
 	}
 
-	AbortWaitInternal();
+	m_abortDesc.SendAbortSignal();
 	
 	MAINMUTEX_UNLOCK
 	return 0;
@@ -1763,110 +1750,6 @@ bool RTPUDPv4Transmitter::ShouldAcceptData(uint32_t srcip,uint16_t srcport)
 	return true;
 }
 
-#ifdef RTP_SOCKETTYPE_WINSOCK
-
-int RTPUDPv4Transmitter::CreateAbortDescriptors()
-{
-	SOCKET listensock;
-	int size;
-	struct sockaddr_in addr;
-
-	listensock = socket(PF_INET,SOCK_STREAM,0);
-	if (listensock == RTPSOCKERR)
-		return ERR_RTP_UDPV4TRANS_CANTCREATEABORTDESCRIPTORS;
-	
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	if (bind(listensock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
-	{
-		RTPCLOSE(listensock);
-		return ERR_RTP_UDPV4TRANS_CANTCREATEABORTDESCRIPTORS;
-	}
-
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	size = sizeof(struct sockaddr_in);
-	if (getsockname(listensock,(struct sockaddr*)&addr,&size) != 0)
-	{
-		RTPCLOSE(listensock);
-		return ERR_RTP_UDPV4TRANS_CANTCREATEABORTDESCRIPTORS;
-	}
-
-	unsigned short connectport = ntohs(addr.sin_port);
-
-	abortdesc[0] = socket(PF_INET,SOCK_STREAM,0);
-	if (abortdesc[0] == RTPSOCKERR)
-	{
-		RTPCLOSE(listensock);
-		return ERR_RTP_UDPV4TRANS_CANTCREATEABORTDESCRIPTORS;
-	}
-
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	if (bind(abortdesc[0],(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
-	{
-		RTPCLOSE(listensock);
-		RTPCLOSE(abortdesc[0]);
-		return ERR_RTP_UDPV4TRANS_CANTCREATEABORTDESCRIPTORS;
-	}
-
-	if (listen(listensock,1) != 0)
-	{
-		RTPCLOSE(listensock);
-		RTPCLOSE(abortdesc[0]);
-		return ERR_RTP_UDPV4TRANS_CANTCREATEABORTDESCRIPTORS;
-	}
-
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	addr.sin_port = htons(connectport);
-	
-	if (connect(abortdesc[0],(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
-	{
-		RTPCLOSE(listensock);
-		RTPCLOSE(abortdesc[0]);
-		return ERR_RTP_UDPV4TRANS_CANTCREATEABORTDESCRIPTORS;
-	}
-
-	memset(&addr,0,sizeof(struct sockaddr_in));
-	size = sizeof(struct sockaddr_in);
-	abortdesc[1] = accept(listensock,(struct sockaddr *)&addr,&size);
-	if (abortdesc[1] == RTPSOCKERR)
-	{
-		RTPCLOSE(listensock);
-		RTPCLOSE(abortdesc[0]);
-		return ERR_RTP_UDPV4TRANS_CANTCREATEABORTDESCRIPTORS;
-	}
-
-	// okay, got the connection, close the listening socket
-
-	RTPCLOSE(listensock);
-	return 0;
-}
-
-void RTPUDPv4Transmitter::DestroyAbortDescriptors()
-{
-	RTPCLOSE(abortdesc[0]);
-	RTPCLOSE(abortdesc[1]);
-}
-
-#else // in a non winsock environment we can use pipes
-
-int RTPUDPv4Transmitter::CreateAbortDescriptors()
-{
-	if (pipe(abortdesc) < 0)
-		return ERR_RTP_UDPV4TRANS_CANTCREATEPIPE;
-	return 0;
-}
-
-void RTPUDPv4Transmitter::DestroyAbortDescriptors()
-{
-	close(abortdesc[0]);
-	close(abortdesc[1]);
-}
-
-#endif // RTP_SOCKETTYPE_WINSOCK
-
 int RTPUDPv4Transmitter::CreateLocalIPList()
 {
 	 // first try to obtain the list from the network interface info
@@ -2038,18 +1921,6 @@ void RTPUDPv4Transmitter::GetLocalIPList_DNS()
 			i++;
 		}
 	}
-}
-
-void RTPUDPv4Transmitter::AbortWaitInternal()
-{
-#ifdef RTP_SOCKETTYPE_WINSOCK
-	send(abortdesc[1],"*",1,0);
-#else
-	if (write(abortdesc[1],"*",1))
-	{
-		// To get rid of __wur related compiler warnings
-	}
-#endif // RTP_SOCKETTYPE_WINSOCK
 }
 
 void RTPUDPv4Transmitter::AddLoopbackAddress()

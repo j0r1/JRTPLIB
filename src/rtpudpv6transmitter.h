@@ -47,6 +47,7 @@
 #include "rtphashtable.h"
 #include "rtpkeyhashtable.h"
 #include "rtpsocketutil.h"
+#include "rtpabortdescriptors.h"
 #include <string.h>
 #include <list>
 
@@ -277,13 +278,8 @@ private:
 	};
 
 	RTPKeyHashTable<const in6_addr,PortInfo*,RTPUDPv6Trans_GetHashIndex_in6_addr,RTPUDPV6TRANS_HASHSIZE> acceptignoreinfo;
+	RTPAbortDescriptors m_abortDesc;
 
-	// notification descriptors for AbortWait (0 is for reading, 1 for writing)
-	SocketType abortdesc[2];
-
-	int CreateAbortDescriptors();
-	void DestroyAbortDescriptors();
-	void AbortWaitInternal();
 #ifdef RTP_SUPPORT_THREAD
 	jthread::JMutex mainmutex,waitmutex;
 	int threadsafe;
