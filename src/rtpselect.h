@@ -43,6 +43,69 @@
 #include "rtptimeutilities.h"
 #include "rtpsocketutil.h"
 
+#if defined(RTP_HAVE_WSAPOLL) || defined(RTP_HAVE_POLL)
+
+#ifndef RTP_HAVE_WSAPOLL
+#include <poll.h>
+#endif // !RTP_HAVE_WSAPOLL
+
+#include <vector>
+#include <limits>
+
+namespace jrtplib
+{
+
+inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks, RTPTime timeout)
+{
+	using namespace std;
+
+#ifdef RTP_HAVE_WSAPOLL
+	vector<WSAPOLLFD> fds(numsocks);
+#else
+	vector<struct pollfd> fds(numsocks);
+#endif // RTP_HAVE_WSAPOLL
+
+	for (size_t i = 0 ; i < numsocks ; i++)
+	{
+		fds[i].fd = sockets[i];
+		fds[i].events = POLLIN | POLLPRI;
+		fds[i].revents = 0;
+		readflags[i] = false;
+	}
+
+	int timeoutmsec = -1;
+	if (timeout.GetDouble() >= 0)
+	{
+		double dtimeoutmsec = timeout.GetDouble()*1000.0;
+		if (dtimeoutmsec > numeric_limits<int>::max())
+			dtimeoutmsec = numeric_limits<int>::max();
+		
+		timeoutmsec = (int)dtimeoutmsec;
+	}
+
+#ifdef RTP_HAVE_WSAPOLL
+	int status = WSAPoll(&(fds[0]), (ULONG)numsocks, timeoutmsec);
+#else
+	int status = poll(&(fds[0]), numsocks, timeoutmsec);
+#endif // RTP_HAVE_WSAPOLL
+	if (status < 0)
+		return ERR_RTP_SELECT_ERRORINPOLL;
+
+	if (status > 0)
+	{
+		for (size_t i = 0 ; i < numsocks ; i++)
+		{
+			if (fds[i].revents)
+				readflags[i] = true;
+		}
+	}
+	return status;
+}
+
+} // end namespace
+
+#else
+
 #ifndef RTP_SOCKETTYPE_WINSOCK
 #include <sys/select.h>
 #include <sys/time.h>
@@ -52,6 +115,16 @@
 namespace jrtplib
 {
 
+/** Wrapper function around 'select', 'poll' or 'WSAPoll', depending on the
+ *  availability on your platform.
+ *
+ *  Wrapper function around 'select', 'poll' or 'WSAPoll', depending on the
+ *  availability on your platform. The function will check the specified
+ *  `sockets` for incoming data and sets the flags in `readflags` if so.
+ *  A maximum time `timeout` will be waited for data to arrive, which is
+ *  indefinitely if set to a negative value. The function returns the number
+ *  of sockets that have data incoming.
+ */
 inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks, RTPTime timeout)
 {
 	struct timeval tv;
@@ -90,4 +163,7 @@ inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks
 }
 
 } // end namespace
+
+#endif // RTP_HAVE_POLL || RTP_HAVE_WSAPOLL
+
 #endif // RTPSELECT_H
