@@ -19,6 +19,7 @@ using namespace std;
 #include "rtplibraryversion.h"
 #include "rtpsourcedata.h"
 #include "rtpabortdescriptors.h"
+#include "rtpselect.h"
 #include <jthread/jthread.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,7 +29,7 @@ using namespace std;
 using namespace jrtplib;
 using namespace jthread;
 
-void checkerror(int rtperr)
+inline void checkerror(int rtperr)
 {
 	if (rtperr < 0)
 	{
@@ -85,6 +86,7 @@ private:
 	{
 		JThread::ThreadStarted();
 
+		bool *pFlags = new bool[m_sockets.size()];
 		bool done = false;
 		m_mutex.Lock();
 		done = m_stop;
@@ -92,11 +94,6 @@ private:
 
 		while (!done)
 		{
-			fd_set fdset;
-			FD_ZERO(&fdset);
-			for (int i = 0 ; i < m_sockets.size() ; i++)
-				FD_SET(m_sockets[i], &fdset);
-
 			double minInt = 10.0; // wait at most 10 secs
 			for (int i = 0 ; i < m_sessions.size() ; i++)
 			{
@@ -104,25 +101,38 @@ private:
 
 				if (nextInt > 0 && nextInt < minInt)
 					minInt = nextInt;
+				else if (nextInt <= 0) // call the Poll function to make sure that RTCP packets are sent
+				{
+					//cout << "RTCP packet should be sent, calling Poll" << endl;
+					m_sessions[i]->Poll();
+				}
 			}
 
 			RTPTime waitTime(minInt);
 			//cout << "Waiting at most " << minInt << " seconds in select" << endl;
-			struct timeval tv = { waitTime.GetSeconds(), waitTime.GetMicroSeconds() };
-			if (select(FD_SETSIZE, &fdset, 0, 0, &tv) < 0)
-			{
-				cerr << "ERROR: error in select" << endl;
-				exit(-1);
-			}
 
-			for (int i = 0 ; i < m_sessions.size() ; i++)
-				m_sessions[i]->Poll();
+			int status = RTPSelect(&m_sockets[0], pFlags, m_sockets.size(), waitTime);
+			checkerror(status);
+
+			if (status > 0) // some descriptors were set
+			{
+				for (int i = 0 ; i < m_sockets.size() ; i++)
+				{
+					if (pFlags[i])
+					{
+						int idx = i/2; // two sockets per session
+						if (idx < m_sessions.size())
+							m_sessions[idx]->Poll(); 
+					}
+				}
+			}
 
 			m_mutex.Lock();
 			done = m_stop;
 			m_mutex.Unlock();
 		}
 
+		delete [] pFlags;
 		return 0;
 	}
 
@@ -143,7 +153,6 @@ int main(void)
 	vector<SocketType> pollSockets;
 
 	checkerror(abortDesc.Init());
-	pollSockets.push_back(abortDesc.GetAbortSocket());
 
 	int numTrans = 5;
 	int portbaseBase = 6000;
@@ -188,6 +197,10 @@ int main(void)
 
 		sessions.push_back(pSess);
 	}
+
+	// First, the pollSockets array will contain two sockets per session,
+	// and an extra entry will be added for the abort socket
+	pollSockets.push_back(abortDesc.GetAbortSocket());
 
 	// Let each session send to the next
 	uint8_t localHost[4] = { 127, 0, 0, 1 };
