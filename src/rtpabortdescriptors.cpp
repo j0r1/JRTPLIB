@@ -33,6 +33,7 @@
 #include "rtpabortdescriptors.h"
 #include "rtpsocketutilinternal.h"
 #include "rtperrors.h"
+#include "rtpselect.h"
 
 #include "rtpdebug.h"
 
@@ -235,16 +236,15 @@ int RTPAbortDescriptors::ClearAbortSignal()
 	bool done = false;
 	while (!done)
 	{
-		fd_set fdset;
-		FD_ZERO(&fdset);
-		FD_SET(m_descriptors[0],&fdset);
+		bool isset = false;
 
 		struct timeval tv = { 0, 0 };
 
-		if (select(FD_SETSIZE,&fdset,0,0,&tv) < 0)
-			return ERR_RTP_ABORTDESC_SELECTERROR;
+		int status = RTPSelect(&m_descriptors[0], &isset, 1, RTPTime(0));
+		if (status < 0)
+			return status;
 
-		if (!FD_ISSET(m_descriptors[0], &fdset))
+		if (!isset)
 			done = true;
 		else
 		{

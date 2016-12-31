@@ -54,6 +54,7 @@ set (HEADERS
 	rtpsecuresession.h
 	rtpsocketutil.h
 	rtpabortdescriptors.h
+	rtpselect.h
 	)
 
 set(SOURCES

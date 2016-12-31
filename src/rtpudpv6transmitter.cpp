@@ -45,6 +45,7 @@
 #include "rtpdefines.h"
 #include "rtpsocketutilinternal.h"
 #include "rtpinternalutils.h"
+#include "rtpselect.h"
 #include <stdio.h>
 
 #include "rtpdebug.h"
@@ -601,25 +602,26 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 		return ERR_RTP_UDPV6TRANS_ALREADYWAITING;
 	}
 	
-	FD_ZERO(&fdset);
-	FD_SET(rtpsock,&fdset);
-	FD_SET(rtcpsock,&fdset);
-	FD_SET(m_abortDesc.GetAbortSocket(),&fdset);
-	tv.tv_sec = delay.GetSeconds();
-	tv.tv_usec = delay.GetMicroSeconds();
-	
+	SocketType abortSocket = m_abortDesc.GetAbortSocket();
+	SocketType socks[3] = { rtpsock, rtcpsock, abortSocket };
+	bool readflags[3] = { false, false, false };
+	const int idxRTP = 0;
+	const int idxRTCP = 1;
+	const int idxAbort = 2;
+
 	waitingfordata = true;
 	
 	WAITMUTEX_LOCK
 	MAINMUTEX_UNLOCK
 
-	if (select(FD_SETSIZE,&fdset,0,0,&tv) < 0)
+	int status = RTPSelect(socks, readflags, 3, delay);
+	if (status < 0)
 	{
 		MAINMUTEX_LOCK
 		waitingfordata = false;
 		MAINMUTEX_UNLOCK
 		WAITMUTEX_UNLOCK
-		return ERR_RTP_UDPV6TRANS_ERRORINSELECT;
+		return status;
 	}
 	
 	MAINMUTEX_LOCK
@@ -632,12 +634,12 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 	}
 		
 	// if aborted, read from abort buffer
-	if (FD_ISSET(m_abortDesc.GetAbortSocket(),&fdset))
+	if (readflags[idxAbort])
 		m_abortDesc.ReadSignallingByte();
 	
 	if (dataavailable != 0)
 	{
-		if (FD_ISSET(rtpsock,&fdset) || FD_ISSET(rtcpsock,&fdset))
+		if (readflags[idxRTP] || readflags[idxRTCP])
 			*dataavailable = true;
 		else
 			*dataavailable = false;
@@ -1230,8 +1232,6 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 	int sock;
 #endif // RTP_SOCKETTYPE_WINSOCK
 	struct sockaddr_in6 srcaddr;
-	fd_set fdset;
-	struct timeval zerotv;
 	bool dataavailable;
 	
 	if (rtp)
@@ -1244,16 +1244,12 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 
 	if (len <= 0) // make sure a packet of length zero is not queued
 	{
-		FD_ZERO(&fdset);
-		FD_SET(sock,&fdset);
-		
-		zerotv.tv_sec = 0;
-		zerotv.tv_usec = 0;
+		bool isset = false;
+		int status = RTPSelect(&sock, &isset, 1, RTPTime(0));
+		if (status < 0)
+			return status;
 
-		if (select(FD_SETSIZE,&fdset,0,0,&zerotv) < 0)
-			return ERR_RTP_UDPV4TRANS_ERRORINSELECT;
-
-		if (FD_ISSET(sock, &fdset))
+		if (isset)
 			dataavailable = true;
 		else
 			dataavailable = false;
@@ -1308,16 +1304,12 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 
 		if (len <= 0) // make sure a packet of length zero is not queued
 		{
-			FD_ZERO(&fdset);
-			FD_SET(sock,&fdset);
-			
-			zerotv.tv_sec = 0;
-			zerotv.tv_usec = 0;
+			bool isset = false;
+			int status = RTPSelect(&sock, &isset, 1, RTPTime(0));
+			if (status < 0)
+				return status;
 
-			if (select(FD_SETSIZE,&fdset,0,0,&zerotv) < 0)
-				return ERR_RTP_UDPV4TRANS_ERRORINSELECT;
-
-			if (FD_ISSET(sock, &fdset))
+			if (isset)
 				dataavailable = true;
 			else
 				dataavailable = false;

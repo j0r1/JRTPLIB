@@ -131,7 +131,6 @@ std::string JRTPLIB_IMPORTEXPORT RTPGetErrorString(int errcode);
 #define ERR_RTP_UDPV4TRANS_CANTSETRTPTRANSMITBUF                  -82
 #define ERR_RTP_UDPV4TRANS_COULDNTJOINMULTICASTGROUP              -83
 #define ERR_RTP_UDPV4TRANS_DIFFERENTRECEIVEMODE                   -84
-#define ERR_RTP_UDPV4TRANS_ERRORINSELECT                          -85
 #define ERR_RTP_UDPV4TRANS_ILLEGALPARAMETERS                      -86
 #define ERR_RTP_UDPV4TRANS_INVALIDADDRESSTYPE                     -87
 #define ERR_RTP_UDPV4TRANS_NOLOCALIPS                             -88
@@ -156,7 +155,6 @@ std::string JRTPLIB_IMPORTEXPORT RTPGetErrorString(int errcode);
 #define ERR_RTP_UDPV6TRANS_CANTSETRTPTRANSMITBUF                  -109
 #define ERR_RTP_UDPV6TRANS_COULDNTJOINMULTICASTGROUP              -110
 #define ERR_RTP_UDPV6TRANS_DIFFERENTRECEIVEMODE                   -111
-#define ERR_RTP_UDPV6TRANS_ERRORINSELECT                          -112
 #define ERR_RTP_UDPV6TRANS_ILLEGALPARAMETERS                      -113
 #define ERR_RTP_UDPV6TRANS_INVALIDADDRESSTYPE                     -114
 #define ERR_RTP_UDPV6TRANS_NOLOCALIPS                             -115
@@ -176,7 +174,6 @@ std::string JRTPLIB_IMPORTEXPORT RTPGetErrorString(int errcode);
 #define ERR_RTP_FAKETRANS_CANTINITMUTEX                           -131
 #define ERR_RTP_FAKETRANS_COULDNTJOINMULTICASTGROUP               -132
 #define ERR_RTP_FAKETRANS_DIFFERENTRECEIVEMODE                    -133
-#define ERR_RTP_FAKETRANS_ERRORINSELECT                           -134
 #define ERR_RTP_FAKETRANS_ILLEGALPARAMETERS                       -135
 #define ERR_RTP_FAKETRANS_INVALIDADDRESSTYPE                      -136
 #define ERR_RTP_FAKETRANS_NOLOCALIPS                              -137
@@ -197,7 +194,6 @@ std::string JRTPLIB_IMPORTEXPORT RTPGetErrorString(int errcode);
 #define ERR_RTP_EXTERNALTRANS_ALREADYWAITING                      -152
 #define ERR_RTP_EXTERNALTRANS_BADRECEIVEMODE                      -153
 #define ERR_RTP_EXTERNALTRANS_CANTINITMUTEX                       -156
-#define ERR_RTP_EXTERNALTRANS_ERRORINSELECT                       -157
 #define ERR_RTP_EXTERNALTRANS_ILLEGALPARAMETERS                   -158
 #define ERR_RTP_EXTERNALTRANS_NOACCEPTLIST                        -159
 #define ERR_RTP_EXTERNALTRANS_NODESTINATIONSSUPPORTED             -160
@@ -234,6 +230,8 @@ std::string JRTPLIB_IMPORTEXPORT RTPGetErrorString(int errcode);
 #define ERR_RTP_ABORTDESC_SELECTERROR -190
 #define ERR_RTP_ABORTDESC_CANTCREATEPIPE -191
 #define ERR_RTP_SESSION_THREADSAFETYCONFLICT -192
+#define ERR_RTP_SELECT_ERRORINSELECT -193
+#define ERR_RTP_SELECT_SOCKETDESCRIPTORTOOLARGE -194
 
 #endif // RTPERRORS_H
 

@@ -36,6 +36,7 @@
 #include "rtpdefines.h"
 #include "rtperrors.h"
 #include "rtpsocketutilinternal.h"
+#include "rtpselect.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -271,9 +272,6 @@ int RTPExternalTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataa
 	
 	MAINMUTEX_LOCK
 	
-	fd_set fdset;
-	struct timeval tv;
-	
 	if (!created)
 	{
 		MAINMUTEX_UNLOCK
@@ -284,11 +282,6 @@ int RTPExternalTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataa
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_EXTERNALTRANS_ALREADYWAITING;
 	}
-	
-	FD_ZERO(&fdset);
-	FD_SET(m_abortDesc.GetAbortSocket(),&fdset);
-	tv.tv_sec = delay.GetSeconds();
-	tv.tv_usec = delay.GetMicroSeconds();
 	
 	waitingfordata = true;
 
@@ -304,13 +297,16 @@ int RTPExternalTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataa
 	WAITMUTEX_LOCK
 	MAINMUTEX_UNLOCK
 
-	if (select(FD_SETSIZE,&fdset,0,0,&tv) < 0)
+	bool isset = false;
+	SocketType abortSock = m_abortDesc.GetAbortSocket();
+	int status = RTPSelect(&abortSock, &isset, 1, delay);
+	if (status < 0)
 	{
 		MAINMUTEX_LOCK
 		waitingfordata = false;
 		MAINMUTEX_UNLOCK
 		WAITMUTEX_UNLOCK
-		return ERR_RTP_EXTERNALTRANS_ERRORINSELECT;
+		return status;
 	}
 	
 	MAINMUTEX_LOCK
@@ -323,7 +319,7 @@ int RTPExternalTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataa
 	}
 		
 	// if aborted, read from abort buffer
-	if (FD_ISSET(m_abortDesc.GetAbortSocket(),&fdset))
+	if (isset)
 		m_abortDesc.ClearAbortSignal();
 
 	if (dataavailable != 0)
