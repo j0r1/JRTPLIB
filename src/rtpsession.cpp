@@ -1642,20 +1642,7 @@ RTPRandom *RTPSession::GetRandomNumberGenerator(RTPRandom *r)
 
 	if (r == 0)
 	{
-#ifdef RTP_HAVE_RAND_S
-		RTPRandomRandS *rnew2 = new RTPRandomRandS();
-#else
-		RTPRandomURandom *rnew2 = new RTPRandomURandom();
-#endif // RTP_HAVE_RAND_S
-
-		if (rnew2->Init() < 0) // fall back to rand48
-		{
-			delete rnew2;
-			rnew = new RTPRandomRand48();
-		}
-		else
-			rnew = rnew2;
-
+		rnew = RTPRandom::CreateDefaultRandomNumberGenerator();
 		deletertprnd = true;
 	}
 	else

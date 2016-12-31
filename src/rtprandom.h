@@ -68,6 +68,9 @@ public:
 
 	/** Can be used by subclasses to generate a seed for a random number generator. */
 	uint32_t PickSeed();
+
+	/** Allocate a default random number generator based on your platform. */
+	static RTPRandom *CreateDefaultRandomNumberGenerator();
 };
 
 } // end namespace
