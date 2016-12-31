@@ -20,6 +20,7 @@ using namespace std;
 #include "rtpsourcedata.h"
 #include "rtpabortdescriptors.h"
 #include "rtpselect.h"
+#include "rtprandom.h"
 #include <jthread/jthread.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -40,6 +41,9 @@ inline void checkerror(int rtperr)
 
 class MyRTPSession : public RTPSession
 {
+public:
+	MyRTPSession(RTPRandom *rnd) : RTPSession(rnd) { }
+	~MyRTPSession() { }
 protected:
 	void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled)
 	{
@@ -173,6 +177,8 @@ int main(void)
 	vector<uint16_t> portBases;
 	vector<RTPSession *> sessions;
 
+	RTPRandom *rnd = RTPRandom::CreateDefaultRandomNumberGenerator();
+
 	for (int i = 0 ; i < transmitters.size() ; i++)
 	{
 		RTPUDPv4Transmitter *pTrans = transmitters[i];
@@ -184,7 +190,7 @@ int main(void)
 
 		pTrans->DeleteTransmissionInfo(pInfo);
 
-		RTPSession *pSess = new MyRTPSession();
+		RTPSession *pSess = new MyRTPSession(rnd); // make them all use the same random number generator
 		RTPSessionParams sessParams;
 
 		// We're going to use our own poll thread!
@@ -235,6 +241,8 @@ int main(void)
 		delete sessions[i];
 	for (int i = 0 ; i < transmitters.size() ; i++)
 		delete transmitters[i];
+
+	delete rnd;
 #ifdef RTP_SOCKETTYPE_WINSOCK
 	WSACleanup();
 #endif // RTP_SOCKETTYPE_WINSOCK
