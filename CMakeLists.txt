@@ -119,6 +119,8 @@ jrtplib_test_feature(arrayalloc RTP_HAVE_ARRAYALLOC FALSE "// No custom new[]" "
 jrtplib_test_feature(randstest RTP_HAVE_RAND_S FALSE "// No rand_s support" "${TESTDEFS}")
 jrtplib_test_feature(strncpystest RTP_HAVE_STRNCPY_S FALSE "// No strncpy_s support" "${TESTDEFS}")
 jrtplib_test_feature(clockgettimetest RTP_HAVE_CLOCK_GETTIME FALSE "// No clock_gettime support" "${TESTDEFS}")
+jrtplib_test_feature(polltest RTP_HAVE_POLL FALSE "// No 'poll' support" "${TESTDEFS}")
+jrtplib_test_feature(wsapolltest RTP_HAVE_WSAPOLL FALSE "// No 'WSAPoll' support" "${TESTDEFS}")
 
 check_cxx_source_compiles("#include <windows.h>\n#include <stdio.h>\nint main(void) { char s[1024]; _snprintf_s(s, 1024,\"%d\", 10);\n  return 0; }" JRTPLIB_SNPRINTF_S)
 if (JRTPLIB_SNPRINTF_S)

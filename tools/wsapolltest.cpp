@@ -1,0 +1,9 @@
+#include <winsock2.h>
+#include <windows.h>
+
+int main(void)
+{
+	WSAPOLLFD pfd = { INVALID_SOCKET, 0, 0 };
+	int status = WSAPoll(&pfd, 1, 0);
+	return status;
+}
