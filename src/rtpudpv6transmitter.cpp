@@ -32,7 +32,7 @@
 
 // This is for getaddrinfo when using mingw
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
+#define _WIN32_WINNT 0x0600
 #endif
 
 #include "rtpudpv6transmitter.h"
@@ -587,10 +587,7 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 		return ERR_RTP_UDPV6TRANS_NOTINIT;
 	
 	MAINMUTEX_LOCK
-	
-	fd_set fdset;
-	struct timeval tv;
-	
+		
 	if (!created)
 	{
 		MAINMUTEX_UNLOCK

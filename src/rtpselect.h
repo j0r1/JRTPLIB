@@ -39,6 +39,7 @@
 #define RTPSELECT_H
 
 #include "rtpconfig.h"
+#include "rtptypes.h"
 #include "rtperrors.h"
 #include "rtptimeutilities.h"
 #include "rtpsocketutil.h"
@@ -59,16 +60,12 @@ inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks
 {
 	using namespace std;
 
-#ifdef RTP_HAVE_WSAPOLL
-	vector<WSAPOLLFD> fds(numsocks);
-#else
 	vector<struct pollfd> fds(numsocks);
-#endif // RTP_HAVE_WSAPOLL
 
 	for (size_t i = 0 ; i < numsocks ; i++)
 	{
 		fds[i].fd = sockets[i];
-		fds[i].events = POLLIN | POLLPRI;
+		fds[i].events = POLLIN;
 		fds[i].revents = 0;
 		readflags[i] = false;
 	}
@@ -77,8 +74,8 @@ inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks
 	if (timeout.GetDouble() >= 0)
 	{
 		double dtimeoutmsec = timeout.GetDouble()*1000.0;
-		if (dtimeoutmsec > numeric_limits<int>::max())
-			dtimeoutmsec = numeric_limits<int>::max();
+		if (dtimeoutmsec > (numeric_limits<int>::max)()) // parentheses to prevent windows 'max' macro expansion
+			dtimeoutmsec = (numeric_limits<int>::max)();
 		
 		timeoutmsec = (int)dtimeoutmsec;
 	}
@@ -132,7 +129,7 @@ inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks
 
 	if (timeout.GetDouble() >= 0)
 	{
-		tv.tv_sec = timeout.GetSeconds();
+		tv.tv_sec = (long)timeout.GetSeconds();
 		tv.tv_usec = timeout.GetMicroSeconds();
 		pTv = &tv;
 	}
@@ -141,8 +138,13 @@ inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks
 	FD_ZERO(&fdset);
 	for (size_t i = 0 ; i < numsocks ; i++)
 	{
-		if (sockets[i] >= FD_SETSIZE)
+		const int setsize = FD_SETSIZE;
+		// On windows it seems that comparing the socket value to FD_SETSIZE does
+		// not make sense
+#ifndef RTP_SOCKETTYPE_WINSOCK
+		if (sockets[i] >= setsize)
 			return ERR_RTP_SELECT_SOCKETDESCRIPTORTOOLARGE;
+#endif // RTP_SOCKETTYPE_WINSOCK
 		FD_SET(sockets[i], &fdset);
 		readflags[i] = false;
 	}

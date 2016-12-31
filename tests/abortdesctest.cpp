@@ -148,8 +148,17 @@ void test2()
 
 int main(void)
 {
+#ifdef RTP_SOCKETTYPE_WINSOCK
+	WSADATA dat;
+	WSAStartup(MAKEWORD(2, 2), &dat);
+#endif // RTP_SOCKETTYPE_WINSOCK
+
 	test1();
 	test2();
+
+#ifdef WIN32
+	WSACleanup();
+#endif // WIN32
 	return 0;
 }
 

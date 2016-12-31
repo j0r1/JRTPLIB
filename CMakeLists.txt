@@ -152,7 +152,7 @@ else (JRTPLIB_STDINT)
 endif (JRTPLIB_STDINT)
 
 if (RTP_SOCKETTYPE_WINSOCK)
-	set(RTP_WINSOCK_HEADERS "#if defined(WIN32) || defined(_WIN32_WCE)\n	#include <winsock2.h>	\n	#include <ws2tcpip.h>\n#ifndef _WIN32_WCE\n	#include <sys/types.h>\n#endif // _WIN32_WCE\n#endif // WIN32 || _WIN32_WCE\n")
+    set(RTP_WINSOCK_HEADERS "#ifdef RTP_SOCKETTYPE_WINSOCK\n	#include <winsock2.h>	\n	#include <ws2tcpip.h>\n#ifndef _WIN32_WCE\n	#include <sys/types.h>\n#endif // _WIN32_WCE\n#endif // RTP_SOCKETTYPE_WINSOCK\n")
 endif (RTP_SOCKETTYPE_WINSOCK)
 
 if (NOT UNIX)

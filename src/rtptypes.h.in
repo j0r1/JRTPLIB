@@ -1,2 +1,4 @@
+#include "rtpconfig.h"
+
 ${RTP_WINSOCK_HEADERS}
 ${RTP_INTTYPE_HEADERS}
