@@ -2,6 +2,19 @@
 				JRTPLIB ChangeLog
 				-----------------
 
+ ? (?)
+	* In the RTPSession class, thread safety can be requested even
+	  if the poll thread is not used.
+	* Moved the 'abort decriptor' stuff into a separate class and 
+	  made it possible for the UDPv4 transmitter to use a pre-created 
+	  instance. In turn this allows a single poll thread to be set up
+	  for multiple RTPSession instances. Example8 illustrates this.
+	* Made an abstraction RTPSelect for the 'select' call. This can
+	  use 'poll' or 'WSAPoll' depending on the availabity, which can
+	  allow better scaling for a use case such as example8.
+	* Added RTPRandom::CreateDefaultRandomNumberGenerator to create
+	  the default random number engine for the platform in use.
+
  3.10.0 (December 2016)
 	* Support for MingW compilation was added
 	* Outgoing data or incoming data can be intercepted and changed
