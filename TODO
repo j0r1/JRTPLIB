@@ -1,8 +1,5 @@
 For v3:
- * Docs for rtpabortdescriptors.h
- * Error descriptions for new errors
-
- * Look into bug here lastmsgtime = srcdat->INF_GetLastMessageTime() was somehow 
+ * Look into bug where lastmsgtime = srcdat->INF_GetLastMessageTime() was somehow 
    negative
  * similar changes to udpv6 transmitter as to udpv4 transmitter
 
@@ -11,5 +8,3 @@ For v4:
    ignore list, accept list
  * similarly: create a basic rtpsession class
  * don't order accepted rtp packets anymore, don't look for duplicates
- * use an abstract timer object, possibly high performance and not affected by
-   clock jumps
