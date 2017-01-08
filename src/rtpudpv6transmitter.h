@@ -70,7 +70,7 @@ namespace jrtplib
 class JRTPLIB_IMPORTEXPORT RTPUDPv6TransmissionParams : public RTPTransmissionParams
 {
 public:
-	RTPUDPv6TransmissionParams():RTPTransmissionParams(RTPTransmitter::IPv6UDPProto)	{ portbase = RTPUDPV6TRANS_DEFAULTPORTBASE; for (int i = 0 ; i < 16 ; i++) bindIP.s6_addr[i] = 0; multicastTTL = 1; mcastifidx = 0; rtpsendbuf = RTPUDPV6TRANS_RTPTRANSMITBUFFER; rtprecvbuf= RTPUDPV6TRANS_RTPRECEIVEBUFFER; rtcpsendbuf = RTPUDPV6TRANS_RTCPTRANSMITBUFFER; rtcprecvbuf = RTPUDPV6TRANS_RTCPRECEIVEBUFFER; }
+	RTPUDPv6TransmissionParams();
 
 	/** Sets the IP address which is used to bind the sockets to \c ip. */
 	void SetBindIP(in6_addr ip)											{ bindIP = ip; }
@@ -120,6 +120,11 @@ public:
 	/** Sets the RTCP socket's receive buffer size. */
 	void SetRTCPReceiveBuffer(int s)							{ rtcprecvbuf = s; }
 
+	/** If non null, the specified abort descriptors will be used to cancel
+	 *  the function that's waiting for packets to arrive; set to null (the default
+	 *  to let the transmitter create its own instance. */
+	void SetCreatedAbortDescriptors(RTPAbortDescriptors *desc) { m_pAbortDesc = desc; }
+
 	/** Returns the RTP socket's send buffer size. */
 	int GetRTPSendBuffer() const								{ return rtpsendbuf; }
 
@@ -131,6 +136,11 @@ public:
 
 	/** Returns the RTCP socket's receive buffer size. */
 	int GetRTCPReceiveBuffer() const							{ return rtcprecvbuf; }
+
+	/** If non-null, this RTPAbortDescriptors instance will be used internally,
+	 *  which can be useful when creating your own poll thread for multiple
+	 *  sessions. */
+	RTPAbortDescriptors *GetCreatedAbortDescriptors() const		{ return m_pAbortDesc; }
 private:
 	uint16_t portbase;
 	in6_addr bindIP;
@@ -139,14 +149,34 @@ private:
 	uint8_t multicastTTL;
 	int rtpsendbuf, rtprecvbuf;
 	int rtcpsendbuf, rtcprecvbuf;
+
+	RTPAbortDescriptors *m_pAbortDesc;
 };
+
+inline RTPUDPv6TransmissionParams::RTPUDPv6TransmissionParams()
+	: RTPTransmissionParams(RTPTransmitter::IPv6UDPProto)	
+{ 
+	portbase = RTPUDPV6TRANS_DEFAULTPORTBASE; 
+	for (int i = 0 ; i < 16 ; i++) 
+		bindIP.s6_addr[i] = 0; 
+
+	multicastTTL = 1; 
+	mcastifidx = 0; 
+	rtpsendbuf = RTPUDPV6TRANS_RTPTRANSMITBUFFER; 
+	rtprecvbuf= RTPUDPV6TRANS_RTPRECEIVEBUFFER; 
+	rtcpsendbuf = RTPUDPV6TRANS_RTCPTRANSMITBUFFER; 
+	rtcprecvbuf = RTPUDPV6TRANS_RTCPRECEIVEBUFFER; 
+
+	m_pAbortDesc = 0;
+}
 
 /** Additional information about the UDP over IPv6 transmitter. */
 class JRTPLIB_IMPORTEXPORT RTPUDPv6TransmissionInfo : public RTPTransmissionInfo
 {
 public:
-	RTPUDPv6TransmissionInfo(std::list<in6_addr> iplist, SocketType rtpsock, SocketType rtcpsock) : RTPTransmissionInfo(RTPTransmitter::IPv6UDPProto) 
-															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; }
+	RTPUDPv6TransmissionInfo(std::list<in6_addr> iplist, SocketType rtpsock, SocketType rtcpsock,
+	                         uint16_t rtpport, uint16_t rtcpport) : RTPTransmissionInfo(RTPTransmitter::IPv6UDPProto) 
+															{ localIPlist = iplist; rtpsocket = rtpsock; rtcpsocket = rtcpsock; m_rtpPort = rtpport; m_rtcpPort = rtcpport; }
 
 	~RTPUDPv6TransmissionInfo()								{ }
 
@@ -154,13 +184,20 @@ public:
 	std::list<in6_addr> GetLocalIPList() const				{ return localIPlist; }
 
 	/** Returns the socket descriptor used for receiving and transmitting RTP packets. */
-	SocketType GetRTPSocket() const								{ return rtpsocket; }
+	SocketType GetRTPSocket() const							{ return rtpsocket; }
 
 	/** Returns the socket descriptor used for receiving and transmitting RTCP packets. */
-	SocketType GetRTCPSocket() const								{ return rtcpsocket; }
+	SocketType GetRTCPSocket() const						{ return rtcpsocket; }
+
+	/** Returns the port number that the RTP socket receives packets on. */
+	uint16_t GetRTPPort() const								{ return m_rtpPort; }
+
+	/** Returns the port number that the RTCP socket receives packets on. */
+	uint16_t GetRTCPPort() const							{ return m_rtcpPort; }
 private:
 	std::list<in6_addr> localIPlist;
 	SocketType rtpsocket,rtcpsocket;
+	uint16_t m_rtpPort, m_rtcpPort;
 };
 		
 class JRTPLIB_IMPORTEXPORT RTPUDPv6Trans_GetHashIndex_IPv6Dest
@@ -279,6 +316,7 @@ private:
 
 	RTPKeyHashTable<const in6_addr,PortInfo*,RTPUDPv6Trans_GetHashIndex_in6_addr,RTPUDPV6TRANS_HASHSIZE> acceptignoreinfo;
 	RTPAbortDescriptors m_abortDesc;
+	RTPAbortDescriptors *m_pAbortDesc;
 
 #ifdef RTP_SUPPORT_THREAD
 	jthread::JMutex mainmutex,waitmutex;

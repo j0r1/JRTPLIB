@@ -281,23 +281,37 @@ int RTPUDPv6Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 	supportsmulticasting = false;
 #endif // RTP_SUPPORT_IPV6MULTICAST
 
-	if ((status = m_abortDesc.Init()) < 0)
-	{
-		RTPCLOSE(rtpsock);
-		RTPCLOSE(rtcpsock);
-		MAINMUTEX_UNLOCK
-		return status;
-	}
-	
 	if (maximumpacketsize > RTPUDPV6TRANS_MAXPACKSIZE)
 	{
 		RTPCLOSE(rtpsock);
 		RTPCLOSE(rtcpsock);
-		m_abortDesc.Destroy();
 		MAINMUTEX_UNLOCK
 		return ERR_RTP_UDPV6TRANS_SPECIFIEDSIZETOOBIG;
 	}
 	
+	if (!params->GetCreatedAbortDescriptors())
+	{
+		if ((status = m_abortDesc.Init()) < 0)
+		{
+			RTPCLOSE(rtpsock);
+			RTPCLOSE(rtcpsock);
+			MAINMUTEX_UNLOCK
+			return status;
+		}
+		m_pAbortDesc = &m_abortDesc;
+	}
+	else
+	{
+		m_pAbortDesc = params->GetCreatedAbortDescriptors();
+		if (!m_pAbortDesc->IsInitialized())
+		{
+			RTPCLOSE(rtpsock);
+			RTPCLOSE(rtcpsock);
+			MAINMUTEX_UNLOCK
+			return ERR_RTP_ABORTDESC_NOTINIT;
+		}
+	}
+
 	maxpacksize = maximumpacketsize;
 	portbase = params->GetPortbase();
 	multicastTTL = params->GetMulticastTTL();
@@ -344,14 +358,14 @@ void RTPUDPv6Transmitter::Destroy()
 	
 	if (waitingfordata)
 	{
-		m_abortDesc.SendAbortSignal();
-		m_abortDesc.Destroy();
+		m_pAbortDesc->SendAbortSignal();
+		m_abortDesc.Destroy(); // Doesn't do anything if not initialized
 		MAINMUTEX_UNLOCK
 		WAITMUTEX_LOCK // to make sure that the WaitForIncomingData function ended
 		WAITMUTEX_UNLOCK
 	}
 	else
-		m_abortDesc.Destroy();
+		m_abortDesc.Destroy(); // Doesn't do anything if not initialized
 
 	MAINMUTEX_UNLOCK
 }
@@ -362,7 +376,7 @@ RTPTransmissionInfo *RTPUDPv6Transmitter::GetTransmissionInfo()
 		return 0;
 
 	MAINMUTEX_LOCK
-	RTPTransmissionInfo *tinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMISSIONINFO) RTPUDPv6TransmissionInfo(localIPs,rtpsock,rtcpsock);
+	RTPTransmissionInfo *tinf = RTPNew(GetMemoryManager(),RTPMEM_TYPE_CLASS_RTPTRANSMISSIONINFO) RTPUDPv6TransmissionInfo(localIPs,rtpsock,rtcpsock,portbase,portbase+1);
 	MAINMUTEX_UNLOCK
 	return tinf;
 }
@@ -599,7 +613,7 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 		return ERR_RTP_UDPV6TRANS_ALREADYWAITING;
 	}
 	
-	SocketType abortSocket = m_abortDesc.GetAbortSocket();
+	SocketType abortSocket = m_pAbortDesc->GetAbortSocket();
 	SocketType socks[3] = { rtpsock, rtcpsock, abortSocket };
 	bool readflags[3] = { false, false, false };
 	const int idxRTP = 0;
@@ -632,7 +646,7 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 		
 	// if aborted, read from abort buffer
 	if (readflags[idxAbort])
-		m_abortDesc.ReadSignallingByte();
+		m_pAbortDesc->ReadSignallingByte();
 	
 	if (dataavailable != 0)
 	{
@@ -664,7 +678,7 @@ int RTPUDPv6Transmitter::AbortWait()
 		return ERR_RTP_UDPV6TRANS_NOTWAITING;
 	}
 
-	m_abortDesc.SendAbortSignal();
+	m_pAbortDesc->SendAbortSignal();
 	
 	MAINMUTEX_UNLOCK
 	return 0;
