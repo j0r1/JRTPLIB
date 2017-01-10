@@ -451,6 +451,11 @@ int RTPFakeTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavail
 	return ERR_RTP_FAKETRANS_WAITNOTIMPLEMENTED;
 }
 
+int RTPFakeTransmitter::AbortWait()
+{
+	return ERR_RTP_FAKETRANS_WAITNOTIMPLEMENTED;
+}
+
 int RTPFakeTransmitter::SendRTPData(const void *data,size_t len)	
 {
 	if (!init)
