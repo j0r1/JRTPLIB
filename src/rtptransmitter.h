@@ -71,6 +71,7 @@ public:
 	{ 
 		IPv4UDPProto, /**< Specifies the internal UDP over IPv4 transmitter. */
 		IPv6UDPProto, /**< Specifies the internal UDP over IPv6 transmitter. */
+		TCPProto, /**< Specifies the internal TCP transmitter. */
 		ExternalProto, /**< Specifies the transmitter which can send packets using an external mechanism, and which can have received packets injected into it - see RTPExternalTransmitter for additional information. */
 		UserDefinedProto  /**< Specifies a user defined, external transmitter. */
 	};

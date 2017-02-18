@@ -56,7 +56,8 @@ public:
 		IPv4Address, /**< Used by the UDP over IPv4 transmitter. */
 		IPv6Address, /**< Used by the UDP over IPv6 transmitter. */
 		ByteAddress, /**< A very general type of address, consisting of a port number and a number of bytes representing the host address. */
-		UserDefinedAddress  /**< Can be useful for a user-defined transmitter. */
+		UserDefinedAddress,  /**< Can be useful for a user-defined transmitter. */
+		TCPAddress /**< Used by the TCP transmitter. */
 	}; 
 	
 	/** Returns the type of address the actual implementation represents. */

@@ -55,6 +55,8 @@ set (HEADERS
 	rtpsocketutil.h
 	rtpabortdescriptors.h
 	rtpselect.h
+	rtptcpaddress.h
+	rtptcptransmitter.h
 	)
 
 set(SOURCES
@@ -97,6 +99,8 @@ set(SOURCES
 	rtpexternaltransmitter.cpp
 	rtpsecuresession.cpp
 	rtpabortdescriptors.cpp
+	rtptcpaddress.cpp
+	rtptcptransmitter.cpp
 	)
 
 if (UNIX)
