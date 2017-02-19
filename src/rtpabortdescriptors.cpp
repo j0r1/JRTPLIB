@@ -236,7 +236,7 @@ int RTPAbortDescriptors::ClearAbortSignal()
 	bool done = false;
 	while (!done)
 	{
-		bool isset = false;
+		int8_t isset = 0;
 
 		struct timeval tv = { 0, 0 };
 

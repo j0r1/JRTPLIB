@@ -90,7 +90,7 @@ private:
 	{
 		JThread::ThreadStarted();
 
-		bool *pFlags = new bool[m_sockets.size()];
+		vector<int8_t> flags(m_sockets.size());
 		bool done = false;
 		m_mutex.Lock();
 		done = m_stop;
@@ -115,14 +115,14 @@ private:
 			RTPTime waitTime(minInt);
 			//cout << "Waiting at most " << minInt << " seconds in select" << endl;
 
-			int status = RTPSelect(&m_sockets[0], pFlags, m_sockets.size(), waitTime);
+			int status = RTPSelect(&m_sockets[0], &flags[0], m_sockets.size(), waitTime);
 			checkerror(status);
 
 			if (status > 0) // some descriptors were set
 			{
 				for (int i = 0 ; i < m_sockets.size() ; i++)
 				{
-					if (pFlags[i])
+					if (flags[i])
 					{
 						int idx = i/2; // two sockets per session
 						if (idx < m_sessions.size())
@@ -136,7 +136,6 @@ private:
 			m_mutex.Unlock();
 		}
 
-		delete [] pFlags;
 		return 0;
 	}
 

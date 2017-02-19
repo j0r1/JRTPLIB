@@ -834,7 +834,7 @@ int RTPUDPv4Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 	SocketType abortSocket = m_pAbortDesc->GetAbortSocket();
 
 	SocketType socks[3] = { rtpsock, rtcpsock, abortSocket };
-	bool readflags[3] = { false, false, false };
+	int8_t readflags[3] = { 0, 0, 0 };
 	const int idxRTP = 0;
 	const int idxRTCP = 1;
 	const int idxAbort = 2;
@@ -1491,7 +1491,7 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 			// know how this would affect anyone else's code, I chose to do it using
 			// an extra select call in case ioctl says the length is zero.
 			
-			bool isset = false;
+			int8_t isset = 0;
 			int status = RTPSelect(&sock, &isset, 1, RTPTime(0));
 			if (status < 0)
 				return status;

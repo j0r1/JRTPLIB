@@ -615,7 +615,7 @@ int RTPUDPv6Transmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavai
 	
 	SocketType abortSocket = m_pAbortDesc->GetAbortSocket();
 	SocketType socks[3] = { rtpsock, rtcpsock, abortSocket };
-	bool readflags[3] = { false, false, false };
+	int8_t readflags[3] = { 0, 0, 0 };
 	const int idxRTP = 0;
 	const int idxRTCP = 1;
 	const int idxAbort = 2;
@@ -1255,7 +1255,7 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 
 	if (len <= 0) // make sure a packet of length zero is not queued
 	{
-		bool isset = false;
+		int8_t isset = 0;
 		int status = RTPSelect(&sock, &isset, 1, RTPTime(0));
 		if (status < 0)
 			return status;
@@ -1315,7 +1315,7 @@ int RTPUDPv6Transmitter::PollSocket(bool rtp)
 
 		if (len <= 0) // make sure a packet of length zero is not queued
 		{
-			bool isset = false;
+			int8_t isset = 0;
 			int status = RTPSelect(&sock, &isset, 1, RTPTime(0));
 			if (status < 0)
 				return status;

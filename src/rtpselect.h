@@ -56,7 +56,7 @@
 namespace jrtplib
 {
 
-inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks, RTPTime timeout)
+inline int RTPSelect(const SocketType *sockets, int8_t *readflags, size_t numsocks, RTPTime timeout)
 {
 	using namespace std;
 
@@ -67,7 +67,7 @@ inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks
 		fds[i].fd = sockets[i];
 		fds[i].events = POLLIN;
 		fds[i].revents = 0;
-		readflags[i] = false;
+		readflags[i] = 0;
 	}
 
 	int timeoutmsec = -1;
@@ -93,7 +93,7 @@ inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks
 		for (size_t i = 0 ; i < numsocks ; i++)
 		{
 			if (fds[i].revents)
-				readflags[i] = true;
+				readflags[i] = 1;
 		}
 	}
 	return status;
@@ -122,7 +122,7 @@ namespace jrtplib
  *  indefinitely if set to a negative value. The function returns the number
  *  of sockets that have data incoming.
  */
-inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks, RTPTime timeout)
+inline int RTPSelect(const SocketType *sockets, int8_t *readflags, size_t numsocks, RTPTime timeout)
 {
 	struct timeval tv;
 	struct timeval *pTv = 0;
@@ -146,7 +146,7 @@ inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks
 			return ERR_RTP_SELECT_SOCKETDESCRIPTORTOOLARGE;
 #endif // RTP_SOCKETTYPE_WINSOCK
 		FD_SET(sockets[i], &fdset);
-		readflags[i] = false;
+		readflags[i] = 0;
 	}
 
 	int status = select(FD_SETSIZE, &fdset, 0, 0, pTv);
@@ -158,7 +158,7 @@ inline int RTPSelect(const SocketType *sockets, bool *readflags, size_t numsocks
 		for (size_t i = 0 ; i < numsocks ; i++)
 		{
 			if (FD_ISSET(sockets[i], &fdset))
-				readflags[i] = true;
+				readflags[i] = 1;
 		}
 	}
 	return status;

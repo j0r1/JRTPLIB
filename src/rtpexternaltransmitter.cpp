@@ -297,7 +297,7 @@ int RTPExternalTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataa
 	WAITMUTEX_LOCK
 	MAINMUTEX_UNLOCK
 
-	bool isset = false;
+	int8_t isset = 0;
 	SocketType abortSock = m_abortDesc.GetAbortSocket();
 	int status = RTPSelect(&abortSock, &isset, 1, delay);
 	if (status < 0)
