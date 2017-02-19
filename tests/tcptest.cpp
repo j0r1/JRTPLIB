@@ -77,8 +77,9 @@ void runTest(int sock1, int sock2)
 	{
 		printf("\nSending packet %d/%d\n",i,num);
 		
-		// send the packet
-		checkerror(sess1.SendPacket((void *)&pack[0],pack.size(),0,false,10));
+		// send a packet, alternating between a large packet and a zero length one
+		int len = (i%2 == 0)?pack.size():0;
+		checkerror(sess1.SendPacket((void *)&pack[0],len,0,false,10));
 
 		// Either the background thread or the poll function itself will
 		// cause the OnValidatedRTPPacket and OnRTCPSDESItem functions to
