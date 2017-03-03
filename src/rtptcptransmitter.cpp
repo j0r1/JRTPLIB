@@ -978,7 +978,7 @@ int RTPTCPTransmitter::SocketData::ProcessAvailableBytes(SocketType sock, int av
 		int r = 0;
 		if (num > 0)
 		{
-			r = (int)recv(sock, m_lengthBuffer+m_lengthBufferOffset, num, 0);
+			r = (int)recv(sock, (char *)(m_lengthBuffer+m_lengthBufferOffset), num, 0);
 			if (r < 0)
 				return ERR_RTP_TCPTRANS_ERRORINRECV;
 		}
@@ -1020,7 +1020,7 @@ int RTPTCPTransmitter::SocketData::ProcessAvailableBytes(SocketType sock, int av
 			int r = 0;
 			if (num > 0)
 			{
-				r = (int)recv(sock, m_pDataBuffer+m_dataBufferOffset, num, 0);
+				r = (int)recv(sock, (char *)(m_pDataBuffer+m_dataBufferOffset), num, 0);
 				if (r < 0)
 					return ERR_RTP_TCPTRANS_ERRORINRECV;
 			}

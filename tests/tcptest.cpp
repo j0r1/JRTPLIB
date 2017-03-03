@@ -7,7 +7,9 @@
 #include "rtpsourcedata.h"
 #include "rtptcpaddress.h"
 #include "rtppacket.h"
+#ifndef RTP_SOCKETTYPE_WINSOCK
 #include <netinet/tcp.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
@@ -95,6 +97,11 @@ void runTest(int sock1, int sock2)
 
 int main(int argc, char *argv[])
 {
+#ifdef RTP_SOCKETTYPE_WINSOCK
+	WSADATA dat;
+	WSAStartup(MAKEWORD(2,2),&dat);
+#endif
+
 	if (argc != 2)
 	{
 		cerr << "Usage: " << argv[0] << " portnumber" << endl;
@@ -163,5 +170,8 @@ int main(int argc, char *argv[])
 	cout << "Done." << endl;
 	RTPCLOSE(server);
 	RTPCLOSE(client);
+#ifdef RTP_SOCKETTYPE_WINSOCK
+	WSACleanup();
+#endif
 	return 0;
 }
