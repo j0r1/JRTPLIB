@@ -44,10 +44,10 @@ protected:
 
 int main(void)
 {
-#ifdef WIN32
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	WSADATA dat;
 	WSAStartup(MAKEWORD(2,2),&dat);
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	
 	MyRTPSession sess;
 
@@ -103,9 +103,9 @@ int main(void)
 
 	sess.Destroy();
 
-#ifdef WIN32
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	WSACleanup();
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	return 0;
 }
 

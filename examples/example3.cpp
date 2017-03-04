@@ -140,10 +140,10 @@ protected:
 
 int main(void)
 {
-#ifdef WIN32
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	WSADATA dat;
 	WSAStartup(MAKEWORD(2,2),&dat);
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	
 	MyRTPSession sess;
 	uint16_t portbase;
@@ -211,9 +211,9 @@ int main(void)
 	
 	sess.BYEDestroy(RTPTime(10,0),0,0);
 
-#ifdef WIN32
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	WSACleanup();
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	return 0;
 }
 

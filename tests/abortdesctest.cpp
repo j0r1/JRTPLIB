@@ -156,9 +156,9 @@ int main(void)
 	test1();
 	test2();
 
-#ifdef WIN32
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	WSACleanup();
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	return 0;
 }
 

@@ -11,10 +11,10 @@ using namespace jrtplib;
 
 int main(void)
 {
-#ifdef WIN32
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	WSADATA dat;
 	WSAStartup(MAKEWORD(2,2),&dat);
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 		
 	RTPSession session;
 	
@@ -93,9 +93,9 @@ int main(void)
 	delay = RTPTime(10.0);
 	session.BYEDestroy(delay,"Time's up",9);
 	
-#ifdef WIN32
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	WSACleanup();
-#endif // WIN32
+#endif // RTP_SOCKETTYPE_WINSOCK
 	return 0;
 }
 
