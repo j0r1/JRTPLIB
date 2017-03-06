@@ -45,6 +45,7 @@ RTPTimeInitializerObject::RTPTimeInitializerObject()
 	std::cout << "RTPTimeInitializer: Initializing RTPTime::CurrentTime()" << std::endl;
 #endif // RTPDEBUG
 	RTPTime curtime = RTPTime::CurrentTime();
+	JRTPLIB_UNUSED(curtime);
 	dummy = -1;
 }
 

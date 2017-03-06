@@ -110,6 +110,7 @@ int RTPTCPTransmitter::Init(bool tsafe)
 
 int RTPTCPTransmitter::Create(size_t maximumpacketsize, const RTPTransmissionParams *transparams)
 {
+	JRTPLIB_UNUSED(maximumpacketsize);
 	const RTPTCPTransmissionParams *params,defaultparams;
 	int status;
 
@@ -269,6 +270,7 @@ bool RTPTCPTransmitter::ComesFromThisTransmitter(const RTPAddress *addr)
 	const RTPTCPAddress *pAddr = static_cast<const RTPTCPAddress *>(addr);
 	bool v = false;
 
+	JRTPLIB_UNUSED(pAddr);
 	// TODO: for now, we're assuming that we can't just send to the same transmitter
 
 	MAINMUTEX_UNLOCK
@@ -309,7 +311,7 @@ int RTPTCPTransmitter::Poll()
 	}
 	MAINMUTEX_UNLOCK
 
-	for (int i = 0 ; i < errSockets.size() ; i++)
+	for (size_t i = 0 ; i < errSockets.size() ; i++)
 		OnReceiveError(errSockets[i]);
 
 	return status;
@@ -385,7 +387,7 @@ int RTPTCPTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavaila
 	{
 		bool avail = false;
 
-		for (int i = 0 ; i < m_tmpFlags.size() ; i++)
+		for (size_t i = 0 ; i < m_tmpFlags.size() ; i++)
 		{
 			if (m_tmpFlags[i])
 			{
@@ -551,12 +553,12 @@ bool RTPTCPTransmitter::SupportsMulticasting()
 	return false;
 }
 
-int RTPTCPTransmitter::JoinMulticastGroup(const RTPAddress &addr)
+int RTPTCPTransmitter::JoinMulticastGroup(const RTPAddress &)
 {
 	return ERR_RTP_TCPTRANS_NOMULTICASTSUPPORT;
 }
 
-int RTPTCPTransmitter::LeaveMulticastGroup(const RTPAddress &addr)
+int RTPTCPTransmitter::LeaveMulticastGroup(const RTPAddress &)
 {
 	return ERR_RTP_TCPTRANS_NOMULTICASTSUPPORT;
 }
@@ -572,12 +574,12 @@ int RTPTCPTransmitter::SetReceiveMode(RTPTransmitter::ReceiveMode m)
 	return 0;
 }
 
-int RTPTCPTransmitter::AddToIgnoreList(const RTPAddress &addr)
+int RTPTCPTransmitter::AddToIgnoreList(const RTPAddress &)
 {
 	return ERR_RTP_TCPTRANS_RECEIVEMODENOTSUPPORTED;
 }
 
-int RTPTCPTransmitter::DeleteFromIgnoreList(const RTPAddress &addr)
+int RTPTCPTransmitter::DeleteFromIgnoreList(const RTPAddress &)
 {
 	return ERR_RTP_TCPTRANS_RECEIVEMODENOTSUPPORTED;
 }
@@ -586,12 +588,12 @@ void RTPTCPTransmitter::ClearIgnoreList()
 {
 }
 
-int RTPTCPTransmitter::AddToAcceptList(const RTPAddress &addr)
+int RTPTCPTransmitter::AddToAcceptList(const RTPAddress &)
 {
 	return ERR_RTP_TCPTRANS_RECEIVEMODENOTSUPPORTED;
 }
 
-int RTPTCPTransmitter::DeleteFromAcceptList(const RTPAddress &addr)
+int RTPTCPTransmitter::DeleteFromAcceptList(const RTPAddress &)
 {
 	return ERR_RTP_TCPTRANS_RECEIVEMODENOTSUPPORTED;
 }
@@ -727,7 +729,7 @@ int RTPTCPTransmitter::PollSocket(SocketType sock, SocketData &sdata)
 						return ERR_RTP_OUTOFMEM;
 
 					bool isrtp = true;
-					if (dataLength > sizeof(RTCPCommonHeader))
+					if (dataLength > (int)sizeof(RTCPCommonHeader))
 					{
 						RTCPCommonHeader *rtcpheader = (RTCPCommonHeader *)pBuf;
 						uint8_t packettype = rtcpheader->packettype;
@@ -877,7 +879,7 @@ void RTPTCPTransmitter::Dump()
 }
 #endif // RTPDEBUG
 
-int RTPTCPTransmitter::SendRTPRTCPData(const void *data,size_t len)	
+int RTPTCPTransmitter::SendRTPRTCPData(const void *data, size_t len)
 {
 	if (!m_init)
 		return ERR_RTP_TCPTRANS_NOTINIT;
@@ -903,7 +905,7 @@ int RTPTCPTransmitter::SendRTPRTCPData(const void *data,size_t len)
 
 	while (it != end)
 	{
-		uint8_t lengthBytes[2] = { (len >> 8)&0xff, len&0xff };
+		uint8_t lengthBytes[2] = { (uint8_t)((len >> 8)&0xff), (uint8_t)(len&0xff) };
 		SocketType sock = it->first;
 
 		if (send(sock,(const char *)lengthBytes,2,0) < 0 ||
@@ -918,14 +920,14 @@ int RTPTCPTransmitter::SendRTPRTCPData(const void *data,size_t len)
 	{
 		status = ERR_RTP_TCPTRANS_ERRORINSEND;
 
-		for (int i = 0 ; i < errSockets.size() ; i++)
+		for (size_t i = 0 ; i < errSockets.size() ; i++)
 			OnSendError(errSockets[i]);
 	}
 
 	return status;
 }
 
-int RTPTCPTransmitter::ValidateSocket(SocketType s)
+int RTPTCPTransmitter::ValidateSocket(SocketType)
 {
 	// TODO: should we even do a check (for a TCP socket)? 
 	return 0;

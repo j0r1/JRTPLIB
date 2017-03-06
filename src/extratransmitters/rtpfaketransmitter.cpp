@@ -446,7 +446,7 @@ int RTPFakeTransmitter::Poll()
 	return status;
 }
 
-int RTPFakeTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataavailable)
+int RTPFakeTransmitter::WaitForIncomingData(const RTPTime &, bool *)
 {
 	return ERR_RTP_FAKETRANS_WAITNOTIMPLEMENTED;
 }
@@ -604,7 +604,7 @@ bool RTPFakeTransmitter::SupportsMulticasting()
 
 #ifdef RTP_SUPPORT_IPV4MULTICAST
 
-int RTPFakeTransmitter::JoinMulticastGroup(const RTPAddress &addr)
+int RTPFakeTransmitter::JoinMulticastGroup(const RTPAddress &)
 {
 // hrrm wonder how will manage to get multicast info thru to the UDPSINK
 /*	if (!init)
@@ -658,7 +658,7 @@ int RTPFakeTransmitter::JoinMulticastGroup(const RTPAddress &addr)
 	return ERR_RTP_FAKETRANS_NOMULTICASTSUPPORT;
 }
 
-int RTPFakeTransmitter::LeaveMulticastGroup(const RTPAddress &addr)
+int RTPFakeTransmitter::LeaveMulticastGroup(const RTPAddress &)
 {
     /*
 	if (!init)
@@ -988,7 +988,7 @@ RTPRawPacket *RTPFakeTransmitter::GetNextPacket()
 // Here the private functions start...
 
 #ifdef RTP_SUPPORT_IPV4MULTICAST
-bool RTPFakeTransmitter::SetMulticastTTL(uint8_t ttl)
+bool RTPFakeTransmitter::SetMulticastTTL(uint8_t)
 {
 /*	int ttl2,status;
 

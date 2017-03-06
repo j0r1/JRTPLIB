@@ -195,8 +195,9 @@ inline uint32_t RTPTime::GetMicroSeconds() const
 
 	if (microsec >= 1000000)
 		return 999999;
-	if (microsec < 0)
-		return 0;
+	// Unsigned, it can never be less than 0
+	// if (microsec < 0)
+	// 	return 0;
 	return microsec;
 }
 

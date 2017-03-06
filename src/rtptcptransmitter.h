@@ -143,9 +143,9 @@ public:
 #endif // RTPDEBUG
 protected:
 	// TODO
-	virtual void OnSendError(SocketType sock)														{ }
+	virtual void OnSendError(SocketType sock);
 	// TODO
-	virtual void OnReceiveError(SocketType sock)													{ }
+	virtual void OnReceiveError(SocketType sock);
 private:
 	class SocketData
 	{
@@ -190,6 +190,9 @@ private:
 	bool m_threadsafe;
 #endif // RTP_SUPPORT_THREAD
 };
+
+inline void RTPTCPTransmitter::OnSendError(SocketType) { }
+inline void RTPTCPTransmitter::OnReceiveError(SocketType) { }
 
 } // end namespace
 

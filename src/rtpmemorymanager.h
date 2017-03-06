@@ -181,6 +181,7 @@ inline void *operator new(size_t numbytes, jrtplib::RTPMemoryManager *mgr, int m
 
 inline void operator delete(void *buffer, jrtplib::RTPMemoryManager *mgr, int memtype)
 {
+	JRTPLIB_UNUSED(memtype);
 	if (mgr == 0)
 		operator delete(buffer);
 	else
@@ -197,6 +198,7 @@ inline void *operator new[](size_t numbytes, jrtplib::RTPMemoryManager *mgr, int
 
 inline void operator delete[](void *buffer, jrtplib::RTPMemoryManager *mgr, int memtype)
 {
+	JRTPLIB_UNUSED(memtype);
 	if (mgr == 0)
 		operator delete[](buffer);
 	else

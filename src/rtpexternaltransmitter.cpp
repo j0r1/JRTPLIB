@@ -421,12 +421,12 @@ int RTPExternalTransmitter::SendRTCPData(const void *data,size_t len)
 	return 0;
 }
 
-int RTPExternalTransmitter::AddDestination(const RTPAddress &addr)
+int RTPExternalTransmitter::AddDestination(const RTPAddress &)
 {
 	return ERR_RTP_EXTERNALTRANS_NODESTINATIONSSUPPORTED;
 }
 
-int RTPExternalTransmitter::DeleteDestination(const RTPAddress &addr)
+int RTPExternalTransmitter::DeleteDestination(const RTPAddress &)
 {
 	return ERR_RTP_EXTERNALTRANS_NODESTINATIONSSUPPORTED;
 }
@@ -440,12 +440,12 @@ bool RTPExternalTransmitter::SupportsMulticasting()
 	return false;
 }
 
-int RTPExternalTransmitter::JoinMulticastGroup(const RTPAddress &addr)
+int RTPExternalTransmitter::JoinMulticastGroup(const RTPAddress &)
 {
 	return ERR_RTP_EXTERNALTRANS_NOMULTICASTSUPPORT;
 }
 
-int RTPExternalTransmitter::LeaveMulticastGroup(const RTPAddress &addr)
+int RTPExternalTransmitter::LeaveMulticastGroup(const RTPAddress &)
 {
 	return ERR_RTP_EXTERNALTRANS_NOMULTICASTSUPPORT;
 }
@@ -474,12 +474,12 @@ int RTPExternalTransmitter::SetReceiveMode(RTPTransmitter::ReceiveMode m)
 	return 0;
 }
 
-int RTPExternalTransmitter::AddToIgnoreList(const RTPAddress &addr)
+int RTPExternalTransmitter::AddToIgnoreList(const RTPAddress &)
 {
 	return ERR_RTP_EXTERNALTRANS_NOIGNORELIST;
 }
 
-int RTPExternalTransmitter::DeleteFromIgnoreList(const RTPAddress &addr)
+int RTPExternalTransmitter::DeleteFromIgnoreList(const RTPAddress &)
 {
 	return ERR_RTP_EXTERNALTRANS_NOIGNORELIST;
 }
@@ -488,12 +488,12 @@ void RTPExternalTransmitter::ClearIgnoreList()
 {
 }
 
-int RTPExternalTransmitter::AddToAcceptList(const RTPAddress &addr)
+int RTPExternalTransmitter::AddToAcceptList(const RTPAddress &)
 {
 	return ERR_RTP_EXTERNALTRANS_NOACCEPTLIST;
 }
 
-int RTPExternalTransmitter::DeleteFromAcceptList(const RTPAddress &addr)
+int RTPExternalTransmitter::DeleteFromAcceptList(const RTPAddress &)
 {
 	return ERR_RTP_EXTERNALTRANS_NOACCEPTLIST;
 }

@@ -1161,6 +1161,7 @@ void RTPUDPv4Transmitter::LeaveAllMulticastGroups()
 			RTPUDPV4TRANS_MCASTMEMBERSHIP(rtpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
 			if (rtpsock != rtcpsock) // no need to leave multicast group twice when multiplexing
 				RTPUDPV4TRANS_MCASTMEMBERSHIP(rtcpsock,IP_DROP_MEMBERSHIP,mcastIP,status);
+			JRTPLIB_UNUSED(status);
 
 			multicastgroups.GotoNextElement();
 		}
@@ -1541,7 +1542,7 @@ int RTPUDPv4Transmitter::PollSocket(bool rtp)
 					{
 						isrtp = true;
 
-						if (recvlen > sizeof(RTCPCommonHeader))
+						if ((size_t)recvlen > sizeof(RTCPCommonHeader))
 						{
 							RTCPCommonHeader *rtcpheader = (RTCPCommonHeader *)datacopy;
 							uint8_t packettype = rtcpheader->packettype;
