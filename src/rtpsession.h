@@ -462,7 +462,7 @@ protected:
 	 *  RTCP packets. Note that when the session is destroyed, this RTPTransmitter 
 	 *  instance will be destroyed as well.
  	 */
-	virtual RTPTransmitter *NewUserDefinedTransmitter()						{ return 0; }
+	virtual RTPTransmitter *NewUserDefinedTransmitter();
 	
 	/** Is called when an incoming RTP packet is about to be processed. 
 	 *  Is called when an incoming RTP packet is about to be processed. This is _not_
@@ -470,94 +470,93 @@ protected:
 	 *  over the sources using the GotoFirst/GotoNext functions. In that case, the
 	 *  RTPSession::OnValidatedRTPPacket function should be used.
 	 */
-	virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime,
-	                         const RTPAddress *senderaddress) 					{ }
+	virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime, const RTPAddress *senderaddress);
 
 	/** Is called when an incoming RTCP packet is about to be processed. */
 	virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime,
-	                                  const RTPAddress *senderaddress) 				{ }
+	                                  const RTPAddress *senderaddress);
 
 	/** Is called when an SSRC collision was detected. 
 	 *  Is called when an SSRC collision was detected. The instance \c srcdat is the one present in 
 	 *  the table, the address \c senderaddress is the one that collided with one of the addresses 
 	 *  and \c isrtp indicates against which address of \c srcdat the check failed.
 	 */
-	virtual void OnSSRCCollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,bool isrtp)	{ }
+	virtual void OnSSRCCollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,bool isrtp);
 
 	/** Is called when another CNAME was received than the one already present for source \c srcdat. */
 	virtual void OnCNAMECollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,
-	                              const uint8_t *cname,size_t cnamelength)				{ }
+	                              const uint8_t *cname,size_t cnamelength);
 
 	/** Is called when a new entry \c srcdat is added to the source table. */
-	virtual void OnNewSource(RTPSourceData *srcdat)			 				{ }
+	virtual void OnNewSource(RTPSourceData *srcdat);
 
 	/** Is called when the entry \c srcdat is about to be deleted from the source table. */
-	virtual void OnRemoveSource(RTPSourceData *srcdat)						{ }
+	virtual void OnRemoveSource(RTPSourceData *srcdat);
 	
 	/** Is called when participant \c srcdat is timed out. */
-	virtual void OnTimeout(RTPSourceData *srcdat)							{ }
+	virtual void OnTimeout(RTPSourceData *srcdat);
 
 	/** Is called when participant \c srcdat is timed after having sent a BYE packet. */
-	virtual void OnBYETimeout(RTPSourceData *srcdat)						{ }
+	virtual void OnBYETimeout(RTPSourceData *srcdat);
 
 	/** Is called when an RTCP APP packet \c apppacket has been received at time \c receivetime 
 	 *  from address \c senderaddress.
 	 */
 	virtual void OnAPPPacket(RTCPAPPPacket *apppacket,const RTPTime &receivetime,
-	                         const RTPAddress *senderaddress)					{ }
+	                         const RTPAddress *senderaddress);
 	
 	/** Is called when an unknown RTCP packet type was detected. */
 	virtual void OnUnknownPacketType(RTCPPacket *rtcppack,const RTPTime &receivetime,
-	                                 const RTPAddress *senderaddress)				{ }
+	                                 const RTPAddress *senderaddress);
 
 	/** Is called when an unknown packet format for a known packet type was detected. */
 	virtual void OnUnknownPacketFormat(RTCPPacket *rtcppack,const RTPTime &receivetime,
-	                                   const RTPAddress *senderaddress)				{ }
+	                                   const RTPAddress *senderaddress);
 
 	/** Is called when the SDES NOTE item for source \c srcdat has been timed out. */
-	virtual void OnNoteTimeout(RTPSourceData *srcdat)						{ }
+	virtual void OnNoteTimeout(RTPSourceData *srcdat);
 
 	/** Is called when an RTCP sender report has been processed for this source. */
-	virtual void OnRTCPSenderReport(RTPSourceData *srcdat)														{ }
+	virtual void OnRTCPSenderReport(RTPSourceData *srcdat);
 	
 	/** Is called when an RTCP receiver report has been processed for this source. */
-	virtual void OnRTCPReceiverReport(RTPSourceData *srcdat)													{ }
+	virtual void OnRTCPReceiverReport(RTPSourceData *srcdat);
 
 	/** Is called when a specific SDES item was received for this source. */
 	virtual void OnRTCPSDESItem(RTPSourceData *srcdat, RTCPSDESPacket::ItemType t,
-	                            const void *itemdata, size_t itemlength)										{ }
+	                            const void *itemdata, size_t itemlength);
 #ifdef RTP_SUPPORT_SDESPRIV
 	/** Is called when a specific SDES item of 'private' type was received for this source. */
 	virtual void OnRTCPSDESPrivateItem(RTPSourceData *srcdat, const void *prefixdata, size_t prefixlen,
-	                                   const void *valuedata, size_t valuelen)									{ }
+	                                   const void *valuedata, size_t valuelen);
 #endif // RTP_SUPPORT_SDESPRIV
 
 	/** Is called when a BYE packet has been processed for source \c srcdat. */
-	virtual void OnBYEPacket(RTPSourceData *srcdat)							{ }
+	virtual void OnBYEPacket(RTPSourceData *srcdat);
 
 	/** Is called when an RTCP compound packet has just been sent (useful to inspect outgoing RTCP data). */
-	virtual void OnSendRTCPCompoundPacket(RTCPCompoundPacket *pack)					{ }
+	virtual void OnSendRTCPCompoundPacket(RTCPCompoundPacket *pack);
 #ifdef RTP_SUPPORT_THREAD
 	/** Is called when error \c errcode was detected in the poll thread. */
-	virtual void OnPollThreadError(int errcode)							{ }
+	virtual void OnPollThreadError(int errcode);
 
 	/** Is called each time the poll thread loops.
 	 *  Is called each time the poll thread loops. This happens when incoming data was 
 	 *  detected or when it's time to send an RTCP compound packet.
 	 */
-	virtual void OnPollThreadStep()									{ }
+	virtual void OnPollThreadStep();
 
 	/** Is called when the poll thread is started.
 	 *  Is called when the poll thread is started. This happens just before entering the
 	 *  thread main loop.
 	 *  \param stop This can be used to stop the thread immediately without entering the loop.
 	*/
-	virtual void OnPollThreadStart(bool &stop)							{ }
+	virtual void OnPollThreadStart(bool &stop);
 
 	/** Is called when the poll thread is going to stop.
 	 *  Is called when the poll thread is going to stop. This happens just before termitating the thread.
 	 */
-	virtual void OnPollThreadStop()									{ }
+	virtual void OnPollThreadStop();
 #endif // RTP_SUPPORT_THREAD
 
 	/** If this is set to true, outgoing data will be passed through RTPSession::OnChangeRTPOrRTCPData
@@ -577,13 +576,12 @@ protected:
 	 *  yourself, a good way may be to do this in RTPSession::OnSentRTPOrRTCPData. If `senddata` is 
 	 *  set to 0, no packet will be sent out. This also provides a way to turn off sending RTCP 
 	 *  packets if desired. */
-	virtual int OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen)
-																	{ return ERR_RTP_RTPSESSION_CHANGEREQUESTEDBUTNOTIMPLEMENTED; } 
+	virtual int OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen);
 
 	/** This function is called when an RTP or RTCP packet was sent, it can be helpful
 	 *  when data was allocated in RTPSession::OnChangeRTPOrRTCPData to deallocate it
 	 *  here. */
-	virtual void OnSentRTPOrRTCPData(void *senddata, size_t sendlen, bool isrtp) { }
+	virtual void OnSentRTPOrRTCPData(void *senddata, size_t sendlen, bool isrtp);
 
 	/** By overriding this function, the raw incoming data can be inspected
 	 *  and modified (e.g. for encryption).
@@ -591,7 +589,7 @@ protected:
 	 *  and modified (e.g. for encryption). If the function returns `false`,
 	 *  the packet is discarded.
 	 */
-	virtual bool OnChangeIncomingData(RTPRawPacket *rawpack)					{ return true; }
+	virtual bool OnChangeIncomingData(RTPRawPacket *rawpack);
 
 	/** Allows you to use an RTP packet from the specified source directly.
 	 *  Allows you to use an RTP packet from the specified source directly. If 
@@ -603,7 +601,7 @@ protected:
 	 *  function will always process the RTP packet further and is therefore not
 	 *  really suited to actually do something with the data.
 	 */
-	virtual void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled) { }
+	virtual void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled);
 private:
 	int InternalCreate(const RTPSessionParams &sessparams);
 	int CreateCNAME(uint8_t *buffer,size_t *bufferlength,bool resolve);
@@ -651,6 +649,44 @@ private:
 	friend class RTPSessionSources;
 	friend class RTCPSessionPacketBuilder;
 };
+
+inline RTPTransmitter *RTPSession::NewUserDefinedTransmitter()                                          { return 0; }
+inline void RTPSession::OnRTPPacket(RTPPacket *, const RTPTime &, const RTPAddress *)                   { }
+inline void RTPSession::OnRTCPCompoundPacket(RTCPCompoundPacket *, const RTPTime &, const RTPAddress *) { }
+inline void RTPSession::OnSSRCCollision(RTPSourceData *, const RTPAddress *, bool )                     { }
+inline void RTPSession::OnCNAMECollision(RTPSourceData *, const RTPAddress *, const uint8_t *, size_t ) { }
+inline void RTPSession::OnNewSource(RTPSourceData *)                                                    { }
+inline void RTPSession::OnRemoveSource(RTPSourceData *)                                                 { }
+inline void RTPSession::OnTimeout(RTPSourceData *)                                                      { }
+inline void RTPSession::OnBYETimeout(RTPSourceData *)                                                   { }
+inline void RTPSession::OnAPPPacket(RTCPAPPPacket *, const RTPTime &, const RTPAddress *)               { }
+inline void RTPSession::OnUnknownPacketType(RTCPPacket *, const RTPTime &, const RTPAddress *)          { }
+inline void RTPSession::OnUnknownPacketFormat(RTCPPacket *, const RTPTime &, const RTPAddress *)        { }
+inline void RTPSession::OnNoteTimeout(RTPSourceData *)                                                  { }
+inline void RTPSession::OnRTCPSenderReport(RTPSourceData *)                                             { }
+inline void RTPSession::OnRTCPReceiverReport(RTPSourceData *)                                           { }
+inline void RTPSession::OnRTCPSDESItem(RTPSourceData *, RTCPSDESPacket::ItemType, const void *, size_t) { }
+
+#ifdef RTP_SUPPORT_SDESPRIV
+inline void RTPSession::OnRTCPSDESPrivateItem(RTPSourceData *, const void *, size_t, const void *, size_t) { }
+#endif // RTP_SUPPORT_SDESPRIV
+
+inline void RTPSession::OnBYEPacket(RTPSourceData *)                                                    { }
+inline void RTPSession::OnSendRTCPCompoundPacket(RTCPCompoundPacket *)                                  { }
+
+#ifdef RTP_SUPPORT_THREAD
+inline void RTPSession::OnPollThreadError(int)                                                          { }
+inline void RTPSession::OnPollThreadStep()                                                              { }
+inline void RTPSession::OnPollThreadStart(bool &)                                                       { }
+inline void RTPSession::OnPollThreadStop()                                                              { }
+#endif // RTP_SUPPORT_THREAD
+
+inline int RTPSession::OnChangeRTPOrRTCPData(const void *, size_t, bool, void **, size_t *) {
+	return ERR_RTP_RTPSESSION_CHANGEREQUESTEDBUTNOTIMPLEMENTED;
+}
+inline void RTPSession::OnSentRTPOrRTCPData(void *, size_t, bool)                                       { }
+inline bool RTPSession::OnChangeIncomingData(RTPRawPacket *)                                            { return true; }
+inline void RTPSession::OnValidatedRTPPacket(RTPSourceData *, RTPPacket *, bool, bool *)                { }
 
 } // end namespace
 

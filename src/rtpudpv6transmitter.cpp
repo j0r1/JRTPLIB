@@ -936,6 +936,7 @@ void RTPUDPv6Transmitter::LeaveAllMulticastGroups()
 			RTPUDPV6TRANS_MCASTMEMBERSHIP(rtpsock,IPV6_LEAVE_GROUP,mcastIP,status);
 			RTPUDPV6TRANS_MCASTMEMBERSHIP(rtcpsock,IPV6_LEAVE_GROUP,mcastIP,status);
 			multicastgroups.GotoNextElement();
+			JRTPLIB_UNUSED(status);
 		}
 		multicastgroups.Clear();
 	}

@@ -79,6 +79,7 @@ RTPSessionParams::RTPSessionParams() : mininterval(0,0)
 int RTPSessionParams::SetUsePollThread(bool usethread)
 {
 #ifndef RTP_SUPPORT_THREAD
+	JRTPLIB_UNUSED(usethread);
 	return ERR_RTP_NOTHREADSUPPORT;
 #else
 	usepollthread = usethread;
@@ -89,6 +90,7 @@ int RTPSessionParams::SetUsePollThread(bool usethread)
 int RTPSessionParams::SetNeedThreadSafety(bool s)
 {
 #ifndef RTP_SUPPORT_THREAD
+	JRTPLIB_UNUSED(s);
 	return ERR_RTP_NOTHREADSUPPORT;
 #else
 	m_needThreadSafety = s;

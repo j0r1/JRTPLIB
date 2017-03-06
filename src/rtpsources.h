@@ -292,51 +292,51 @@ public:
 #endif // RTPDEBUG
 protected:
 	/** Is called when an RTP packet is about to be processed. */
-	virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime, const RTPAddress *senderaddress) 		{ }
+	virtual void OnRTPPacket(RTPPacket *pack,const RTPTime &receivetime, const RTPAddress *senderaddress);
 
 	/** Is called when an RTCP compound packet is about to be processed. */
-	virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime, 
-	                                  const RTPAddress *senderaddress) 											{ }
+	virtual void OnRTCPCompoundPacket(RTCPCompoundPacket *pack,const RTPTime &receivetime,
+	                                  const RTPAddress *senderaddress);
 
 	/** Is called when an SSRC collision was detected.
 	 *  Is called when an SSRC collision was detected. The instance \c srcdat is the one present in 
 	 *  the table, the address \c senderaddress is the one that collided with one of the addresses 
 	 *  and \c isrtp indicates against which address of \c srcdat the check failed.
 	 */
-	virtual void OnSSRCCollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,bool isrtp)  			{ }
+	virtual void OnSSRCCollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,bool isrtp);
 
 	/** Is called when another CNAME was received than the one already present for source \c srcdat. */
 	virtual void OnCNAMECollision(RTPSourceData *srcdat,const RTPAddress *senderaddress,
-	                              const uint8_t *cname,size_t cnamelength)										{ }
+	                              const uint8_t *cname,size_t cnamelength);
 
 	/** Is called when a new entry \c srcdat is added to the source table. */
-	virtual void OnNewSource(RTPSourceData *srcdat)			 													{ }
+	virtual void OnNewSource(RTPSourceData *srcdat);
 
 	/** Is called when the entry \c srcdat is about to be deleted from the source table. */
-	virtual void OnRemoveSource(RTPSourceData *srcdat)															{ }
+	virtual void OnRemoveSource(RTPSourceData *srcdat);
 
 	/** Is called when participant \c srcdat is timed out. */
-	virtual void OnTimeout(RTPSourceData *srcdat)																{ }
+	virtual void OnTimeout(RTPSourceData *srcdat);
 
 	/** Is called when participant \c srcdat is timed after having sent a BYE packet. */
-	virtual void OnBYETimeout(RTPSourceData *srcdat)															{ }
+	virtual void OnBYETimeout(RTPSourceData *srcdat);
 
 	/** Is called when a BYE packet has been processed for source \c srcdat. */
-	virtual void OnBYEPacket(RTPSourceData *srcdat)																{ }
+	virtual void OnBYEPacket(RTPSourceData *srcdat);
 
 	/** Is called when an RTCP sender report has been processed for this source. */
-	virtual void OnRTCPSenderReport(RTPSourceData *srcdat)														{ }
+	virtual void OnRTCPSenderReport(RTPSourceData *srcdat);
 	
 	/** Is called when an RTCP receiver report has been processed for this source. */
-	virtual void OnRTCPReceiverReport(RTPSourceData *srcdat)													{ }
+	virtual void OnRTCPReceiverReport(RTPSourceData *srcdat);
 
 	/** Is called when a specific SDES item was received for this source. */
 	virtual void OnRTCPSDESItem(RTPSourceData *srcdat, RTCPSDESPacket::ItemType t,
-	                            const void *itemdata, size_t itemlength)										{ }
+	                            const void *itemdata, size_t itemlength);
 #ifdef RTP_SUPPORT_SDESPRIV
 	/** Is called when a specific SDES item of 'private' type was received for this source. */
 	virtual void OnRTCPSDESPrivateItem(RTPSourceData *srcdat, const void *prefixdata, size_t prefixlen,
-	                                   const void *valuedata, size_t valuelen)									{ }
+	                                   const void *valuedata, size_t valuelen);
 #endif // RTP_SUPPORT_SDESPRIV
 	
 
@@ -344,24 +344,24 @@ protected:
 	 *  from address \c senderaddress.
 	 */
 	virtual void OnAPPPacket(RTCPAPPPacket *apppacket,const RTPTime &receivetime,
-	                         const RTPAddress *senderaddress)													{ }
+	                         const RTPAddress *senderaddress);
 
 	/** Is called when an unknown RTCP packet type was detected. */
 	virtual void OnUnknownPacketType(RTCPPacket *rtcppack,const RTPTime &receivetime,
-	                                 const RTPAddress *senderaddress)											{ }
+	                                 const RTPAddress *senderaddress);
 
 	/** Is called when an unknown packet format for a known packet type was detected. */
 	virtual void OnUnknownPacketFormat(RTCPPacket *rtcppack,const RTPTime &receivetime,
-	                                   const RTPAddress *senderaddress)											{ }
+	                                   const RTPAddress *senderaddress);
 
 	/** Is called when the SDES NOTE item for source \c srcdat has been timed out. */
-	virtual void OnNoteTimeout(RTPSourceData *srcdat)															{ }
+	virtual void OnNoteTimeout(RTPSourceData *srcdat);
 
 	/** Allows you to use an RTP packet from the specified source directly.
 	 *  Allows you to use an RTP packet from the specified source directly. If 
 	 *  `ispackethandled` is set to `true`, the packet will no longer be stored in this
 	 *  source's packet list. */
-	virtual void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled) { }
+	virtual void OnValidatedRTPPacket(RTPSourceData *srcdat, RTPPacket *rtppack, bool isonprobation, bool *ispackethandled);
 private:
 	void ClearSourceList();
 	int ObtainSourceDataInstance(uint32_t ssrc,RTPInternalSourceData **srcdat,bool *created);
@@ -382,6 +382,28 @@ private:
 
 	friend class RTPInternalSourceData;
 };
+
+// Inlining the default implementations to avoid unused-parameter errors.
+inline void RTPSources::OnRTPPacket(RTPPacket *, const RTPTime &, const RTPAddress *)                               { }
+inline void RTPSources::OnRTCPCompoundPacket(RTCPCompoundPacket *, const RTPTime &, const RTPAddress *)             { }
+inline void RTPSources::OnSSRCCollision(RTPSourceData *, const RTPAddress *, bool)                                  { }
+inline void RTPSources::OnCNAMECollision(RTPSourceData *, const RTPAddress *, const uint8_t *, size_t)              { }
+inline void RTPSources::OnNewSource(RTPSourceData *)                                                                { }
+inline void RTPSources::OnRemoveSource(RTPSourceData *)                                                             { }
+inline void RTPSources::OnTimeout(RTPSourceData *)                                                                  { }
+inline void RTPSources::OnBYETimeout(RTPSourceData *)                                                               { }
+inline void RTPSources::OnBYEPacket(RTPSourceData *)                                                                { }
+inline void RTPSources::OnRTCPSenderReport(RTPSourceData *)                                                         { }
+inline void RTPSources::OnRTCPReceiverReport(RTPSourceData *)                                                       { }
+inline void RTPSources::OnRTCPSDESItem(RTPSourceData *, RTCPSDESPacket::ItemType, const void *, size_t)             { }
+#ifdef RTP_SUPPORT_SDESPRIV
+inline void RTPSources::OnRTCPSDESPrivateItem(RTPSourceData *, const void *, size_t, const void *, size_t)          { }
+#endif // RTP_SUPPORT_SDESPRIV
+inline void RTPSources::OnAPPPacket(RTCPAPPPacket *, const RTPTime &, const RTPAddress *)                           { }
+inline void RTPSources::OnUnknownPacketType(RTCPPacket *, const RTPTime &, const RTPAddress *)                      { }
+inline void RTPSources::OnUnknownPacketFormat(RTCPPacket *, const RTPTime &, const RTPAddress *)                    { }
+inline void RTPSources::OnNoteTimeout(RTPSourceData *)                                                              { }
+inline void RTPSources::OnValidatedRTPPacket(RTPSourceData *, RTPPacket *, bool, bool *)                            { }
 
 } // end namespace
 

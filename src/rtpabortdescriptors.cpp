@@ -238,7 +238,7 @@ int RTPAbortDescriptors::ClearAbortSignal()
 	{
 		int8_t isset = 0;
 
-		struct timeval tv = { 0, 0 };
+		// Not used: struct timeval tv = { 0, 0 };
 
 		int status = RTPSelect(&m_descriptors[0], &isset, 1, RTPTime(0));
 		if (status < 0)
