@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8)
-cmake_policy(SET CMP0026 OLD)
 
 project(jrtplib)
 set(VERSION_MAJOR 3)
@@ -182,23 +181,10 @@ if (JRTPLIB_COMPILE_TESTS)
 endif()
 
 if (UNIX)
-	get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-shared LOCATION)
-	get_filename_component(JRTPLIB_LIBNAME "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME)
-	set(JRTPLIB_LIBS "${LIBRARY_INSTALL_DIR}/${JRTPLIB_LIBNAME}")
+	set(JRTPLIB_LIBS "-L${LIBRARY_INSTALL_DIR}" "-ljrtp")
 else (UNIX)
-	if (JRTPLIB_COMPILE_STATIC)
-		get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-static RELEASE_LOCATION)
-		get_filename_component(JRTPLIB_LIBNAME_RELEASE "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME_WE)
-		get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-static DEBUG_LOCATION)
-		get_filename_component(JRTPLIB_LIBNAME_DEBUG "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME_WE)
-	else (JRTPLIB_COMPILE_STATIC)
-		get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-shared RELEASE_LOCATION)
-		get_filename_component(JRTPLIB_LIBNAME_RELEASE "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME_WE)
-		get_target_property(JRTPLIB_LOCAL_LIBRARY_NAME jrtplib-shared DEBUG_LOCATION)
-		get_filename_component(JRTPLIB_LIBNAME_DEBUG "${JRTPLIB_LOCAL_LIBRARY_NAME}" NAME_WE)
-	endif (JRTPLIB_COMPILE_STATIC)
-	set(JRTPLIB_LIBS optimized "${LIBRARY_INSTALL_DIR}/${JRTPLIB_LIBNAME_RELEASE}.lib" 
-		         debug "${LIBRARY_INSTALL_DIR}/${JRTPLIB_LIBNAME_DEBUG}.lib")
+	set(JRTPLIB_LIBS optimized "${LIBRARY_INSTALL_DIR}/jrtplib.lib" 
+		         debug "${LIBRARY_INSTALL_DIR}/jrtplib_d.lib")
 endif (UNIX)
 
 set(JRTPLIB_INCDIRS ${JRTPLIB_EXTERNAL_INCLUDES} ${CMAKE_INSTALL_PREFIX}/include)
