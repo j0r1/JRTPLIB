@@ -112,7 +112,10 @@ endif (UNIX)
 
 # Enable extra compiler warnings and mark warnings as errors: -Wall -Wextra -Werror
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+	option(JRTPLIB_WARNINGSASERRORS "Enable -Wall -Wextra -Werror" ON)
+	if (JRTPLIB_WARNINGSASERRORS)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+	endif ()
 endif(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
 
 if (UNIX OR JRTPLIB_COMPILE_STATIC)
