@@ -144,7 +144,7 @@ int RTPSecureSession::encryptData(uint8_t *pData, int &dataLength, bool rtp)
 
 	if (rtp)
 	{
-		if (length < sizeof(uint32_t)*3)
+		if (length < (int)sizeof(uint32_t)*3)
 			return ERR_RTP_SECURESESSION_NOTENOUGHDATATOENCRYPT ;
 
 		err_status_t result = srtp_protect(m_pSRTPContext, (void *)pData, &length);
@@ -156,7 +156,7 @@ int RTPSecureSession::encryptData(uint8_t *pData, int &dataLength, bool rtp)
 	}
 	else // rtcp
 	{
-		if (length < sizeof(uint32_t)*2)
+		if (length < (int)sizeof(uint32_t)*2)
 			return ERR_RTP_SECURESESSION_NOTENOUGHDATATOENCRYPT;
 
 		err_status_t result = srtp_protect_rtcp(m_pSRTPContext, (void *)pData, &length);
@@ -214,7 +214,7 @@ int RTPSecureSession::decryptRawPacket(RTPRawPacket *rawpack, int *srtpError)
 
 	if (rawpack->IsRTP())
 	{
-		if (dataLength < sizeof(uint32_t)*3)
+		if (dataLength < (int)sizeof(uint32_t)*3)
 			return ERR_RTP_SECURESESSION_NOTENOUGHDATATODECRYPT;
 
 		err_status_t result = srtp_unprotect(m_pSRTPContext, (void*)pData, &dataLength);
@@ -226,7 +226,7 @@ int RTPSecureSession::decryptRawPacket(RTPRawPacket *rawpack, int *srtpError)
 	}
 	else // RTCP
 	{
-		if (dataLength < sizeof(uint32_t)*2)
+		if (dataLength < (int)sizeof(uint32_t)*2)
 			return ERR_RTP_SECURESESSION_NOTENOUGHDATATODECRYPT;
 
 		err_status_t result = srtp_unprotect_rtcp(m_pSRTPContext, (void *)pData, &dataLength);
@@ -270,6 +270,9 @@ bool RTPSecureSession::OnChangeIncomingData(RTPRawPacket *rawpack)
 
 void RTPSecureSession::OnSentRTPOrRTCPData(void *senddata, size_t sendlen, bool isrtp)
 {
+	JRTPLIB_UNUSED(sendlen);
+	JRTPLIB_UNUSED(isrtp);
+
 	if (senddata)
 		RTPDeleteByteArray((uint8_t *)senddata, GetMemoryManager());
 }

@@ -56,6 +56,8 @@ namespace jrtplib
 
 RTPSources::RTPSources(ProbationType probtype,RTPMemoryManager *mgr) : RTPMemoryObject(mgr),sourcelist(mgr,RTPMEM_TYPE_CLASS_SOURCETABLEHASHELEMENT)
 {
+	JRTPLIB_UNUSED(probtype); // possibly unused
+
 	totalcount = 0;
 	sendercount = 0;
 	activecount = 0;

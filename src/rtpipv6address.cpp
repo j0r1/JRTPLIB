@@ -47,6 +47,7 @@ namespace jrtplib
 
 RTPAddress *RTPIPv6Address::CreateCopy(RTPMemoryManager *mgr) const
 {
+	JRTPLIB_UNUSED(mgr); // possibly unused
 	RTPIPv6Address *newaddr = RTPNew(mgr,RTPMEM_TYPE_CLASS_RTPADDRESS) RTPIPv6Address(ip,port);
 	return newaddr;
 }

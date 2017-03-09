@@ -43,6 +43,7 @@ namespace jrtplib
 
 RTPInternalSourceData::RTPInternalSourceData(uint32_t ssrc,RTPSources::ProbationType probtype,RTPMemoryManager *mgr):RTPSourceData(ssrc,mgr)
 {
+	JRTPLIB_UNUSED(probtype); // possibly unused
 #ifdef RTP_SUPPORT_PROBATION
 	probationtype = probtype;
 #endif // RTP_SUPPORT_PROBATION

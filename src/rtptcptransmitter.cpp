@@ -969,6 +969,8 @@ RTPTCPTransmitter::SocketData::~SocketData()
 
 int RTPTCPTransmitter::SocketData::ProcessAvailableBytes(SocketType sock, int availLen, bool &complete, RTPMemoryManager *pMgr)
 {
+	JRTPLIB_UNUSED(pMgr); // possibly unused
+
 	const int numLengthBuffer = 2;
 	if (m_lengthBufferOffset < numLengthBuffer) // first we need to get the length
 	{

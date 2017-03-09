@@ -105,6 +105,8 @@ private:
 template<class Key,class Element,class GetIndex,int hashsize>
 inline RTPKeyHashTable<Key,Element,GetIndex,hashsize>::RTPKeyHashTable(RTPMemoryManager *mgr,int memtype) : RTPMemoryObject(mgr)
 {
+	JRTPLIB_UNUSED(memtype); // possibly unused
+
 	for (int i = 0 ; i < hashsize ; i++)
 		table[i] = 0;
 	firsthashelem = 0;

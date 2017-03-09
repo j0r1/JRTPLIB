@@ -48,18 +48,18 @@ class JRTPLIB_IMPORTEXPORT RTPMemoryObject
 {
 protected:	
 #ifdef RTP_SUPPORT_MEMORYMANAGEMENT
-	RTPMemoryObject(RTPMemoryManager *memmgr) : mgr(memmgr)					{ }
+	RTPMemoryObject(RTPMemoryManager *memmgr) : mgr(memmgr)			{ }
 #else
-	RTPMemoryObject(RTPMemoryManager *memmgr)						{ }
+	RTPMemoryObject(RTPMemoryManager *memmgr)						{ JRTPLIB_UNUSED(memmgr); }
 #endif // RTP_SUPPORT_MEMORYMANAGEMENT
-	virtual ~RTPMemoryObject()								{ }
+	virtual ~RTPMemoryObject()										{ }
 
 #ifdef RTP_SUPPORT_MEMORYMANAGEMENT	
 	RTPMemoryManager *GetMemoryManager() const						{ return mgr; }
 	void SetMemoryManager(RTPMemoryManager *m)						{ mgr = m; }
 #else
 	RTPMemoryManager *GetMemoryManager() const						{ return 0; }
-	void SetMemoryManager(RTPMemoryManager *m)						{ }
+	void SetMemoryManager(RTPMemoryManager *m)						{ JRTPLIB_UNUSED(m); }
 #endif // RTP_SUPPORT_MEMORYMANAGEMENT
 	
 #ifdef RTP_SUPPORT_MEMORYMANAGEMENT

@@ -106,7 +106,7 @@ protected:
 	/** In case the reimplementation of OnChangeIncomingData (which may take place
 	 *  in a background thread) encounters an error, this member function will be
 	 *  called; implement it in a derived class to receive notification of this. */
-	virtual void OnErrorChangeIncomingData(int errcode, int libsrtperrorcode) { }
+	virtual void OnErrorChangeIncomingData(int errcode, int libsrtperrorcode);
 
 	int OnChangeRTPOrRTCPData(const void *origdata, size_t origlen, bool isrtp, void **senddata, size_t *sendlen);
 	bool OnChangeIncomingData(RTPRawPacket *rawpack);
@@ -121,6 +121,8 @@ private:
 	jthread::JMutex m_srtpLock;
 #endif // RTP_SUPPORT_THREAD
 };
+
+inline void RTPSecureSession::OnErrorChangeIncomingData(int, int) { }
 
 } // end namespace
 

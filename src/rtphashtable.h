@@ -102,6 +102,8 @@ private:
 template<class Element,class GetIndex,int hashsize>
 inline RTPHashTable<Element,GetIndex,hashsize>::RTPHashTable(RTPMemoryManager *mgr,int memtype) : RTPMemoryObject(mgr)
 {
+	JRTPLIB_UNUSED(memtype); // possibly unused
+
 	for (int i = 0 ; i < hashsize ; i++)
 		table[i] = 0;
 	firsthashelem = 0;
