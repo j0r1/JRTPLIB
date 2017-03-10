@@ -106,4 +106,44 @@ Installation notes
     - `RTPDEBUG`: Enables some memory tracking functions and some debug 
       routines.
     
+Cross-compilation of JThread & JRTPLIB for Android
+--------------------------------------------------
 
+**Warning:** When cross-compiling, the configuration defaults to big-endian.
+But since most Android systems are little-endian, you should probably change
+this setting in the CMake configuration.
+
+The approach I follow for cross-compiling these libraries for the Android
+platform is sketched below. The following lines are stored in a file called 
+`toolchain.cmake` (for example):
+
+    set(CMAKE_SYSTEM_NAME Android)
+    set(CMAKE_SYSTEM_VERSION 21) # API level
+    set(CMAKE_ANDROID_ARCH_ABI armeabi-v7a)
+    set(CMAKE_ANDROID_NDK /path/to/ndk-bundle/)
+    set(CMAKE_ANDROID_STL_TYPE gnustl_static)
+    
+    set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+    
+When starting CMake, first for JThread and afterwards for JRTPLIB, I then manually 
+add the following entries:
+
+    CMAKE_TOOLCHAIN_FILE /path/to/toolchain.cmake
+    CMAKE_INSTALL_PREFIX /path/to/installation/directory
+    CMAKE_FIND_ROOT_PATH /path/to/installation/directory
+
+For example, I like to use the `ccmake` program, which would yield
+the following command line:
+
+    ccmake -DCMAKE_TOOLCHAIN_FILE=/path/to/toolchain.cmake \
+           -DCMAKE_INSTALL_PREFIX=/path/to/installation/directory \
+           -DCMAKE_FIND_ROOT_PATH=/path/to/installation/directory \
+           /path/to/main/CMakeLists.txt
+
+After configuring JThread this way, just build and install it. The same CMake
+procedure for JRTPLIB should then automatically detect the correct JThread
+(so the one that's installed in your cross-compilation installation directory),
+after which you can again build and install the RTP library.
