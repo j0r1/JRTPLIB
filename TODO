@@ -1,4 +1,8 @@
+
 For v3:
+ * Error descriptions
+ * TCP transmitter and address docs
+ 
  * Look into bug where lastmsgtime = srcdat->INF_GetLastMessageTime() was somehow 
    negative
  * similar changes to udpv6 transmitter as to udpv4 transmitter

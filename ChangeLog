@@ -14,6 +14,10 @@
 	  allow better scaling for a use case such as example8.
 	* Added RTPRandom::CreateDefaultRandomNumberGenerator to create
 	  the default random number engine for the platform in use.
+	* When using gcc, warnings will be treated as error by default
+	  (this can be disabled in the cmake options)
+	* Added a transmission component that allows packets to be sent
+	  and received over TCP.
 
  3.10.0 (December 2016)
 	* Support for MingW compilation was added
