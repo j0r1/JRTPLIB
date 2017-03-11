@@ -228,6 +228,23 @@ static RTPErrorInfo ErrorDescriptions[]=
 	{ ERR_RTP_SELECT_ERRORINSELECT, "Error in the call to 'select'" },
 	{ ERR_RTP_SELECT_SOCKETDESCRIPTORTOOLARGE, "A socket descriptor value is too large for a call to 'select' (exceeds FD_SETSIZE)" },
 	{ ERR_RTP_SELECT_ERRORINPOLL, "Error in the call to 'poll' or 'WSAPoll'" },
+	{ ERR_RTP_TCPTRANS_NOTINIT, "The TCP transmitter is not yet initialized" },
+	{ ERR_RTP_TCPTRANS_ALREADYINIT, "The TCP transmitter is already initialized" },
+	{ ERR_RTP_TCPTRANS_NOTCREATED, "The TCP transmitter is not yet created" },
+	{ ERR_RTP_TCPTRANS_ALREADYCREATED, "The TCP transmitter is already created" },
+	{ ERR_RTP_TCPTRANS_ILLEGALPARAMETERS, "The parameters for the TCP transmitter are invalid" },
+	{ ERR_RTP_TCPTRANS_CANTINITMUTEX, "Unable to initialize a mutex during the initialization of the TCP transmitter" },
+	{ ERR_RTP_TCPTRANS_ALREADYWAITING, "The TCP transmitter is already waiting for data" },
+	{ ERR_RTP_TCPTRANS_INVALIDADDRESSTYPE, "The address specified is not a valid address for the TCP transmitter" },
+	{ ERR_RTP_TCPTRANS_NOSOCKETSPECIFIED, "No socket was specified in the address used for the TCP transmitter" },
+	{ ERR_RTP_TCPTRANS_NOMULTICASTSUPPORT, "The TCP transmitter does not support multicasting" },
+	{ ERR_RTP_TCPTRANS_RECEIVEMODENOTSUPPORTED, "The TCP transmitter does not support receive modes other than 'accept all'" },
+	{ ERR_RTP_TCPTRANS_SPECIFIEDSIZETOOBIG, "The maximum packet size for the TCP transmitter is limited to 64KB" },
+	{ ERR_RTP_TCPTRANS_NOTWAITING, "The TCP transmitter is not waiting for data" },
+	{ ERR_RTP_TCPTRANS_SOCKETALREADYINDESTINATIONS, "The specified destination address (socket) was already added to the destination list of the TCP transmitter" },
+	{ ERR_RTP_TCPTRANS_SOCKETNOTFOUNDINDESTINATIONS, "The specified destination address (socket) was not found in the list of destinations of the TCP transmitter" },
+	{ ERR_RTP_TCPTRANS_ERRORINSEND, "An error occurred in the TCP transmitter while sending a packet" },
+	{ ERR_RTP_TCPTRANS_ERRORINRECV, "An error occurred in the TCP transmitter while receiving a packet" },
 	{ 0,0 }
 };
 
