@@ -6,10 +6,8 @@
 #include "rtperrors.h"
 #include "rtpsourcedata.h"
 #include "rtptcpaddress.h"
+#include "rtptcptransmitter.h"
 #include "rtppacket.h"
-#ifndef RTP_SOCKETTYPE_WINSOCK
-#include <netinet/tcp.h>
-#endif
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
@@ -54,19 +52,50 @@ protected:
 	}
 };
 
+class MyTCPTransmitter : public RTPTCPTransmitter
+{
+public:
+	MyTCPTransmitter(const string &name) : RTPTCPTransmitter(0), m_name(name) { }
+
+	void OnSendError(SocketType sock)
+	{
+		cout << m_name << ": Error sending over socket " << sock << ", removing destination" << endl;
+		DeleteDestination(RTPTCPAddress(sock));
+	}
+	
+	void OnReceiveError(SocketType sock)
+	{
+		cout << m_name << ": Error receiving from socket " << sock << ", removing destination" << endl;
+		DeleteDestination(RTPTCPAddress(sock));
+	}
+private:
+	string m_name;
+};
+
 void runTest(int sock1, int sock2)
 {
 	const int packSize = 45678;
 	RTPSessionParams sessParams;
+	MyTCPTransmitter trans1("Transmitter1"), trans2("Transmitter2");
 	MyRTPSession sess1, sess2;
 
 	sessParams.SetProbationType(RTPSources::NoProbation);
 	sessParams.SetOwnTimestampUnit(1.0/packSize);
 	sessParams.SetMaximumPacketSize(packSize + 64); // some extra room for rtp header
 
-	checkerror(sess1.Create(sessParams, 0, RTPTransmitter::TCPProto));
+	bool threadsafe = false;
+#ifdef RTP_SUPPORT_THREAD
+	threadsafe = true;
+#endif // RTP_SUPPORT_THREAD
+
+	checkerror(trans1.Init(threadsafe));
+	checkerror(trans2.Init(threadsafe));
+	checkerror(trans1.Create(65535, 0));
+	checkerror(trans2.Create(65535, 0));
+
+	checkerror(sess1.Create(sessParams, &trans1));
 	cout << "Session 1 created " << endl;
-	checkerror(sess2.Create(sessParams, 0, RTPTransmitter::TCPProto));
+	checkerror(sess2.Create(sessParams, &trans2));
 	cout << "Session 2 created " << endl;
 
 	checkerror(sess1.AddDestination(RTPTCPAddress(sock1)));
@@ -82,6 +111,9 @@ void runTest(int sock1, int sock2)
 		// send a packet, alternating between a large packet and a zero length one
 		int len = (i%2 == 0)?pack.size():0;
 		checkerror(sess1.SendPacket((void *)&pack[0],len,0,false,10));
+
+		if (i == 10)
+			RTPCLOSE(sock1); // Induce an error when sending/receiving
 
 		// Either the background thread or the poll function itself will
 		// cause the OnValidatedRTPPacket and OnRTCPSDESItem functions to
@@ -154,16 +186,6 @@ int main(int argc, char *argv[])
 	RTPCLOSE(listener);
 
 	cout << "Got connected socket pair" << endl;
-	cout << "Turning off Nagle's algorithm" << endl;
-
-	int flag = 1;
-	if (setsockopt(client, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int)) != 0 ||
-		setsockopt(server, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int)) != 0)
-	{
-		cerr << "Unable to turn off Nagle's algorithm on a socket" << endl;
-		return -1;
-	}
-
 
 	runTest(server, client);
 

@@ -49,7 +49,9 @@ namespace jrtplib
 class RTPMemoryManager;
 
 /** Represents a TCP 'address' and port.
- *  This class is used by the TCP transmission component.
+ *  This class is used by the TCP transmission component, to specify which sockets
+ *  should be used to send/receive data, and to know on which socket incoming data
+ *  was received.
  */
 class JRTPLIB_IMPORTEXPORT RTPTCPAddress : public RTPAddress
 {

@@ -305,7 +305,13 @@ int RTPTCPTransmitter::Poll()
 			if (status == ERR_RTP_OUTOFMEM)
 				break;
 			else
+			{
 				errSockets.push_back(sock);
+				// Don't let this count as an error (due to a closed connection for example),
+				// otherwise the poll thread (if used) will stop because of this. Since there
+				// may be more than one connection, that's not desirable in general.
+				status = 0; 
+			}
 		}
 		++it;
 	}
@@ -899,17 +905,20 @@ int RTPTCPTransmitter::SendRTPRTCPData(const void *data, size_t len)
 	
 	std::map<SocketType, SocketData>::iterator it = m_destSockets.begin();
 	std::map<SocketType, SocketData>::iterator end = m_destSockets.end();
-	int status = 0;
 
 	vector<SocketType> errSockets;
+	int flags = 0;
+#ifndef RTP_SOCKETTYPE_WINSOCK // TODO: replace this by a test
+	flags = MSG_NOSIGNAL;
+#endif
 
 	while (it != end)
 	{
 		uint8_t lengthBytes[2] = { (uint8_t)((len >> 8)&0xff), (uint8_t)(len&0xff) };
 		SocketType sock = it->first;
 
-		if (send(sock,(const char *)lengthBytes,2,0) < 0 ||
-			send(sock,(const char *)data,len,0) < 0)
+		if (send(sock,(const char *)lengthBytes,2,flags) < 0 ||
+			send(sock,(const char *)data,len,flags) < 0)
 			errSockets.push_back(sock);
 		++it;
 	}
@@ -918,13 +927,14 @@ int RTPTCPTransmitter::SendRTPRTCPData(const void *data, size_t len)
 
 	if (errSockets.size() != 0)
 	{
-		status = ERR_RTP_TCPTRANS_ERRORINSEND;
-
 		for (size_t i = 0 ; i < errSockets.size() ; i++)
 			OnSendError(errSockets[i]);
 	}
 
-	return status;
+	// Don't return an error code to avoid the poll thread exiting
+	// due to one closed connection for example
+
+	return 0;
 }
 
 int RTPTCPTransmitter::ValidateSocket(SocketType)

@@ -60,7 +60,7 @@ public:
 	RTPTCPTransmissionParams();
 
 	/** If non null, the specified abort descriptors will be used to cancel
-	 *  the function that's waiting for packets to arrive; set to null (the default
+	 *  the function that's waiting for packets to arrive; set to null (the default)
 	 *  to let the transmitter create its own instance. */
 	void SetCreatedAbortDescriptors(RTPAbortDescriptors *desc) { m_pAbortDesc = desc; }
 
@@ -89,11 +89,25 @@ public:
 #define RTPTCPTRANS_HEADERSIZE						(20+20+2) // 20 IP, 20 TCP, 2 for framing (RFC 4571)
 	
 /** A TCP transmission component.
+ *
  *  This class inherits the RTPTransmitter interface and implements a transmission component 
  *  which uses TCP to send and receive RTP and RTCP data. The component's parameters 
  *  are described by the class RTPTCPTransmissionParams. The functions which have an RTPAddress 
- *  argument require an argument of RTPTCPAddress. The GetTransmissionInfo member function
+ *  argument require an argument of RTPTCPAddress. The RTPTransmitter::GetTransmissionInfo member function
  *  returns an instance of type RTPTCPTransmissionInfo.
+ *
+ *  After this transmission component was created, no data will actually be sent or received
+ *  yet. You can specify over which TCP connections (which must be established first) data
+ *  should be transmitted by using the RTPTransmitter::AddDestination member function. This
+ *  takes an argument of type RTPTCPAddress, with which relevant the socket descriptor can
+ *  be passed to the transmitter. 
+ *
+ *  These sockets will also be used to check for incoming RTP or RTCP data. The RTPTCPAddress
+ *  instance that's associated with a received packet, will contain the socket descriptor
+ *  on which the data was received. This descriptor can be obtained using RTPTCPAddress::GetSocket.
+ *
+ *  To get notified of an error when sending over or receiving from a socket, override the
+ *  RTPTCPTransmitter::OnSendError and RTPTCPTransmitter::OnReceiveError member functions.
  */
 class JRTPLIB_IMPORTEXPORT RTPTCPTransmitter : public RTPTransmitter
 {
@@ -142,9 +156,9 @@ public:
 	void Dump();
 #endif // RTPDEBUG
 protected:
-	// TODO
+	/** By overriding this function you can be notified of an error when sending over a socket. */
 	virtual void OnSendError(SocketType sock);
-	// TODO
+	/** By overriding this function you can be notified of an error when receiving from a socket. */
 	virtual void OnReceiveError(SocketType sock);
 private:
 	class SocketData
