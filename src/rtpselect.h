@@ -138,10 +138,10 @@ inline int RTPSelect(const SocketType *sockets, int8_t *readflags, size_t numsoc
 	FD_ZERO(&fdset);
 	for (size_t i = 0 ; i < numsocks ; i++)
 	{
+#ifndef RTP_SOCKETTYPE_WINSOCK
 		const int setsize = FD_SETSIZE;
 		// On windows it seems that comparing the socket value to FD_SETSIZE does
 		// not make sense
-#ifndef RTP_SOCKETTYPE_WINSOCK
 		if (sockets[i] >= setsize)
 			return ERR_RTP_SELECT_SOCKETDESCRIPTORTOOLARGE;
 #endif // RTP_SOCKETTYPE_WINSOCK
