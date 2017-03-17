@@ -103,7 +103,7 @@ set(SOURCES
 	rtptcptransmitter.cpp
 	)
 
-if (NOT RTP_SOCKETTYPE_WINSOCK)
+if (NOT JRTPLIB_WINSOCK)
 	set (SOURCES ${SOURCES} extratransmitters/rtpfaketransmitter.cpp )
 	set (HEADERS ${HEADERS} extratransmitters/rtpfaketransmitter.h )
 endif ()

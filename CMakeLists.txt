@@ -101,8 +101,12 @@ option(JRTPLIB_COMPILE_TESTS "Compile various tests in the 'tests' subdirectory"
 
 # Check winsock first
 set(TESTDEFS "")
-jrtplib_test_feature(winsocktest RTP_SOCKETTYPE_WINSOCK FALSE "// Not using winsock sockets" "${TESTDEFS}")
-if (RTP_SOCKETTYPE_WINSOCK)
+set(EMPTYWSSTRING "// Not using winsock sockets")
+jrtplib_test_feature(winsocktest RTP_SOCKETTYPE_WINSOCK FALSE "${EMPTYWSSTRING}" "${TESTDEFS}")
+if ("${RTP_SOCKETTYPE_WINSOCK}" STREQUAL "${EMPTYWSSTRING}")
+	set(JRTPLIB_WINSOCK FALSE)
+else ()
+	set(JRTPLIB_WINSOCK TRUE)
 	set(TESTDEFS "${TESTDEFS} -DRTP_SOCKETTYPE_WINSOCK")
 endif()
 
@@ -150,10 +154,10 @@ else (JRTPLIB_STDINT)
 	endif (JRTPLIB_INTTYPES)
 endif (JRTPLIB_STDINT)
 
-if (RTP_SOCKETTYPE_WINSOCK)
-    set(RTP_WINSOCK_HEADERS "#ifdef RTP_SOCKETTYPE_WINSOCK\n	#include <winsock2.h>	\n	#include <ws2tcpip.h>\n#ifndef _WIN32_WCE\n	#include <sys/types.h>\n#endif // _WIN32_WCE\n#endif // RTP_SOCKETTYPE_WINSOCK\n")
+if (JRTPLIB_WINSOCK)
+	set(RTP_WINSOCK_HEADERS "#ifdef RTP_SOCKETTYPE_WINSOCK\n	#include <winsock2.h>	\n	#include <ws2tcpip.h>\n#ifndef _WIN32_WCE\n	#include <sys/types.h>\n#endif // _WIN32_WCE\n#endif // RTP_SOCKETTYPE_WINSOCK\n")
 	list(APPEND JRTPLIB_LINK_LIBS "ws2_32")
-endif (RTP_SOCKETTYPE_WINSOCK)
+endif ()
 
 if (MSVC)
 	set(JRTPLIB_COMPILE_STATIC ON CACHE BOOL "Flag indicating if a static library should be built, or a dynamic one")
