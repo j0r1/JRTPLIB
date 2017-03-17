@@ -1,4 +1,4 @@
-#if defined(WIN32) || defined(_WIN32_WCE)
+#ifdef RTP_SOCKETTYPE_WINSOCK
 	#include <winsock2.h>	
 	#include <ws2tcpip.h>
 	#ifndef _WIN32_WCE
@@ -8,7 +8,7 @@
 	#include <sys/types.h>
 	#include <sys/socket.h>
 	#include <netinet/in.h>
-#endif // WIN32 || _WIN32_WCE
+#endif // RTP_SOCKETTYPE_WINSOCK
 
 int main(void)
 {
