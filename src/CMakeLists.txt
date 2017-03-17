@@ -103,10 +103,12 @@ set(SOURCES
 	rtptcptransmitter.cpp
 	)
 
-if (NOT MSVC)
+if (NOT RTP_SOCKETTYPE_WINSOCK)
 	set (SOURCES ${SOURCES} extratransmitters/rtpfaketransmitter.cpp )
 	set (HEADERS ${HEADERS} extratransmitters/rtpfaketransmitter.h )
-else ()
+endif ()
+
+if (MSVC)
 	set(CMAKE_DEBUG_POSTFIX _d)
 endif ()
 
