@@ -127,6 +127,7 @@ jrtplib_test_feature(strncpystest RTP_HAVE_STRNCPY_S FALSE "// No strncpy_s supp
 jrtplib_test_feature(clockgettimetest RTP_HAVE_CLOCK_GETTIME FALSE "// No clock_gettime support" "${TESTDEFS}")
 jrtplib_test_feature(polltest RTP_HAVE_POLL FALSE "// No 'poll' support" "${TESTDEFS}")
 jrtplib_test_feature(wsapolltest RTP_HAVE_WSAPOLL FALSE "// No 'WSAPoll' support" "${TESTDEFS}")
+jrtplib_test_feature(msgnosignaltest RTP_HAVE_MSG_NOSIGNAL FALSE "// No MSG_NOSIGNAL option" "${TESTDEFS}")
 
 check_cxx_source_compiles("#include <windows.h>\n#include <stdio.h>\nint main(void) { char s[1024]; _snprintf_s(s, 1024,\"%d\", 10);\n  return 0; }" JRTPLIB_SNPRINTF_S)
 if (JRTPLIB_SNPRINTF_S)

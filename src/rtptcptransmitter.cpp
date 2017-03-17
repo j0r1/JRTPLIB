@@ -908,9 +908,9 @@ int RTPTCPTransmitter::SendRTPRTCPData(const void *data, size_t len)
 
 	vector<SocketType> errSockets;
 	int flags = 0;
-#ifndef RTP_SOCKETTYPE_WINSOCK // TODO: replace this by a test
+#ifdef RTP_HAVE_MSG_NOSIGNAL
 	flags = MSG_NOSIGNAL;
-#endif
+#endif // RTP_HAVE_MSG_NOSIGNAL
 
 	while (it != end)
 	{
