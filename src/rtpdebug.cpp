@@ -103,7 +103,7 @@ public:
 
 static MemoryTracker memtrack;
 
-void *donew(size_t s,char filename[],int line)
+void *donew(size_t s,const char *filename,int line)
 {	
 #ifdef RTP_SUPPORT_THREAD
 	JMutexAutoLock l(mutex);
