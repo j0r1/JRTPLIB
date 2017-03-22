@@ -5,7 +5,7 @@ endif()
 
 project(jrtplib)
 set(VERSION_MAJOR 3)
-set(VERSION_MINOR 10)
+set(VERSION_MINOR 11)
 set(VERSION_DEBUG 0)
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_DEBUG}")
 

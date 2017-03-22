@@ -2,7 +2,7 @@
 				JRTPLIB ChangeLog
 				-----------------
 
- ? (?)
+ 3.11.0 (March 2017)
 	* In the RTPSession class, thread safety can be requested even
 	  if the poll thread is not used.
 	* Moved the 'abort decriptor' stuff into a separate class and 
