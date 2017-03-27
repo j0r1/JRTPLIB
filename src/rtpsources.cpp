@@ -317,11 +317,19 @@ int RTPSources::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,c
 	bool prevsender = srcdat->IsSender();
 	bool prevactive = srcdat->IsActive();
 	
+	uint32_t CSRCs[RTP_MAXCSRCS];
+	int numCSRCs = rtppack->GetCSRCCount();
+	for (int i = 0 ; i < numCSRCs ; i++)
+		CSRCs[i] = rtppack->GetCSRC(i);
+
 	// The packet comes from a valid source, we can process it further now
 	// The following function should delete rtppack itself if something goes
 	// wrong
 	if ((status = srcdat->ProcessRTPPacket(rtppack,receivetime,stored,this)) < 0)
 		return status;
+
+	// NOTE: we cannot use 'rtppack' anymore since it may have been deleted in
+	//       OnValidatedRTPPacket
 
 	if (!prevsender && srcdat->IsSender())
 		sendercount++;
@@ -336,12 +344,12 @@ int RTPSources::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,c
 		RTPInternalSourceData *csrcdat;
 		bool createdcsrc;
 
-		int num = rtppack->GetCSRCCount();
+		int num = numCSRCs;
 		int i;
 
 		for (i = 0 ; i < num ; i++)
 		{
-			if ((status = ObtainSourceDataInstance(rtppack->GetCSRC(i),&csrcdat,&createdcsrc)) < 0)
+			if ((status = ObtainSourceDataInstance(CSRCs[i],&csrcdat,&createdcsrc)) < 0)
 				return status;
 			if (createdcsrc)
 			{
