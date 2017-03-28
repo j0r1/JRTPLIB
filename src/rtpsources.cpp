@@ -319,6 +319,9 @@ int RTPSources::ProcessRTPPacket(RTPPacket *rtppack,const RTPTime &receivetime,c
 	
 	uint32_t CSRCs[RTP_MAXCSRCS];
 	int numCSRCs = rtppack->GetCSRCCount();
+	if (numCSRCs > RTP_MAXCSRCS) // shouldn't happen, but better to check than go out of bounds
+		numCSRCs = RTP_MAXCSRCS;
+
 	for (int i = 0 ; i < numCSRCs ; i++)
 		CSRCs[i] = rtppack->GetCSRC(i);
 
