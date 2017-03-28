@@ -2,6 +2,12 @@
 				JRTPLIB ChangeLog
 				-----------------
 
+ 3.11.1 (March 2017)
+ 	* Bugfix in rtpsources.cpp: if the RTP packet got deleted in
+	  OnValidatedRTPPacket, then an illegal address would be accessed
+	  when looking up the CSRC identifiers. Thanks to Lau Bakman for
+	  reporting this.
+
  3.11.0 (March 2017)
 	* In the RTPSession class, thread safety can be requested even
 	  if the poll thread is not used.
