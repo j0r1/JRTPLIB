@@ -43,6 +43,7 @@
 #ifndef RTP_HAVE_QUERYPERFORMANCECOUNTER
 	#include <sys/time.h>
 	#include <time.h>
+	#include <errno.h>	
 #endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
 
 #define RTP_NTPTIMEOFFSET									2208988800UL
@@ -313,10 +314,15 @@ inline void RTPTime::Wait(const RTPTime &delay)
 	uint64_t nanosec = (uint32_t)(1e9*(delay.m_t-(double)sec));
 
 	struct timespec req,rem;
+	int ret;
 
 	req.tv_sec = (time_t)sec;
 	req.tv_nsec = ((long)nanosec);
-	nanosleep(&req,&rem);
+	do
+	{
+		ret = nanosleep(&req,&rem);
+		req = rem;
+	} while (ret == -1 && errno == EINTR);
 }
 
 #endif // RTP_HAVE_QUERYPERFORMANCECOUNTER
