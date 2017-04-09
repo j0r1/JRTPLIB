@@ -1,6 +1,10 @@
 				
 				JRTPLIB ChangeLog
 				-----------------
+ ? (?):
+ 	* Taking EINTR in nanosleep, poll and select calls into account.
+	  Thanks to Filippo Guerzoni (filippo.guerzoni@gmail.com) for bringing
+	  this to my attention.
 
  3.11.1 (March 2017)
  	* Bugfix in rtpsources.cpp: if the RTP packet got deleted in
