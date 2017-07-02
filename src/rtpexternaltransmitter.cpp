@@ -137,6 +137,7 @@ int RTPExternalTransmitter::Create(size_t maximumpacketsize,const RTPTransmissio
 		MAINMUTEX_UNLOCK
 		return status;
 	}
+	m_abortCount = 0;
 	
 	maxpacksize = maximumpacketsize;
 	sender = params->GetSender();
@@ -176,6 +177,7 @@ void RTPExternalTransmitter::Destroy()
 	if (waitingfordata)
 	{
 		m_abortDesc.SendAbortSignal();
+		m_abortCount++;
 		m_abortDesc.Destroy();
 		MAINMUTEX_UNLOCK
 		WAITMUTEX_LOCK // to make sure that the WaitForIncomingData function ended
@@ -320,7 +322,10 @@ int RTPExternalTransmitter::WaitForIncomingData(const RTPTime &delay,bool *dataa
 		
 	// if aborted, read from abort buffer
 	if (isset)
+	{
 		m_abortDesc.ClearAbortSignal();
+		m_abortCount = 0;
+	}
 
 	if (dataavailable != 0)
 	{
@@ -353,6 +358,7 @@ int RTPExternalTransmitter::AbortWait()
 	}
 
 	m_abortDesc.SendAbortSignal();
+	m_abortCount++;
 	
 	MAINMUTEX_UNLOCK
 	return 0;
@@ -616,7 +622,12 @@ void RTPExternalTransmitter::InjectRTP(const void *data, size_t len, const RTPAd
 		return;
 	}
 	rawpacketlist.push_back(pack);
-	m_abortDesc.SendAbortSignal();
+
+	if (m_abortCount == 0)
+	{
+		m_abortDesc.SendAbortSignal();
+		m_abortCount++;
+	}
 
 	MAINMUTEX_UNLOCK
 }
@@ -658,7 +669,12 @@ void RTPExternalTransmitter::InjectRTCP(const void *data, size_t len, const RTPA
 		return;
 	}
 	rawpacketlist.push_back(pack);
-	m_abortDesc.SendAbortSignal();
+
+	if (m_abortCount == 0)
+	{
+		m_abortDesc.SendAbortSignal();
+		m_abortCount++;
+	}
 
 	MAINMUTEX_UNLOCK
 }
@@ -708,7 +724,12 @@ void RTPExternalTransmitter::InjectRTPorRTCP(const void *data, size_t len, const
 		return;
 	}
 	rawpacketlist.push_back(pack);
-	m_abortDesc.SendAbortSignal();
+
+	if (m_abortCount == 0)
+	{
+		m_abortDesc.SendAbortSignal();
+		m_abortCount++;
+	}
 
 	MAINMUTEX_UNLOCK
 

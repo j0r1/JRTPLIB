@@ -205,6 +205,7 @@ private:
 	int headersize;
 
 	RTPAbortDescriptors m_abortDesc;
+	int m_abortCount;
 #ifdef RTP_SUPPORT_THREAD
 	jthread::JMutex mainmutex,waitmutex;
 	int threadsafe;
