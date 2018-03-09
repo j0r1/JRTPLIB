@@ -32,13 +32,22 @@
 
 #include "rtpsecuresession.h"
 
-#ifdef RTP_SUPPORT_SRTP
+#if defined(RTP_SUPPORT_SRTP) || defined(RTP_SUPPORT_SRTP2)
 
 #include "rtprawpacket.h"
 #ifdef RTP_SUPPORT_THREAD
 #include <jthread/jmutexautolock.h>
 #endif
-#include <srtp/srtp.h>
+
+#ifdef RTP_SUPPORT_SRTP2
+	#include <srtp2/srtp.h>
+
+	#define err_status_t srtp_err_status_t
+	#define err_status_ok srtp_err_status_ok
+#else
+	#include <srtp/srtp.h>
+#endif 
+
 #include <iostream>
 #include <vector>
 
@@ -283,5 +292,5 @@ void RTPSecureSession::OnSentRTPOrRTCPData(void *senddata, size_t sendlen, bool 
 
 } // end namespace
 
-#endif // RTP_SUPPORT_SRTP
+#endif // RTP_SUPPORT_SRTP || RTP_SUPPORT_SRTP2
 
