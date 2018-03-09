@@ -3,7 +3,7 @@
 
 using namespace std;
 
-#ifdef RTP_SUPPORT_SRTP
+#if defined(RTP_SUPPORT_SRTP) || defined(RTP_SUPPORT_SRTP2)
 
 #include "rtpsecuresession.h"
 #include "rtpudpv4transmitter.h"
@@ -15,7 +15,15 @@ using namespace std;
 #include "rtprawpacket.h"
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef RTP_SUPPORT_SRTP2
+#include <srtp2/srtp.h>
+#define SRTP_ERR_T srtp_err_status_t
+#define SRTP_ERR_OK srtp_err_status_ok
+#else
 #include <srtp/srtp.h>
+#define SRTP_ERR_T err_status_t
+#define SRTP_ERR_OK err_status_ok
+#endif // RTP_SUPPORT_SRTP2
 #include <string>
 
 using namespace jrtplib;
@@ -67,11 +75,19 @@ public:
 		memset(&policyIn, 0, sizeof(srtp_policy_t));
 		memset(&policyOut, 0, sizeof(srtp_policy_t));
 		
+#ifdef RTP_SUPPORT_SRTP2
+		srtp_crypto_policy_set_rtp_default(&policyIn.rtp);
+		srtp_crypto_policy_set_rtcp_default(&policyIn.rtcp);
+
+		srtp_crypto_policy_set_rtp_default(&policyOut.rtp);
+		srtp_crypto_policy_set_rtcp_default(&policyOut.rtcp);
+#else
 		crypto_policy_set_rtp_default(&policyIn.rtp);
 		crypto_policy_set_rtcp_default(&policyIn.rtcp);
 
 		crypto_policy_set_rtp_default(&policyOut.rtp);
 		crypto_policy_set_rtcp_default(&policyOut.rtcp);
+#endif 
 
 		policyIn.ssrc.type = ssrc_any_inbound;
 		policyIn.key = (uint8_t *)key.c_str();
@@ -88,14 +104,14 @@ public:
 			cerr << "Unable to get/lock srtp context" << endl;
 			return false;
 		}
-		err_status_t err = srtp_add_stream(ctx, &policyIn);
-		if (err == err_status_ok)
+		SRTP_ERR_T err = srtp_add_stream(ctx, &policyIn);
+		if (err == SRTP_ERR_OK)
 			err = srtp_add_stream(ctx, &policyOut);
 		UnlockSRTPContext();
 
-		if (err != err_status_ok)
+		if (err != SRTP_ERR_OK)
 		{
-			cerr << "libsrtp error while adding stream: " << err << endl;
+			cerr << "libsrtp(2) error while adding stream: " << err << endl;
 			return false;
 		}
 		return true;
@@ -151,7 +167,7 @@ protected:
 	void OnErrorChangeIncomingData(int errcode, int libsrtperrorcode) 
 	{
 		printf("SSRC %x JRTPLIB Error: %s\n", GetLocalSSRC(), RTPGetErrorString(errcode).c_str());
-		if (libsrtperrorcode != err_status_ok)
+		if (libsrtperrorcode != SRTP_ERR_OK)
 			printf("libsrtp error: %d\n", libsrtperrorcode);
 		printf("\n");
 	}
@@ -243,4 +259,4 @@ int main(void)
 	return 0;
 }
 
-#endif // RTP_SUPPORT_SRTP
+#endif // RTP_SUPPORT_SRTP || RTP_SUPPORT_SRTP2

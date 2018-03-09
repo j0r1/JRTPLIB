@@ -40,7 +40,7 @@
 
 #include "rtpconfig.h"
 
-#ifdef RTP_SUPPORT_SRTP
+#if defined(RTP_SUPPORT_SRTP) || defined(RTP_SUPPORT_SRTP2)
 
 #include "rtpsession.h"
 
@@ -48,7 +48,12 @@
 	#include <jthread/jthread.h>
 #endif // RTP_SUPPORT_THREAD
 
+#ifdef RTP_SUPPORT_SRTP2
+struct srtp_ctx_t_;
+typedef struct srtp_ctx_t_ srtp_ctx_t;
+#else
 struct srtp_ctx_t;
+#endif
 
 namespace jrtplib
 {
@@ -126,7 +131,7 @@ inline void RTPSecureSession::OnErrorChangeIncomingData(int, int) { }
 
 } // end namespace
 
-#endif // RTP_SUPPORT_SRTP
+#endif // RTP_SUPPORT_SRTP || RTP_SUPPORT_SRTP2
 
 #endif // RTPSECURESESSION_H
 
