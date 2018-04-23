@@ -147,3 +147,39 @@ After configuring JThread this way, just build and install it. The same CMake
 procedure for JRTPLIB should then automatically detect the correct JThread
 (so the one that's installed in your cross-compilation installation directory),
 after which you can again build and install the RTP library.
+
+Automatic Android cross compilation using cmake and gradle
+----------------------------------------------------------
+
+For Android with API versions below `24`, you need to include the quirk `arguments "-DFORCE_RTP_SUPPORT_IFADDRS_FALSE=TRUE"`, otherwise it isnt necessary as for the api number above `24`, `ifaddrs` is fully supported
+
+
+So this is how you do it in gradle:
+
+```
+defaultConfig {
+        applicationId "com.example"
+        minSdkVersion 16
+        targetSdkVersion 22
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            abiFilters "armeabi-v7a", "x86"
+        }
+        externalNativeBuild {
+            cmake {
+                arguments "-DFORCE_RTP_SUPPORT_IFADDRS_FALSE=TRUE"
+            }
+        }
+    }
+
+    // Encapsulates your external native build configurations.
+    externalNativeBuild {
+
+        // Encapsulates your CMake build configurations.
+        cmake {
+            // Provides a relative path to your CMake build script.
+            path "../../JRTPLIB/CMakeLists.txt"
+        }
+    }
+```
