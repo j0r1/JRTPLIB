@@ -53,6 +53,10 @@ jrtplib_include_test(sys/sockio.h RTP_HAVE_SYS_SOCKIO "// Don't have <sys/sockio
 jrtplib_include_test(ifaddrs.h RTP_SUPPORT_IFADDRS "// No ifaddrs support")
 jrtplib_include_test(netinet/in.h RTP_SUPPORT_NETINET_IN "// Don't have <netinet/in.h>")
 
+if(FORCE_RTP_SUPPORT_IFADDRS_FALSE)
+	unset(RTP_SUPPORT_IFADDRS)
+endif()
+
 if (JTHREAD_FOUND)
 	set(V "ON")
 else (JTHREAD_FOUND)
@@ -226,5 +230,3 @@ if (NOT MSVC)
 	configure_file(${PROJECT_SOURCE_DIR}/pkgconfig/jrtplib.pc.in ${PROJECT_BINARY_DIR}/pkgconfig/jrtplib.pc)
 	install(FILES ${PROJECT_BINARY_DIR}/pkgconfig/jrtplib.pc DESTINATION ${LIBRARY_INSTALL_DIR}/pkgconfig)
 endif ()
-
-
