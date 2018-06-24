@@ -165,6 +165,7 @@ inline RTPSourceStats::RTPSourceStats():prevpacktime(0,0),lastmsgtime(0,0),lastr
 /** Describes an entry in the RTPSources source table. */
 class JRTPLIB_IMPORTEXPORT RTPSourceData : public RTPMemoryObject
 {
+	JRTPLIB_NO_COPY(RTPSourceData)
 protected:
 	RTPSourceData(uint32_t ssrc, RTPMemoryManager *mgr = 0);
 	virtual ~RTPSourceData();

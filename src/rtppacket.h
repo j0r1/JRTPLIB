@@ -55,6 +55,7 @@ class RTPRawPacket;
  */
 class JRTPLIB_IMPORTEXPORT RTPPacket : public RTPMemoryObject
 {
+	JRTPLIB_NO_COPY(RTPPacket)
 public:
 	/** Creates an RTPPacket instance based upon the data in \c rawpack, optionally installing a memory manager.
 	 *  Creates an RTPPacket instance based upon the data in \c rawpack, optionally installing a memory manager. 

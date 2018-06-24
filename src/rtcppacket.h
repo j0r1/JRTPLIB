@@ -49,6 +49,7 @@ class RTCPCompoundPacket;
 /** Base class for specific types of RTCP packets. */
 class JRTPLIB_IMPORTEXPORT RTCPPacket 
 {
+	JRTPLIB_NO_COPY(RTCPPacket)
 public:
 	/** Identifies the specific kind of RTCP packet. */
 	enum PacketType 

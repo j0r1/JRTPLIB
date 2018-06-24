@@ -63,6 +63,7 @@ namespace jrtplib
  */
 class JRTPLIB_IMPORTEXPORT RTPAbortDescriptors
 {
+	JRTPLIB_NO_COPY(RTPAbortDescriptors)
 public:
 	RTPAbortDescriptors();
 	~RTPAbortDescriptors();

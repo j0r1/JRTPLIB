@@ -111,6 +111,7 @@ public:
  */
 class JRTPLIB_IMPORTEXPORT RTPTCPTransmitter : public RTPTransmitter
 {
+	JRTPLIB_NO_COPY(RTPTCPTransmitter)
 public:
 	RTPTCPTransmitter(RTPMemoryManager *mgr);
 	~RTPTCPTransmitter();

@@ -49,6 +49,11 @@
 	#define JRTPLIB_IMPORTEXPORT JRTPLIB_IMPORT
 #endif // JRTPLIB_COMPILING
 
+#define JRTPLIB_NO_COPY(ClassName) \
+	private: \
+		ClassName(const ClassName &); \
+		ClassName &operator=(const ClassName &);
+
 ${RTP_HAVE_SYS_FILIO}
 
 ${RTP_HAVE_SYS_SOCKIO}

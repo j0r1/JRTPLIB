@@ -52,6 +52,7 @@ namespace jrtplib
 /** The class RTCPSDESInfo is a container for RTCP SDES information. */
 class JRTPLIB_IMPORTEXPORT RTCPSDESInfo : public RTPMemoryObject
 {
+	JRTPLIB_NO_COPY(RTCPSDESInfo)
 public:
 	/** Constructs an instance, optionally installing a memory manager. */
 	RTCPSDESInfo(RTPMemoryManager *mgr = 0) : RTPMemoryObject(mgr)		{ for (int i = 0 ; i < RTCP_SDES_NUMITEMS_NONPRIVATE ; i++) nonprivateitems[i].SetMemoryManager(mgr); }

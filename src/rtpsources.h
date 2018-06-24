@@ -73,6 +73,7 @@ class RTPSourceData;
  */
 class JRTPLIB_IMPORTEXPORT RTPSources : public RTPMemoryObject
 {
+	JRTPLIB_NO_COPY(RTPSources)
 public:
 	/** Type of probation to use for new sources. */
 	enum ProbationType 

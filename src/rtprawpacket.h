@@ -50,6 +50,7 @@ namespace jrtplib
 /** This class is used by the transmission component to store the incoming RTP and RTCP data in. */
 class JRTPLIB_IMPORTEXPORT RTPRawPacket : public RTPMemoryObject
 {
+	JRTPLIB_NO_COPY(RTPRawPacket)
 public:	
     	/** Creates an instance which stores data from \c data with length \c datalen.
 	 *  Creates an instance which stores data from \c data with length \c datalen. Only the pointer 

@@ -56,6 +56,7 @@ class RTCPScheduler;
 
 class JRTPLIB_IMPORTEXPORT RTPPollThread : private jthread::JThread
 {
+	JRTPLIB_NO_COPY(RTPPollThread)
 public:
 	RTPPollThread(RTPSession &session,RTCPScheduler &rtcpsched);
 	~RTPPollThread();

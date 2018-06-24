@@ -52,6 +52,7 @@ namespace jrtplib
 template<class Element,class GetIndex,int hashsize>
 class RTPHashTable : public RTPMemoryObject
 {
+	JRTPLIB_NO_COPY(RTPHashTable)
 public:
 	RTPHashTable(RTPMemoryManager *mgr = 0, int memtype = RTPMEM_TYPE_OTHER);
 	~RTPHashTable()						{ Clear(); }

@@ -79,6 +79,7 @@ class RTCPAPPPacket;
  */
 class JRTPLIB_IMPORTEXPORT RTPSession : public RTPMemoryObject
 {
+	JRTPLIB_NO_COPY(RTPSession)
 public:
 	/** Constructs an RTPSession instance, optionally using a specific instance of a random
 	 *  number generator, and optionally installing a memory manager. 

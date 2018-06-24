@@ -223,6 +223,7 @@ public:
  */
 class JRTPLIB_IMPORTEXPORT RTPUDPv6Transmitter : public RTPTransmitter
 {
+	JRTPLIB_NO_COPY(RTPUDPv6Transmitter)
 public:
 	RTPUDPv6Transmitter(RTPMemoryManager *mgr);
 	~RTPUDPv6Transmitter();

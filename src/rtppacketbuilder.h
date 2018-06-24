@@ -56,6 +56,7 @@ class RTPSources;
  */
 class JRTPLIB_IMPORTEXPORT RTPPacketBuilder : public RTPMemoryObject
 {
+	JRTPLIB_NO_COPY(RTPPacketBuilder)
 public:
 	/** Constructs an instance which will use \c rtprand for generating random numbers
 	 *  (used to initialize the SSRC value and sequence number), optionally installing a memory manager. 

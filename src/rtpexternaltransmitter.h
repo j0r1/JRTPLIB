@@ -139,6 +139,7 @@ private:
  */
 class JRTPLIB_IMPORTEXPORT RTPExternalTransmitter : public RTPTransmitter
 {
+	JRTPLIB_NO_COPY(RTPExternalTransmitter)
 public:
 	RTPExternalTransmitter(RTPMemoryManager *mgr);
 	~RTPExternalTransmitter();

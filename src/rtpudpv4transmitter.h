@@ -256,6 +256,7 @@ public:
  */
 class JRTPLIB_IMPORTEXPORT RTPUDPv4Transmitter : public RTPTransmitter
 {
+	JRTPLIB_NO_COPY(RTPUDPv4Transmitter)
 public:
 	RTPUDPv4Transmitter(RTPMemoryManager *mgr);
 	~RTPUDPv4Transmitter();

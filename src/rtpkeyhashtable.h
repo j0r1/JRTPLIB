@@ -52,6 +52,7 @@ namespace jrtplib
 template<class Key,class Element,class GetIndex,int hashsize>
 class RTPKeyHashTable : public RTPMemoryObject
 {
+	JRTPLIB_NO_COPY(RTPKeyHashTable)
 public:
 	RTPKeyHashTable(RTPMemoryManager *mgr = 0,int memtype = RTPMEM_TYPE_OTHER);
 	~RTPKeyHashTable()					{ Clear(); }
