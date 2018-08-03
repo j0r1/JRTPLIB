@@ -78,7 +78,7 @@ public:
 	uint8_t *GetCompoundPacketData()						{ return compoundpacket; }
 
 	/** Returns the size of the entire RTCP compound packet. */
-	size_t GetCompoundPacketLength()						{ return compoundpacketlength; }
+	size_t GetCompoundPacketLength() const					{ return compoundpacketlength; }
 
 	/** Starts the iteration over the individual RTCP packets in the RTCP compound packet. */
 	void GotoFirstPacket()									{ rtcppackit = rtcppacklist.begin(); }
