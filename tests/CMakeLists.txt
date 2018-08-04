@@ -3,7 +3,7 @@ apply_include_paths("${JRTPLIB_EXTERNAL_INCLUDES}")
 
 foreach(T testmultiplex testexistingsockets testautoportbase srtptest rtcpdump readlogfile
 	  timetest timeinittest abortdesctest abortdescipv6 tcptest sigintrtest
-	  testexttrans)
+	  testexttrans testrawpacket)
 	add_executable(${T} ${T}.cpp)
 	if (NOT MSVC OR JRTPLIB_COMPILE_STATIC)
 		target_link_libraries(${T} jrtplib-static)
