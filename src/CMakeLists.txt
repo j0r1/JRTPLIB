@@ -48,7 +48,7 @@ set (HEADERS
 	rtptypes_win.h
 	${PROJECT_BINARY_DIR}/src/rtptypes.h
 	rtpudpv4transmitter.h
-	rtpudpv6transmitter.h  
+	rtpudpv6transmitter.h
 	rtpbyteaddress.h
 	rtpexternaltransmitter.h
 	rtpsecuresession.h
@@ -94,7 +94,7 @@ set(SOURCES
 	rtpsources.cpp
 	rtptimeutilities.cpp
 	rtpudpv4transmitter.cpp
-	rtpudpv6transmitter.cpp 
+	rtpudpv6transmitter.cpp
 	rtpbyteaddress.cpp
 	rtpexternaltransmitter.cpp
 	rtpsecuresession.cpp
@@ -132,6 +132,7 @@ if (NOT MSVC OR JRTPLIB_COMPILE_STATIC)
 	target_link_libraries(jrtplib-static ${JRTPLIB_LINK_LIBS})
 endif (NOT MSVC OR JRTPLIB_COMPILE_STATIC)
 
+#[[
 if (NOT MSVC OR NOT JRTPLIB_COMPILE_STATIC)
 	add_library(jrtplib-shared SHARED ${SOURCES} ${HEADERS})
 	if (NOT MSVC)
@@ -144,10 +145,10 @@ if (NOT MSVC OR NOT JRTPLIB_COMPILE_STATIC)
 	set(JRTPLIB_INSTALLTARGETS ${JRTPLIB_INSTALLTARGETS} jrtplib-shared)
 	target_link_libraries(jrtplib-shared ${JRTPLIB_LINK_LIBS})
 endif (NOT MSVC OR NOT JRTPLIB_COMPILE_STATIC)
+]]
 
 apply_include_paths("${JRTPLIB_INTERNAL_INCLUDES}")
 apply_include_paths("${JRTPLIB_EXTERNAL_INCLUDES}")
 
 install(FILES ${HEADERS} DESTINATION include/jrtplib3)
 install(TARGETS ${JRTPLIB_INSTALLTARGETS} DESTINATION ${LIBRARY_INSTALL_DIR})
-
