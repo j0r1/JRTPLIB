@@ -68,7 +68,8 @@ uint8_t RTPRandomURandom::GetRandom8()
 
 	uint8_t value;
 
-	fread(&value, sizeof(uint8_t), 1, device);
+	if (fread(&value, sizeof(uint8_t), 1, device) != 1)
+        return 0;
 
 	return value;
 }
