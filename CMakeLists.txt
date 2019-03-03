@@ -104,6 +104,7 @@ else (CMAKE_CROSSCOMPILING)
 endif (CMAKE_CROSSCOMPILING)
 
 option(JRTPLIB_COMPILE_TESTS "Compile various tests in the 'tests' subdirectory" NO)
+option(JRTPLIB_COMPILE_EXAMPLES "Compile various examples in the 'examples' subdirectory" YES)
 
 # Check winsock first
 set(TESTDEFS "")
@@ -186,7 +187,10 @@ configure_file("${PROJECT_SOURCE_DIR}/src/rtplibraryversioninternal.h.in" "${PRO
 save_paths(JRTPLIB_INTERNAL_INCLUDES "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}/src")
 
 add_subdirectory(src)
-add_subdirectory(examples)
+
+if (JRTPLIB_COMPILE_EXAMPLES)
+	add_subdirectory(examples)
+endif()
 
 if (JRTPLIB_COMPILE_TESTS)
 	add_subdirectory(tests)
