@@ -1,10 +1,15 @@
 				
 				JRTPLIB ChangeLog
 				-----------------
- ? (?):
+ 3.11.2 (April 2020):
  	* Taking EINTR in nanosleep, poll and select calls into account.
 	  Thanks to Filippo Guerzoni (filippo.guerzoni@gmail.com) for bringing
 	  this to my attention.
+	* Disabled some copy constructors
+	* Bugfix in RTPExternalTransmitter: a buffer could fill up causing the
+	  an operation to fail to get aborted
+	* Added constructor to RTPRawPacket to guess RTP/RTCP type
+	* Bugfixed regarding some calles being cut short due to an EINTR
 
  3.11.1 (March 2017)
  	* Bugfix in rtpsources.cpp: if the RTP packet got deleted in
