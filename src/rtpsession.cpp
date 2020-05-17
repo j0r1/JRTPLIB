@@ -1565,6 +1565,7 @@ int RTPSession::CreateCNAME(uint8_t *buffer,size_t *bufferlength,bool resolve)
 {
 #ifndef WIN32
 	bool gotlogin = true;
+	char defUser[]="root";
 #ifdef RTP_SUPPORT_GETLOGINR
 	buffer[0] = 0;
 	if (getlogin_r((char *)buffer,*bufferlength) != 0)
@@ -1592,9 +1593,21 @@ int RTPSession::CreateCNAME(uint8_t *buffer,size_t *bufferlength,bool resolve)
 #endif // RTP_SUPPORT_GETLOGINR
 	if (!gotlogin)
 	{
-		char *logname = getenv("LOGNAME");
-		if (logname == 0)
-			return ERR_RTP_SESSION_CANTGETLOGINNAME;
+		char *logname=NULL;
+		for(int i = 0 ; environ[i] ;i++)
+        {
+			logname=strstr(environ[i], "LOGNAME");
+			if(logname)
+				break;  
+        }
+		if(logname){
+			logname = getenv("LOGNAME");
+			if (logname == 0)
+				return ERR_RTP_SESSION_CANTGETLOGINNAME;
+		}
+		else
+			logname=defUser;
+		
 		strncpy((char *)buffer,logname,*bufferlength);
 	}
 #else // Win32 version
