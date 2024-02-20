@@ -131,7 +131,7 @@ option(JRTPLIB_COMPILE_TESTS "Compile various tests in the 'tests' subdirectory"
 option(JRTPLIB_COMPILE_EXAMPLES "Compile various examples in the 'examples' subdirectory" YES)
 
 # Check winsock first
-set(TESTDEFS "")
+set(TESTDEFS "" CACHE STRING "Preprocessor definitions of feature tests")
 set(EMPTYWSSTRING "// Not using winsock sockets")
 jrtplib_test_feature(winsocktest RTP_SOCKETTYPE_WINSOCK FALSE "${EMPTYWSSTRING}" "${TESTDEFS}")
 if ("${RTP_SOCKETTYPE_WINSOCK}" STREQUAL "${EMPTYWSSTRING}")
