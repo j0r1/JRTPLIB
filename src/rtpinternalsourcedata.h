@@ -90,6 +90,7 @@ inline int RTPInternalSourceData::SetRTPDataAddress(const RTPAddress *a)
 			RTPDelete(rtpaddr,GetMemoryManager());
 			rtpaddr = 0;
 		}
+		isrtpaddrset = false;
 	}
 	else
 	{
@@ -100,8 +101,8 @@ inline int RTPInternalSourceData::SetRTPDataAddress(const RTPAddress *a)
 		if (rtpaddr && a != rtpaddr)
 			RTPDelete(rtpaddr,GetMemoryManager());
 		rtpaddr = newaddr;
+		isrtpaddrset = true;
 	}
-	isrtpaddrset = true;
 	return 0;
 }
 
@@ -114,6 +115,7 @@ inline int RTPInternalSourceData::SetRTCPDataAddress(const RTPAddress *a)
 			RTPDelete(rtcpaddr,GetMemoryManager());
 			rtcpaddr = 0;
 		}
+		isrtcpaddrset = false;
 	}
 	else
 	{
@@ -124,8 +126,8 @@ inline int RTPInternalSourceData::SetRTCPDataAddress(const RTPAddress *a)
 		if (rtcpaddr && a != rtcpaddr)
 			RTPDelete(rtcpaddr,GetMemoryManager());
 		rtcpaddr = newaddr;
+		isrtcpaddrset = true;
 	}
-	isrtcpaddrset = true;
 	return 0;
 }
 	
