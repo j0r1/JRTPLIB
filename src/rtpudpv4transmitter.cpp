@@ -162,9 +162,9 @@ static int GetIPv4SocketPort(SocketType s, uint16_t *pPort)
 
 int GetAutoSockets(uint32_t bindIP, bool allowOdd, bool rtcpMux,
                    SocketType *pRtpSock, SocketType *pRtcpSock, 
-                   uint16_t *pRtpPort, uint16_t *pRtcpPort)
+                   uint16_t *pRtpPort, uint16_t *pRtcpPort, uint16_t pbaseMin, uint16_t pbaseMax)
 {
-	const int maxAttempts = 1024;
+	const int maxAttempts = pbaseMax - pbaseMin;
 	int attempts = 0;
 	std::vector<SocketType> toClose;
 
@@ -178,110 +178,120 @@ int GetAutoSockets(uint32_t bindIP, bool allowOdd, bool rtcpMux,
 			return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
 		}
 
+#ifdef WIN32
+		int optval = 1;
+		setsockopt(sock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char*)&optval, sizeof(int));
+#endif
+
+
 		// First we get an automatically chosen port
 
 		struct sockaddr_in addr;
 		memset(&addr,0,sizeof(struct sockaddr_in));
 
 		addr.sin_family = AF_INET;
-		addr.sin_port = 0;
+		addr.sin_port = htons(pbaseMin + attempts -1);
 		addr.sin_addr.s_addr = htonl(bindIP);
 		if (bind(sock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) != 0)
 		{
 			RTPCLOSE(sock);
-			for (size_t i = 0 ; i < toClose.size() ; i++)
-				RTPCLOSE(toClose[i]);
-			return ERR_RTP_UDPV4TRANS_CANTGETVALIDSOCKET;
-		}
-
-		uint16_t basePort = 0;
-		int status = GetIPv4SocketPort(sock, &basePort);
-		if (status < 0)
-		{
-			RTPCLOSE(sock);
-			for (size_t i = 0 ; i < toClose.size() ; i++)
-				RTPCLOSE(toClose[i]);
-			return status;
-		}
-
-		if (rtcpMux) // only need one socket
-		{
-			if (basePort%2 == 0 || allowOdd)
-			{
-				*pRtpSock = sock;
-				*pRtcpSock = sock;
-				*pRtpPort = basePort;
-				*pRtcpPort = basePort;
-				for (size_t i = 0 ; i < toClose.size() ; i++)
-					RTPCLOSE(toClose[i]);
-
-				return 0;
-			}
-			else
-				toClose.push_back(sock);
 		}
 		else
 		{
-			SocketType sock2 = socket(PF_INET, SOCK_DGRAM, 0);
-			if (sock2 == RTPSOCKERR)
+			uint16_t basePort = 0;
+			int status = GetIPv4SocketPort(sock, &basePort);
+			if (status < 0)
 			{
 				RTPCLOSE(sock);
-				for (size_t i = 0 ; i < toClose.size() ; i++)
+				for (size_t i = 0; i < toClose.size(); i++)
 					RTPCLOSE(toClose[i]);
-				return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
+				return status;
 			}
 
-			// Try the next port or the previous port
-			uint16_t secondPort = basePort;
-			bool possiblyValid = false;
-
-			if (basePort%2 == 0)
+			if (rtcpMux) // only need one socket
 			{
-				secondPort++;
-				possiblyValid = true;
-			}
-			else if (basePort > 1) // avoid landing on port 0
-			{
-				secondPort--;
-				possiblyValid = true;
-			}
-
-			if (possiblyValid)
-			{
-				memset(&addr,0,sizeof(struct sockaddr_in));
-
-				addr.sin_family = AF_INET;
-				addr.sin_port = htons(secondPort);
-				addr.sin_addr.s_addr = htonl(bindIP);
-				if (bind(sock2,(struct sockaddr *)&addr,sizeof(struct sockaddr_in)) == 0)
+				if (basePort % 2 == 0 || allowOdd)
 				{
-					// In this case, we have two consecutive port numbers, the lower of
-					// which is even
-
-					if (basePort < secondPort)
-					{
-						*pRtpSock = sock;
-						*pRtcpSock = sock2;
-						*pRtpPort = basePort;
-						*pRtcpPort = secondPort;
-					}
-					else
-					{
-						*pRtpSock = sock2;
-						*pRtcpSock = sock;
-						*pRtpPort = secondPort;
-						*pRtcpPort = basePort;
-					}
-
-					for (size_t i = 0 ; i < toClose.size() ; i++)
+					*pRtpSock = sock;
+					*pRtcpSock = sock;
+					*pRtpPort = basePort;
+					*pRtcpPort = basePort;
+					for (size_t i = 0; i < toClose.size(); i++)
 						RTPCLOSE(toClose[i]);
 
 					return 0;
 				}
+				else
+					toClose.push_back(sock);
 			}
+			else
+			{
+				SocketType sock2 = socket(PF_INET, SOCK_DGRAM, 0);
+				if (sock2 == RTPSOCKERR)
+				{
+					RTPCLOSE(sock);
+					for (size_t i = 0; i < toClose.size(); i++)
+						RTPCLOSE(toClose[i]);
+					return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
+				}
 
-			toClose.push_back(sock);
-			toClose.push_back(sock2);
+#ifdef WIN32
+				int optval = 1;
+				setsockopt(sock2, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char*)&optval, sizeof(int));
+#endif
+
+				// Try the next port or the previous port
+				uint16_t secondPort = basePort;
+				bool possiblyValid = false;
+
+				if (basePort % 2 == 0)
+				{
+					secondPort++;
+					possiblyValid = true;
+				}
+				else if (basePort > 1) // avoid landing on port 0
+				{
+					secondPort--;
+					possiblyValid = true;
+				}
+
+				if (possiblyValid)
+				{
+					memset(&addr, 0, sizeof(struct sockaddr_in));
+
+					addr.sin_family = AF_INET;
+					addr.sin_port = htons(secondPort);
+					addr.sin_addr.s_addr = htonl(bindIP);
+					if (bind(sock2, (struct sockaddr*)&addr, sizeof(struct sockaddr_in)) == 0)
+					{
+						// In this case, we have two consecutive port numbers, the lower of
+						// which is even
+
+						if (basePort < secondPort)
+						{
+							*pRtpSock = sock;
+							*pRtcpSock = sock2;
+							*pRtpPort = basePort;
+							*pRtcpPort = secondPort;
+						}
+						else
+						{
+							*pRtpSock = sock2;
+							*pRtcpSock = sock;
+							*pRtpPort = secondPort;
+							*pRtcpPort = basePort;
+						}
+
+						for (size_t i = 0; i < toClose.size(); i++)
+							RTPCLOSE(toClose[i]);
+
+						return 0;
+					}
+				}
+
+				toClose.push_back(sock);
+				toClose.push_back(sock2);
+			}
 		}
 	}
 
@@ -348,7 +358,7 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 		if (params->GetPortbase() == 0)
 		{
 			int status = GetAutoSockets(params->GetBindIP(), params->GetAllowOddPortbase(), params->GetRTCPMultiplexing(),
-			                            &rtpsock, &rtcpsock, &m_rtpPort, &m_rtcpPort);
+			                            &rtpsock, &rtcpsock, &m_rtpPort, &m_rtcpPort, params->GetPortbaseMin(), params->GetPortbaseMax());
 			if (status < 0)
 			{
 				MAINMUTEX_UNLOCK
@@ -386,6 +396,21 @@ int RTPUDPv4Transmitter::Create(size_t maximumpacketsize,const RTPTransmissionPa
 					return ERR_RTP_UDPV4TRANS_CANTCREATESOCKET;
 				}
 			}
+
+			// On windows avoid that someone can reuse the same UDP socket
+#ifdef WIN32
+			int optval = 1;
+			if (setsockopt(rtpsock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char*)&optval, sizeof(int)) != 0)
+			{
+				RTPCLOSE(rtpsock);
+				return ERR_RTP_UDPV4TRANS_CANTBINDRTPSOCKET;
+			}
+			if (setsockopt(rtcpsock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char*)&optval, sizeof(int)) != 0)
+			{
+				RTPCLOSE(rtcpsock);
+				return ERR_RTP_UDPV4TRANS_CANTBINDRTCPSOCKET;
+			}
+#endif
 
 			// bind sockets
 

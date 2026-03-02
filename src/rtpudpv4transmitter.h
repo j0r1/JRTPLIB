@@ -52,7 +52,7 @@
 #endif // RTP_SUPPORT_THREAD
 
 #define RTPUDPV4TRANS_HASHSIZE									8317
-#define RTPUDPV4TRANS_DEFAULTPORTBASE								5000
+#define RTPUDPV4TRANS_DEFAULTPORTBASE							5000
 
 #define RTPUDPV4TRANS_RTPRECEIVEBUFFER							32768
 #define RTPUDPV4TRANS_RTCPRECEIVEBUFFER							32768
@@ -78,6 +78,12 @@ public:
 	 *  unless RTPUDPv4TransmissionParams::SetAllowOddPortbase was called;
 	 *  a port number of zero will cause a port to be chosen automatically. */
 	void SetPortbase(uint16_t pbase)							{ portbase = pbase; }
+	
+	/** Sets the minimum RTP port that can be used to \c pbase_min. This has to be higher than pbase_max. */
+	void SetPortbaseMin(uint16_t pbase_min)						{ if (pbase_min < portbaseMax) portbaseMin = pbase_min; }
+
+	/** Sets the maximum RTP port that can be used to \c pbase_max. This has to be lower than portbaseMin. */
+	void SetPortbaseMax(uint16_t pbase_max)						{ if (pbase_max > portbaseMin) portbaseMax = pbase_max; }
 
 	/** Sets the multicast TTL to be used to \c mcastTTL. */
 	void SetMulticastTTL(uint8_t mcastTTL)						{ multicastTTL = mcastTTL; }
@@ -99,6 +105,12 @@ public:
 
 	/** Returns the RTP portbase which will be used (default is 5000). */
 	uint16_t GetPortbase() const								{ return portbase; }
+	
+	/** Returns the RTP port which will be used as the minimum port value if portbase is set to 0 (default is 5000). */
+	uint16_t GetPortbaseMin() const								{ return portbaseMin; }
+
+	/** Returns the RTP port which will be used as the maximum port value point if portbase is set to 0 (default is 65534). */
+	uint16_t GetPortbaseMax() const								{ return portbaseMax; }
 
 	/** Returns the multicast TTL which will be used (default is 1). */
 	uint8_t GetMulticastTTL() const								{ return multicastTTL; }
@@ -168,7 +180,7 @@ public:
 	 *  sessions. */
 	RTPAbortDescriptors *GetCreatedAbortDescriptors() const		{ return m_pAbortDesc; }
 private:
-	uint16_t portbase;
+	uint16_t portbase, portbaseMin, portbaseMax;
 	uint32_t bindIP, mcastifaceIP;
 	std::list<uint32_t> localIPs;
 	uint8_t multicastTTL;
@@ -185,8 +197,10 @@ private:
 };
 
 inline RTPUDPv4TransmissionParams::RTPUDPv4TransmissionParams() : RTPTransmissionParams(RTPTransmitter::IPv4UDPProto)	
-{ 
-	portbase = RTPUDPV4TRANS_DEFAULTPORTBASE; 
+{
+	portbase = RTPUDPV4TRANS_DEFAULTPORTBASE;
+	portbaseMin = portbase;
+	portbaseMax = 65534;
 	bindIP = 0; 
 	multicastTTL = 1; 
 	mcastifaceIP = 0; 
